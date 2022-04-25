@@ -87,6 +87,15 @@ getAscent m i =
     Dict.get i m.ascents
 
 
+addAscentFromForm : Model -> Dict Int Ascent
+addAscentFromForm model =
+    let
+        newAscent =
+            Form.ascentFromForm model
+    in
+    Dict.insert newAscent.id newAscent model.ascents
+
+
 deleteAscent : Model -> Int -> Model
 deleteAscent m i =
     { m | ascents = Dict.remove i m.ascents }

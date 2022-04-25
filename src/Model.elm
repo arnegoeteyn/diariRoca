@@ -1,10 +1,10 @@
 module Model exposing (..)
 
-import Data exposing (Area, Ascent, ClimbingRoute, ClimbingRouteKind, Sector, Trip)
+import Data exposing (Area, Ascent, AscentKind, ClimbingRoute, ClimbingRouteKind, Sector, Trip)
 import Date exposing (Date)
+import DatePicker exposing (DatePicker)
 import Dict exposing (Dict)
 import Select
-import Time
 
 
 type alias Model =
@@ -50,7 +50,12 @@ type alias ClimbingRouteForm =
 
 
 type alias AscentForm =
-    {}
+    { comment : Maybe String
+    , kind : Maybe AscentKind
+    , date : Maybe Date
+    , id : Maybe Int
+    , datePicker : DatePicker
+    }
 
 
 type ModalContent

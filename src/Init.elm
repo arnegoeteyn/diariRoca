@@ -2,10 +2,11 @@ module Init exposing (..)
 
 import Data exposing (ClimbingRouteKind(..), Sector, jsonFileDecoder)
 import DataUtilities
-import Date
+import Date exposing (Date)
+import DatePicker exposing (DatePicker, defaultSettings)
 import Dict
 import Json.Decode exposing (decodeString)
-import Message exposing (Msg)
+import Message exposing (Msg(..))
 import Model exposing (AscentForm, ClimbingRouteForm, Model)
 import Select
 import Time
@@ -15,11 +16,17 @@ import Utilities
 init : { storageCache : String, posixTime : Int } -> ( Model, Cmd Msg )
 init { storageCache, posixTime } =
     let
+        date =
+            Date.fromPosix Time.utc (Time.millisToPosix posixTime)
+
         decodedStorage =
             decodeString jsonFileDecoder storageCache
 
         jsonFile =
             Result.withDefault { climbingRoutes = Dict.empty, ascents = Dict.empty, sectors = Dict.empty, areas = Dict.empty, trips = Dict.empty } <| decodedStorage
+
+        ( ascentForm, ascentFormCmd ) =
+            initAscentForm (Just date)
     in
     ( { appState =
             case decodedStorage of
@@ -46,9 +53,9 @@ init { storageCache, posixTime } =
 
       --| Forms
       , climbingRouteForm = initClimbingRouteForm
-      , ascentForm = initAscentForm
+      , ascentForm = ascentForm
       }
-    , Cmd.batch [ Cmd.none ]
+    , Cmd.batch [ ascentFormCmd ]
     )
 
 
@@ -69,9 +76,25 @@ initClimbingRouteForm =
     }
 
 
-initAscentForm : AscentForm
-initAscentForm =
-    {}
+initAscentForm : Maybe Date -> ( AscentForm, Cmd Msg )
+initAscentForm mDate =
+    let
+        ( datePicker, datePickerFx ) =
+            DatePicker.init
+    in
+    ( { comment = Nothing
+      , date = mDate
+      , kind = Nothing
+      , id = Nothing
+      , datePicker = datePicker
+      }
+    , Cmd.map ToDatePickerAscentForm datePickerFx
+    )
+
+
+ascentFormDatePickerSettings : DatePicker.Settings
+ascentFormDatePickerSettings =
+    defaultSettings
 
 
 

@@ -1,6 +1,6 @@
 module Form exposing (..)
 
-import Data exposing (ClimbingRoute, ClimbingRouteKind(..))
+import Data exposing (Ascent, AscentKind(..), ClimbingRoute, ClimbingRouteKind(..))
 import Dict
 import Model exposing (Model)
 
@@ -33,6 +33,26 @@ climbingRouteFromForm model =
     , sectorId = sectorId
     , id = id
     , kind = Maybe.withDefault Sport form.kind
+    }
+
+
+ascentFromForm : Model -> Ascent
+ascentFromForm model =
+    let
+        form =
+            model.ascentForm
+
+        id =
+            Maybe.withDefault (newId model.ascents) model.ascentForm.id
+
+        routeId =
+            Maybe.withDefault -1 (Maybe.map .id model.selectedClimbingRoute)
+    in
+    { comment = form.comment
+    , routeId = routeId
+    , id = id
+    , kind = Maybe.withDefault Redpoint form.kind
+    , date = Maybe.withDefault model.startUpDate form.date
     }
 
 

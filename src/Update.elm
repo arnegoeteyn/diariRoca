@@ -2,6 +2,7 @@ module Update exposing (..)
 
 import Command
 import Data exposing (AscentKind(..), ClimbingRouteKind(..), Trip, encodedJsonFile, jsonFileDecoder)
+import DatePicker exposing (DateEvent(..), DatePicker)
 import File
 import File.Download
 import File.Select
@@ -103,8 +104,14 @@ update msg model =
         UpdateClimbingRouteForm form ->
             ( { model | climbingRouteForm = form }, Cmd.none )
 
+        UpdateAscentForm form ->
+            ( { model | ascentForm = form }, Cmd.none )
+
         SaveClimbingRouteForm ->
-            ( { model | climbingRoutes = MA.addRouteFromForm model }, Cmd.none )
+            ( closeModal { model | climbingRoutes = MA.addRouteFromForm model }, Cmd.none )
+
+        SaveAscentForm ->
+            ( closeModal { model | ascents = MA.addAscentFromForm model }, Cmd.none )
 
         FormSelectSector maybeSector ->
             let
@@ -124,7 +131,29 @@ update msg model =
             ( { model | modal = Model.DeleteClimbingRouteRequestModal }, Cmd.none )
 
         Message.DeleteClimbingRouteConfirmation route ->
-            ( MA.deleteRoute { model | modal = Empty } route.id, Cmd.none )
+            ( MA.deleteRoute (closeModal model) route.id, Cmd.none )
+
+        ToDatePickerAscentForm subMsg ->
+            let
+                ( newDatePicker, dateEvent ) =
+                    DatePicker.update Init.ascentFormDatePickerSettings subMsg model.ascentForm.datePicker
+
+                newDate =
+                    case dateEvent of
+                        Picked changedDate ->
+                            Just changedDate
+
+                        _ ->
+                            model.ascentForm.date
+
+                newForm =
+                    (\f -> { f | date = newDate, datePicker = newDatePicker }) model.ascentForm
+            in
+            ( { model
+                | ascentForm = newForm
+              }
+            , Cmd.none
+            )
 
 
 updateWithStorage : Msg -> Model -> ( Model, Cmd Msg )
@@ -142,3 +171,12 @@ updateWithStorage msg model =
         , cmds
         ]
     )
+
+
+
+--| Utilities
+
+
+closeModal : Model -> Model
+closeModal m =
+    { m | modal = Empty }

@@ -1,6 +1,7 @@
 module Message exposing (..)
 
 import Data exposing (ClimbingRoute, Sector)
+import DatePicker exposing (DatePicker)
 import File exposing (File)
 import Model
 import Select
@@ -23,9 +24,13 @@ type Msg
     | SetModal Model.ModalContent
     | DeleteClimbingRouteRequested
     | DeleteClimbingRouteConfirmation ClimbingRoute
-      --| Forms
+      --| ClimbingRoute Form
     | UpdateClimbingRouteForm Model.ClimbingRouteForm
     | SaveClimbingRouteForm
     | FormSelectSector (Maybe Sector)
     | FormSelectSectorMsg (Select.Msg Sector)
     | OnFormRemoveSectorSelection Sector
+      --| Ascent Form
+    | UpdateAscentForm Model.AscentForm
+    | SaveAscentForm
+    | ToDatePickerAscentForm DatePicker.Msg

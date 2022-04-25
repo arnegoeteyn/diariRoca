@@ -1,7 +1,7 @@
 module Modal exposing (..)
 
 import Criteria
-import Data exposing (climbingRouteKindFromString, climbingRouteKindToString, enumClimbingRouteKind)
+import Data exposing (ascentKindFromString, ascentKindToString, climbingRouteKindFromString, climbingRouteKindToString, enumAscentKind, enumClimbingRouteKind)
 import Dict
 import Form exposing (updateComment, updateGrade, updateKind, updateName)
 import Html exposing (Html)
@@ -59,7 +59,7 @@ viewModal model =
                         climbingRouteFormModal model
 
                     AscentFormModal ->
-                        H.text "ascent"
+                        ascentFormModal model
 
                     DeleteClimbingRouteRequestModal ->
                         deleteClimbingRouteConfirmation model
@@ -129,6 +129,39 @@ deleteClimbingRouteConfirmation model =
                     [ H.text <| Utilities.stringFromList [ "Delete \"", route.name, "\" " ] ]
                 , H.button [ E.onClick <| Message.DeleteClimbingRouteConfirmation route ] [ H.text "confirm" ]
                 ]
+
+
+ascentFormModal : Model -> Html Msg
+ascentFormModal model =
+    H.div []
+        [ H.h2 []
+            [ H.text "New ascent" ]
+        , H.form [ A.css [ Tw.flex_col ] ] <|
+            List.map (\x -> H.div [] [ x ])
+                [ Criteria.viewMaybeTextInput "comment"
+                    model.ascentForm.comment
+                    (\x ->
+                        UpdateAscentForm <|
+                            updateComment model.ascentForm x
+                    )
+                , Criteria.criteriaViewSelection (Nothing :: List.map Just enumAscentKind)
+                    (\k ->
+                        case k of
+                            Nothing ->
+                                ""
+
+                            Just x ->
+                                ascentKindToString x
+                    )
+                    ascentKindFromString
+                    (\s ->
+                        UpdateAscentForm <| updateKind model.ascentForm s
+                    )
+                , Criteria.dateCriteria model.ascentForm.date Init.ascentFormDatePickerSettings model.ascentForm.datePicker Message.ToDatePickerAscentForm
+                ]
+                ++ [ H.button [ E.onClick SaveAscentForm, A.type_ "button" ] [ H.text "Create ascent" ]
+                   ]
+        ]
 
 
 onClickStopPropagation : msg -> H.Attribute msg
