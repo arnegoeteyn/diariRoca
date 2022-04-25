@@ -105,6 +105,11 @@ climbingRouteKindToString kind =
             "boulder"
 
 
+enumClimbingRouteKind : List ClimbingRouteKind
+enumClimbingRouteKind =
+    [ Sport, Boulder ]
+
+
 encodeClimbingRouteKind : ClimbingRouteKind -> Json.Encode.Value
 encodeClimbingRouteKind =
     Json.Encode.string << climbingRouteKindToString
@@ -165,6 +170,11 @@ type AscentKind
     | SecondGo
     | Redpoint
     | Repeat
+
+
+enumAscentKind : List AscentKind
+enumAscentKind =
+    [ Onsight, Flash, SecondGo, Redpoint, Repeat ]
 
 
 ascentKindDecoder : Json.Decode.Decoder AscentKind

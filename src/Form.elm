@@ -32,7 +32,7 @@ climbingRouteFromForm model =
     , media = []
     , sectorId = sectorId
     , id = id
-    , kind = Sport
+    , kind = Maybe.withDefault Sport form.kind
     }
 
 
@@ -53,3 +53,8 @@ updateGrade form value =
 updateComment : { a | comment : b } -> b -> { a | comment : b }
 updateComment form value =
     { form | comment = value }
+
+
+updateKind : { a | kind : b } -> b -> { a | kind : b }
+updateKind form value =
+    { form | kind = value }

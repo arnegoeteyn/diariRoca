@@ -1,6 +1,6 @@
 module Init exposing (..)
 
-import Data exposing (Sector, jsonFileDecoder)
+import Data exposing (ClimbingRouteKind(..), Sector, jsonFileDecoder)
 import DataUtilities
 import Date
 import Dict
@@ -62,6 +62,7 @@ initClimbingRouteForm =
     , grade = Nothing
     , sectorId = Nothing
     , comment = Nothing
+    , kind = Nothing
     , id = Nothing
     , selected = []
     , selectState = Select.init "formSector"

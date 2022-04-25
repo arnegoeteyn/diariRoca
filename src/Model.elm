@@ -1,6 +1,6 @@
 module Model exposing (..)
 
-import Data exposing (Area, Ascent, ClimbingRoute, Sector, Trip)
+import Data exposing (Area, Ascent, ClimbingRoute, ClimbingRouteKind, Sector, Trip)
 import Date exposing (Date)
 import Dict exposing (Dict)
 import Select
@@ -42,6 +42,7 @@ type alias ClimbingRouteForm =
     , grade : Maybe String
     , comment : Maybe String
     , sectorId : Maybe Int
+    , kind : Maybe ClimbingRouteKind
     , id : Maybe Int
     , selected : List Sector
     , selectState : Select.State

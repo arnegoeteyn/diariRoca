@@ -1,8 +1,9 @@
 module Modal exposing (..)
 
 import Criteria
+import Data exposing (climbingRouteKindFromString, climbingRouteKindToString, enumClimbingRouteKind)
 import Dict
-import Form exposing (updateComment, updateGrade, updateName)
+import Form exposing (updateComment, updateGrade, updateKind, updateName)
 import Html exposing (Html)
 import Html.Styled as H exposing (Html)
 import Html.Styled.Attributes as A
@@ -97,6 +98,19 @@ climbingRouteFormModal model =
                         model.climbingRouteForm.selectState
                         (Dict.toList model.sectors |> List.map Tuple.second)
                         model.climbingRouteForm.selected
+                , Criteria.criteriaViewSelection (Nothing :: List.map Just enumClimbingRouteKind)
+                    (\k ->
+                        case k of
+                            Nothing ->
+                                ""
+
+                            Just x ->
+                                climbingRouteKindToString x
+                    )
+                    climbingRouteKindFromString
+                    (\s ->
+                        UpdateClimbingRouteForm <| updateKind model.climbingRouteForm s
+                    )
                 ]
                 ++ [ H.button [ E.onClick SaveClimbingRouteForm, A.type_ "button" ] [ H.text "Create route" ]
                    ]

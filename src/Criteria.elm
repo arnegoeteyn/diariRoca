@@ -23,3 +23,8 @@ viewMaybeTextInput p v toMsg =
                     Just s
                 )
         )
+
+
+criteriaViewSelection : List a -> (a -> String) -> (String -> a) -> (a -> msg) -> H.Html msg
+criteriaViewSelection l toString fromString toMsg =
+    H.select [ E.onInput <| (fromString >> toMsg) ] (List.map (\i -> H.option [] [ H.text <| toString i ]) l)
