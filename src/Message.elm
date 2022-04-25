@@ -1,6 +1,6 @@
 module Message exposing (..)
 
-import Data exposing (ClimbingRoute, Sector)
+import Data exposing (Ascent, ClimbingRoute, Sector)
 import DatePicker exposing (DatePicker)
 import File exposing (File)
 import Model
@@ -14,6 +14,7 @@ type Msg
     | JsonSelected File
     | JsonLoaded String
     | ExportRequested
+    | SetModal Model.ModalContent
       -- Filter
     | SetRouteFilter String
     | SelectMsg (Select.Msg Sector)
@@ -21,9 +22,11 @@ type Msg
     | OnRemoveSectorSelection Sector
       -- Route list
     | OnClimbingRouteClicked (Maybe ClimbingRoute)
-    | SetModal Model.ModalContent
     | DeleteClimbingRouteRequested
     | DeleteClimbingRouteConfirmation ClimbingRoute
+      -- Ascent List
+    | DeleteAscentRequested Ascent
+    | DeleteAscentConfirmation Ascent
       --| ClimbingRoute Form
     | UpdateClimbingRouteForm Model.ClimbingRouteForm
     | SaveClimbingRouteForm

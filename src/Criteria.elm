@@ -29,9 +29,9 @@ viewMaybeTextInput p v toMsg =
         )
 
 
-criteriaViewSelection : List a -> (a -> String) -> (String -> a) -> (a -> msg) -> H.Html msg
-criteriaViewSelection l toString fromString toMsg =
-    H.select [ E.onInput <| (fromString >> toMsg) ] (List.map (\i -> H.option [] [ H.text <| toString i ]) l)
+criteriaViewSelection : List a -> String -> (a -> String) -> (String -> a) -> (a -> msg) -> H.Html msg
+criteriaViewSelection l p toString fromString toMsg =
+    H.select [ E.onInput <| (fromString >> toMsg), A.placeholder p ] (List.map (\i -> H.option [] [ H.text <| toString i ]) l)
 
 
 dateCriteria : Maybe Date -> DatePicker.Settings -> DatePicker.DatePicker -> (DatePicker.Msg -> msg) -> H.Html msg

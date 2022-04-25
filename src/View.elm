@@ -59,8 +59,8 @@ viewFilters model =
 viewRouteDetail : Model -> ClimbingRoute -> Html Msg
 viewRouteDetail model route =
     if isSelected model route then
-        H.div [ A.css [ Tw.grid, Tw.gap_4, Tw.grid_cols_2 ] ]
-            [ H.div [ A.css [ Tw.flex, Tw.flex_col, Tw.justify_around ] ]
+        H.div [ A.css [ Tw.grid, Tw.gap_4, Tw.grid_cols_3 ] ]
+            [ H.div [ A.css [ Tw.flex, Tw.flex_col, Tw.justify_around, Tw.col_span_2 ] ]
                 [ viewRouteInfo model route
                 , viewAscentsList model route
                 ]
@@ -123,19 +123,24 @@ viewAscentsList model route =
             MA.getAscents model route
     in
     H.div [ A.css [] ]
-        (H.h3 [ A.css [] ]
+        [ H.h3 [ A.css [] ]
             [ H.text (Utilities.stringFromList [ String.fromInt <| List.length ascents, " ascents:" ])
             , viewAddButton model (SetModal Model.AscentFormModal)
             ]
-            :: List.map
+        , H.div [ A.css [ Tw.grid, Tw.grid_cols_1, Tw.divide_solid, Tw.divide_y_2, Tw.divide_x_0 ] ] <|
+            List.map
                 (\ascent ->
-                    H.div [ A.css [ Tw.flex, Tw.justify_around ] ]
-                        [ H.div [] [ H.text <| Date.toIsoString ascent.date ]
-                        , H.div [] [ H.text (ascentKindToString ascent.kind) ]
+                    H.div [ A.css [ Tw.p_2 ] ]
+                        [ H.div [ A.css [ Tw.flex, Tw.justify_around, Tw.flex_row ] ]
+                            [ H.div [ A.css [] ] [ H.text <| Date.toIsoString ascent.date ]
+                            , H.div [ A.css [] ] [ H.text (ascentKindToString ascent.kind) ]
+                            ]
+                        , H.div [ A.css [] ] [ H.text <| Maybe.withDefault "" ascent.comment ]
+                        , H.div [] [ H.button [ E.onClick <| Message.DeleteAscentRequested ascent ] [ H.text "Delete ascent" ] ]
                         ]
                 )
                 ascents
-        )
+        ]
 
 
 isSelected : Model -> ClimbingRoute -> Bool

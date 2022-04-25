@@ -1,6 +1,7 @@
 module ModelAccessors exposing (..)
 
 import Data exposing (Area, Ascent, ClimbingRoute, Sector)
+import Date
 import Dict exposing (Dict)
 import Form
 import Model exposing (Model)
@@ -75,7 +76,7 @@ isAscentOf c a =
 
 getAscents : Model -> ClimbingRoute -> List Ascent
 getAscents m c =
-    Utilities.dictToList m.ascents |> List.filter (isAscentOf c)
+    Utilities.dictToList m.ascents |> List.filter (isAscentOf c) |> Utilities.sortByDescending (.date >> Date.toIsoString)
 
 
 

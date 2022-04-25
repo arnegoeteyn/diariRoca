@@ -63,3 +63,4 @@ type ModalContent
     | ClimbingRouteFormModal
     | AscentFormModal
     | DeleteClimbingRouteRequestModal
+    | DeleteAscentRequestModal Ascent

@@ -133,6 +133,12 @@ update msg model =
         Message.DeleteClimbingRouteConfirmation route ->
             ( MA.deleteRoute (closeModal model) route.id, Cmd.none )
 
+        Message.DeleteAscentRequested ascent ->
+            ( { model | modal = Model.DeleteAscentRequestModal ascent }, Cmd.none )
+
+        Message.DeleteAscentConfirmation ascent ->
+            ( MA.deleteAscent (closeModal model) ascent.id, Cmd.none )
+
         ToDatePickerAscentForm subMsg ->
             let
                 ( newDatePicker, dateEvent ) =

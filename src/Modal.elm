@@ -1,7 +1,7 @@
 module Modal exposing (..)
 
 import Criteria
-import Data exposing (ascentKindFromString, ascentKindToString, climbingRouteKindFromString, climbingRouteKindToString, enumAscentKind, enumClimbingRouteKind)
+import Data exposing (Ascent, ascentKindFromString, ascentKindToString, climbingRouteKindFromString, climbingRouteKindToString, enumAscentKind, enumClimbingRouteKind)
 import Dict
 import Form exposing (updateComment, updateGrade, updateKind, updateName)
 import Html exposing (Html)
@@ -63,6 +63,9 @@ viewModal model =
 
                     DeleteClimbingRouteRequestModal ->
                         deleteClimbingRouteConfirmation model
+
+                    DeleteAscentRequestModal ascent ->
+                        deleteAscentConfirmation model ascent
                 ]
             ]
 
@@ -99,6 +102,7 @@ climbingRouteFormModal model =
                         (Dict.toList model.sectors |> List.map Tuple.second)
                         model.climbingRouteForm.selected
                 , Criteria.criteriaViewSelection (Nothing :: List.map Just enumClimbingRouteKind)
+                    "kind"
                     (\k ->
                         case k of
                             Nothing ->
@@ -131,6 +135,15 @@ deleteClimbingRouteConfirmation model =
                 ]
 
 
+deleteAscentConfirmation : Model -> Ascent -> Html Msg
+deleteAscentConfirmation model ascent =
+    H.div []
+        [ H.h2 []
+            [ H.text <| Utilities.stringFromList [ "Delete" ] ]
+        , H.button [ E.onClick <| Message.DeleteAscentConfirmation ascent ] [ H.text "confirm" ]
+        ]
+
+
 ascentFormModal : Model -> Html Msg
 ascentFormModal model =
     H.div []
@@ -145,6 +158,7 @@ ascentFormModal model =
                             updateComment model.ascentForm x
                     )
                 , Criteria.criteriaViewSelection (Nothing :: List.map Just enumAscentKind)
+                    "kind"
                     (\k ->
                         case k of
                             Nothing ->
