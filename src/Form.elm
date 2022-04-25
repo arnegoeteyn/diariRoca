@@ -3,7 +3,6 @@ module Form exposing (..)
 import Data exposing (ClimbingRoute, ClimbingRouteKind(..))
 import Dict
 import Model exposing (Model)
-import Set
 
 
 

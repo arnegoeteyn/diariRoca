@@ -25,7 +25,7 @@ mainView model =
                     ]
 
 
-main : Program String Model Msg
+main : Program { storageCache : String, posixTime : Int } Model Msg
 main =
     Browser.element
         { view = mainView

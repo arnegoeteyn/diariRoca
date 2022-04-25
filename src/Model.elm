@@ -1,12 +1,15 @@
 module Model exposing (..)
 
 import Data exposing (Area, Ascent, ClimbingRoute, Sector, Trip)
+import Date exposing (Date)
 import Dict exposing (Dict)
 import Select
+import Time
 
 
 type alias Model =
     { appState : AppState
+    , startUpDate : Date
 
     -- Data
     , climbingRoutes : Dict Int ClimbingRoute
@@ -25,6 +28,7 @@ type alias Model =
 
     -- Forms
     , climbingRouteForm : ClimbingRouteForm
+    , ascentForm : AscentForm
     }
 
 
@@ -42,6 +46,10 @@ type alias ClimbingRouteForm =
     , selected : List Sector
     , selectState : Select.State
     }
+
+
+type alias AscentForm =
+    {}
 
 
 type ModalContent

@@ -2,16 +2,18 @@ module Init exposing (..)
 
 import Data exposing (Sector, jsonFileDecoder)
 import DataUtilities
+import Date
 import Dict
 import Json.Decode exposing (decodeString)
 import Message exposing (Msg)
-import Model exposing (ClimbingRouteForm, Model)
+import Model exposing (AscentForm, ClimbingRouteForm, Model)
 import Select
+import Time
 import Utilities
 
 
-init : String -> ( Model, Cmd Msg )
-init storageCache =
+init : { storageCache : String, posixTime : Int } -> ( Model, Cmd Msg )
+init { storageCache, posixTime } =
     let
         decodedStorage =
             decodeString jsonFileDecoder storageCache
@@ -27,6 +29,7 @@ init storageCache =
                 Result.Err _ ->
                     -- appstate can just default to empty dictionaries
                     Model.Ready
+      , startUpDate = Date.fromPosix Time.utc (Time.millisToPosix posixTime)
       , climbingRoutes = jsonFile.climbingRoutes
       , ascents = jsonFile.ascents
       , sectors = jsonFile.sectors
@@ -40,7 +43,10 @@ init storageCache =
       , selectedClimbingRoute = Nothing
       , mediaInput = ""
       , modal = Model.Empty
+
+      --| Forms
       , climbingRouteForm = initClimbingRouteForm
+      , ascentForm = initAscentForm
       }
     , Cmd.batch [ Cmd.none ]
     )
@@ -60,6 +66,11 @@ initClimbingRouteForm =
     , selected = []
     , selectState = Select.init "formSector"
     }
+
+
+initAscentForm : AscentForm
+initAscentForm =
+    {}
 
 
 

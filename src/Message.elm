@@ -4,6 +4,7 @@ import Data exposing (ClimbingRoute, Sector)
 import File exposing (File)
 import Model
 import Select
+import Time
 
 
 type Msg
