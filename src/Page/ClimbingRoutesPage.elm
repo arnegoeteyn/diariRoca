@@ -1,4 +1,4 @@
-module ViewClimbingRoutes exposing (..)
+module Page.ClimbingRoutesPage exposing (..)
 
 import Criteria
 import Criterium
@@ -18,6 +18,7 @@ import Select
 import Tailwind.Breakpoints as B
 import Tailwind.Utilities as Tw
 import Utilities
+import View.ClimbingRoute as ClimbingRoute
 
 
 view : Model -> Html Msg
@@ -162,26 +163,11 @@ isSelected model route =
 
 viewRouteRow : Model -> ClimbingRoute -> Html Msg
 viewRouteRow model route =
-    H.div
-        [ A.css [ Tw.flex ]
-        ]
-        [ H.div [ A.css [ Tw.w_1over6 ] ] [ H.div [] [ H.text route.grade ] ]
-        , H.div [ A.css [ Tw.w_2over6 ] ] [ viewRouteNameCell model route ]
-        , H.div [ A.css [ Tw.w_2over6 ] ] [ H.text (Data.climbingRouteKindToString route.kind) ]
-        , H.div [ A.css [ Tw.w_1over6 ] ] [ (H.text << String.fromInt << List.length) (MA.getAscents model route) ]
-        ]
-
-
-viewRouteNameCell : Model -> ClimbingRoute -> Html Msg
-viewRouteNameCell model route =
-    let
-        sector =
-            MA.getSector model route.sectorId
-    in
-    H.div []
-        [ H.div [] [ H.text route.name ]
-        , H.div [] [ H.text (Maybe.withDefault "N/A" <| Maybe.map .name sector) ]
-        ]
+    ClimbingRoute.viewRouteRow
+        { route = route
+        , sectorName = MA.getSectorName model route.sectorId
+        , ascents = MA.getAscents model route
+        }
 
 
 

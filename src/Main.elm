@@ -8,11 +8,12 @@ import Html.Styled.Events as E
 import Init exposing (init)
 import Message exposing (Msg(..))
 import Model exposing (Model, Page(..))
+import Page.AscentsPage
+import Page.ClimbingRoutesPage
 import Tailwind.Breakpoints as B
 import Tailwind.Utilities as Tw
 import Update exposing (updateWithStorage)
 import Utilities
-import ViewClimbingRoutes exposing (view)
 
 
 mainView : Model -> Html.Html Msg
@@ -24,10 +25,10 @@ mainView model =
                         Model.Ready ->
                             [ case model.page of
                                 ClimbingRoutesPage ->
-                                    ViewClimbingRoutes.view model
+                                    Page.ClimbingRoutesPage.view model
 
                                 AscentsPage ->
-                                    H.text "ascents"
+                                    Page.AscentsPage.view model
 
                                 StatsPage ->
                                     H.text "stats"

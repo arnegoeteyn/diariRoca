@@ -27,6 +27,11 @@ getSector m i =
     Dict.get i m.sectors
 
 
+getSectorName : Model -> Int -> String
+getSectorName m i =
+    getSector m i |> Maybe.map .name |> Maybe.withDefault "N/A"
+
+
 
 --| ClimbingRoute
 
@@ -34,6 +39,11 @@ getSector m i =
 getClimbingRoute : Model -> Int -> Maybe ClimbingRoute
 getClimbingRoute m i =
     Dict.get i m.climbingRoutes
+
+
+getClimbingRouteName : Model -> Int -> String
+getClimbingRouteName m i =
+    getClimbingRoute m i |> Maybe.map .name |> Maybe.withDefault "N/A"
 
 
 addRouteFromForm : Model -> Dict Int ClimbingRoute
@@ -103,7 +113,4 @@ deleteAscent m i =
 
 
 
--- deleteAscent : Model -> Int -> Dict Int Ascent
--- deleteAscent m i =
---     Dict.remove i m.ascents
 --| Trip
