@@ -1,6 +1,6 @@
 module Message exposing (..)
 
-import Data exposing (Ascent, ClimbingRoute, Sector)
+import Data exposing (Ascent, ClimbingRoute, ClimbingRouteKind, Sector)
 import DatePicker exposing (DatePicker)
 import File exposing (File)
 import Model
@@ -21,6 +21,7 @@ type Msg
     | SelectMsg (Select.Msg Sector)
     | SelectSector (Maybe Sector)
     | OnRemoveSectorSelection Sector
+    | SetClimbingRouteKindFilter (Maybe ClimbingRouteKind)
       -- Route list
     | OnClimbingRouteClicked (Maybe ClimbingRoute)
     | DeleteClimbingRouteRequested

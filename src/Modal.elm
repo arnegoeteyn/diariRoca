@@ -1,6 +1,7 @@
 module Modal exposing (..)
 
 import Criteria
+import Criterium
 import Data exposing (Ascent, ascentKindFromString, ascentKindToString, climbingRouteKindFromString, climbingRouteKindToString, enumAscentKind, enumClimbingRouteKind)
 import Dict
 import Form exposing (updateComment, updateGrade, updateKind, updateName)
@@ -77,19 +78,19 @@ climbingRouteFormModal model =
             [ H.text "New climbingroute" ]
         , H.form [ A.css [ Tw.flex_col ] ] <|
             List.map (\x -> H.div [] [ x ])
-                [ Criteria.viewMaybeTextInput "name"
+                [ Criterium.maybeTextCriterium "name"
                     model.climbingRouteForm.name
                     (\x ->
                         UpdateClimbingRouteForm <|
                             updateName model.climbingRouteForm x
                     )
-                , Criteria.viewMaybeTextInput "grade"
+                , Criterium.maybeTextCriterium "grade"
                     model.climbingRouteForm.grade
                     (\x ->
                         UpdateClimbingRouteForm <|
                             updateGrade model.climbingRouteForm x
                     )
-                , Criteria.viewMaybeTextInput "comment"
+                , Criterium.maybeTextCriterium "comment"
                     model.climbingRouteForm.comment
                     (\x ->
                         UpdateClimbingRouteForm <|
@@ -101,20 +102,7 @@ climbingRouteFormModal model =
                         model.climbingRouteForm.selectState
                         (Dict.toList model.sectors |> List.map Tuple.second)
                         model.climbingRouteForm.selected
-                , Criteria.criteriaViewSelection (Nothing :: List.map Just enumClimbingRouteKind)
-                    "kind"
-                    (\k ->
-                        case k of
-                            Nothing ->
-                                ""
-
-                            Just x ->
-                                climbingRouteKindToString x
-                    )
-                    climbingRouteKindFromString
-                    (\s ->
-                        UpdateClimbingRouteForm <| updateKind model.climbingRouteForm s
-                    )
+                , Criteria.climbingRouteKindCriterium (UpdateClimbingRouteForm << updateKind model.climbingRouteForm)
                 ]
                 ++ [ H.button [ E.onClick SaveClimbingRouteForm, A.type_ "button" ] [ H.text "Create route" ]
                    ]
@@ -151,13 +139,13 @@ ascentFormModal model =
             [ H.text "New ascent" ]
         , H.form [ A.css [ Tw.flex_col ] ] <|
             List.map (\x -> H.div [] [ x ])
-                [ Criteria.viewMaybeTextInput "comment"
+                [ Criterium.maybeTextCriterium "comment"
                     model.ascentForm.comment
                     (\x ->
                         UpdateAscentForm <|
                             updateComment model.ascentForm x
                     )
-                , Criteria.criteriaViewSelection (Nothing :: List.map Just enumAscentKind)
+                , Criterium.selectionCriterium (Nothing :: List.map Just enumAscentKind)
                     "kind"
                     (\k ->
                         case k of
@@ -171,7 +159,7 @@ ascentFormModal model =
                     (\s ->
                         UpdateAscentForm <| updateKind model.ascentForm s
                     )
-                , Criteria.dateCriteria model.ascentForm.date Init.ascentFormDatePickerSettings model.ascentForm.datePicker Message.ToDatePickerAscentForm
+                , Criterium.dateCriterium model.ascentForm.date Init.ascentFormDatePickerSettings model.ascentForm.datePicker Message.ToDatePickerAscentForm
                 ]
                 ++ [ H.button [ E.onClick SaveAscentForm, A.type_ "button" ] [ H.text "Create ascent" ]
                    ]

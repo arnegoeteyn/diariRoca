@@ -46,6 +46,7 @@ init { storageCache, posixTime } =
 
       -- UI
       , routeFilter = ""
+      , routeKindFilter = Nothing
       , selected = []
       , selectState = Select.init "sectors"
       , selectedClimbingRoute = Nothing

@@ -1,6 +1,6 @@
 module DataUtilities exposing (..)
 
-import Data exposing (ClimbingRoute, Sector)
+import Data exposing (ClimbingRoute, ClimbingRouteKind, Sector)
 import Utilities
 
 
@@ -9,13 +9,13 @@ sortRoutes =
     Utilities.sortByDescending .grade
 
 
-filterRoutes : String -> List Sector -> List ClimbingRoute -> List ClimbingRoute
-filterRoutes routeFilter selectedSectors routes =
-    let
-        filter =
-            filterRoutesByName routeFilter >> filterRoutesBySectors selectedSectors
-    in
-    filter routes
+filterRoutes : String -> List Sector -> Maybe ClimbingRouteKind -> List ClimbingRoute -> List ClimbingRoute
+filterRoutes routeFilter selectedSectors kind routes =
+    (filterRoutesByName routeFilter
+        >> filterRoutesBySectors selectedSectors
+        >> filterRoutesByKind kind
+    )
+        routes
 
 
 filterRoutesByName : String -> List ClimbingRoute -> List ClimbingRoute
@@ -31,6 +31,16 @@ matchRouteBySectors sectors route =
 filterRoutesBySectors : List Sector -> List ClimbingRoute -> List ClimbingRoute
 filterRoutesBySectors sectors =
     List.filter (matchRouteBySectors sectors)
+
+
+matchRouteByKind : Maybe ClimbingRouteKind -> ClimbingRoute -> Bool
+matchRouteByKind kind route =
+    Maybe.map (\k -> route.kind == k) kind |> Maybe.withDefault True
+
+
+filterRoutesByKind : Maybe ClimbingRouteKind -> List ClimbingRoute -> List ClimbingRoute
+filterRoutesByKind kind =
+    List.filter (matchRouteByKind kind)
 
 
 matchSectorByName : String -> Sector -> Bool

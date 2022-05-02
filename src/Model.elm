@@ -21,6 +21,7 @@ type alias Model =
 
     -- UI
     , routeFilter : String
+    , routeKindFilter : Maybe ClimbingRouteKind
     , selected : List Sector
     , selectState : Select.State
     , selectedClimbingRoute : Maybe ClimbingRoute

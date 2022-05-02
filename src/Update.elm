@@ -75,6 +75,9 @@ update msg model =
         SetRouteFilter filter ->
             ( { model | routeFilter = filter }, Cmd.none )
 
+        SetClimbingRouteKindFilter kind ->
+            ( { model | routeKindFilter = kind }, Cmd.none )
+
         SelectMsg subMsg ->
             let
                 ( updated, cmd ) =

@@ -1,7 +1,8 @@
 module ViewClimbingRoutes exposing (..)
 
 import Criteria
-import Data exposing (AscentKind(..), ClimbingRoute, ascentKindToString)
+import Criterium
+import Data exposing (AscentKind(..), ClimbingRoute, ascentKindToString, climbingRouteKindToString)
 import DataUtilities
 import Date
 import Dict
@@ -39,20 +40,30 @@ viewFilters model =
     let
         routes =
             sortedAndFilteredRoutes model
-    in
-    H.div []
-        [ H.h2 [] [ H.text <| Utilities.stringFromList [ (String.fromInt << List.length) routes, " routes " ], viewAddButton model (Message.SetModal Model.ClimbingRouteFormModal) ]
-        , H.div []
-            [ Criteria.viewTextInput
+
+        onRouteFilter =
+            Criterium.textCriterium
                 "route"
                 model.routeFilter
                 (\value -> Message.SetRouteFilter value)
-            , H.fromUnstyled <|
+
+        onSectorFilter =
+            H.fromUnstyled <|
                 Select.view
                     Init.sectorSelectConfig
                     model.selectState
                     (Dict.toList model.sectors |> List.map Tuple.second)
                     model.selected
+
+        onKindFilter =
+            Criteria.climbingRouteKindCriterium SetClimbingRouteKindFilter
+    in
+    H.div []
+        [ H.h2 [] [ H.text <| Utilities.stringFromList [ (String.fromInt << List.length) routes, " routes " ], viewAddButton model (Message.SetModal Model.ClimbingRouteFormModal) ]
+        , H.div []
+            [ onRouteFilter
+            , onSectorFilter
+            , onKindFilter
             ]
         ]
 
@@ -98,7 +109,7 @@ viewRouteMedia model route =
             (not << List.isEmpty) route.media
 
         addMediaInput =
-            Criteria.viewTextInput "media" model.mediaInput (\_ -> Message.Dummy)
+            Criterium.textCriterium "media" model.mediaInput (\_ -> Message.Dummy)
 
         addMediaButton =
             viewAddButton model ((\_ -> Message.Dummy) route)
@@ -192,4 +203,4 @@ sortedAndFilteredRoutes model =
         routes =
             Dict.toList model.climbingRoutes |> List.map Tuple.second
     in
-    (DataUtilities.filterRoutes model.routeFilter model.selected >> DataUtilities.sortRoutes) routes
+    (DataUtilities.filterRoutes model.routeFilter model.selected model.routeKindFilter >> DataUtilities.sortRoutes) routes
