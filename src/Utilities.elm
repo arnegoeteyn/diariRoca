@@ -74,3 +74,27 @@ addIfNotPresent item list =
 dictToList : Dict.Dict comparable a -> List a
 dictToList =
     Dict.toList >> List.map Tuple.second
+
+
+filterList : List ( a, Bool ) -> List a
+filterList =
+    filterAndReplaceList << List.map (\( x, y ) -> ( x, y, Nothing ))
+
+
+filterAndReplaceList : List ( a, Bool, Maybe a ) -> List a
+filterAndReplaceList list =
+    case list of
+        [] ->
+            []
+
+        ( style, b, maybeAlternative ) :: xs ->
+            if b then
+                style :: filterAndReplaceList xs
+
+            else
+                case maybeAlternative of
+                    Nothing ->
+                        filterAndReplaceList xs
+
+                    Just alternative ->
+                        alternative :: filterAndReplaceList xs

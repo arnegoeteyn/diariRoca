@@ -14,6 +14,7 @@ type Msg
     | JsonSelected File
     | JsonLoaded String
     | ExportRequested
+    | SetPage Model.Page
     | SetModal Model.ModalContent
       -- Filter
     | SetRouteFilter String

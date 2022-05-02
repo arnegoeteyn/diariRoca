@@ -1,4 +1,4 @@
-module View exposing (..)
+module ViewClimbingRoutes exposing (..)
 
 import Criteria
 import Data exposing (AscentKind(..), ClimbingRoute, ascentKindToString)
@@ -11,9 +11,10 @@ import Html.Styled.Events as E
 import Init
 import Message exposing (Msg(..))
 import Modal
-import Model exposing (Model)
+import Model exposing (Model, Page)
 import ModelAccessors as MA
 import Select
+import Tailwind.Breakpoints as B
 import Tailwind.Utilities as Tw
 import Utilities
 

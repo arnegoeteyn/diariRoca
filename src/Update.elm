@@ -35,6 +35,9 @@ update msg model =
         Dummy ->
             ( model, Cmd.none )
 
+        SetPage page ->
+            ( { model | page = page }, Cmd.none )
+
         JsonRequested ->
             ( model, File.Select.file [ "application/json" ] JsonSelected )
 

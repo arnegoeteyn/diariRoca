@@ -10,6 +10,7 @@ import Select
 type alias Model =
     { appState : AppState
     , startUpDate : Date
+    , page : Page
 
     -- Data
     , climbingRoutes : Dict Int ClimbingRoute
@@ -64,3 +65,9 @@ type ModalContent
     | AscentFormModal
     | DeleteClimbingRouteRequestModal
     | DeleteAscentRequestModal Ascent
+
+
+type Page
+    = ClimbingRoutesPage
+    | AscentsPage
+    | StatsPage

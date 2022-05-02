@@ -7,7 +7,7 @@ import DatePicker exposing (DatePicker, defaultSettings)
 import Dict
 import Json.Decode exposing (decodeString)
 import Message exposing (Msg(..))
-import Model exposing (AscentForm, ClimbingRouteForm, Model)
+import Model exposing (AscentForm, ClimbingRouteForm, Model, Page(..))
 import Select
 import Time
 import Utilities
@@ -36,6 +36,7 @@ init { storageCache, posixTime } =
                 Result.Err _ ->
                     -- appstate can just default to empty dictionaries
                     Model.Ready
+      , page = ClimbingRoutesPage
       , startUpDate = Date.fromPosix Time.utc (Time.millisToPosix posixTime)
       , climbingRoutes = jsonFile.climbingRoutes
       , ascents = jsonFile.ascents
