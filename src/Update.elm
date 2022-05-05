@@ -1,11 +1,13 @@
 module Update exposing (..)
 
+import Browser.Dom
 import Command
 import Data exposing (AscentKind(..), ClimbingRouteKind(..), Trip, encodedJsonFile, jsonFileDecoder)
 import DatePicker exposing (DateEvent(..), DatePicker)
 import File
 import File.Download
 import File.Select
+import Form exposing (newId)
 import Init
 import Json.Decode exposing (decodeString)
 import Json.Encode exposing (encode)
@@ -23,7 +25,7 @@ update msg model =
         newSelected maybeItem default =
             case maybeItem of
                 Nothing ->
-                    default
+                    []
 
                 Just item ->
                     Utilities.addIfNotPresent item default
@@ -114,7 +116,21 @@ update msg model =
             ( { model | ascentForm = form }, Cmd.none )
 
         SaveClimbingRouteForm ->
-            ( closeModal { model | climbingRoutes = MA.addRouteFromForm model }, Cmd.none )
+            let
+                id =
+                    Maybe.withDefault (newId model.climbingRoutes) model.climbingRouteForm.id
+
+                tag =
+                    "route-" ++ String.fromInt id
+
+                -- "route-container"
+                task =
+                    Browser.Dom.getElement tag
+                        |> Task.andThen (\info -> Browser.Dom.setViewport 0 (Debug.log "height" info.element.y))
+                        |> Debug.log "works"
+                        |> Task.attempt (\_ -> Dummy)
+            in
+            ( closeModal { model | climbingRoutes = MA.addRouteFromForm model }, task )
 
         SaveAscentForm ->
             ( closeModal { model | ascents = MA.addAscentFromForm model }, Cmd.none )

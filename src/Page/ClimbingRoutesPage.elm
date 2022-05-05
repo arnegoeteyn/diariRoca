@@ -25,10 +25,10 @@ view : Model -> Html Msg
 view model =
     H.div []
         [ viewFilters model
-        , H.div [ A.css [] ] <|
+        , H.div [ A.css [], A.id "route-container" ] <|
             List.map
                 (\route ->
-                    H.div [ A.css [ Tw.border, Tw.border_solid, Tw.py_4 ], E.onClick <| Message.OnClimbingRouteClicked (Just route) ]
+                    H.div [ A.id <| "route-" ++ String.fromInt route.id, A.css [ Tw.border, Tw.border_solid, Tw.py_4 ], E.onClick <| Message.OnClimbingRouteClicked (Just route) ]
                         [ viewRouteRow model route, viewRouteDetail model route ]
                 )
                 (sortedAndFilteredRoutes model)
