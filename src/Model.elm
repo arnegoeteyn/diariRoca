@@ -11,6 +11,7 @@ type alias Model =
     { appState : AppState
     , startUpDate : Date
     , page : Page
+    , modal : ModalContent
 
     -- Data
     , climbingRoutes : Dict Int ClimbingRoute
@@ -19,18 +20,24 @@ type alias Model =
     , areas : Dict Int Area
     , trips : Dict Int Trip
 
-    -- UI
+    -- Pages
+    , climbingRoutesPageModel : ClimbingRoutesPageModel
+    }
+
+
+type alias ClimbingRoutesPageModel =
+    { selectedClimbingRoute : Maybe ClimbingRoute
+
+    -- Filters
     , routeFilter : String
     , routeKindFilter : Maybe ClimbingRouteKind
     , selected : List Sector
     , selectState : Select.State
-    , selectedClimbingRoute : Maybe ClimbingRoute
-    , mediaInput : String
-    , modal : ModalContent
 
     -- Forms
     , climbingRouteForm : ClimbingRouteForm
     , ascentForm : AscentForm
+    , mediaInput : String
     }
 
 

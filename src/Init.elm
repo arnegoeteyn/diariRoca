@@ -6,8 +6,8 @@ import Date exposing (Date)
 import DatePicker exposing (DatePicker, defaultSettings)
 import Dict
 import Json.Decode exposing (decodeString)
-import Message exposing (Msg(..))
-import Model exposing (AscentForm, ClimbingRouteForm, Model, Page(..))
+import Message exposing (ClimbingRoutesPageMsg(..), Msg(..))
+import Model exposing (AscentForm, ClimbingRouteForm, ClimbingRoutesPageModel, Model, Page(..))
 import Select
 import Time
 import Utilities
@@ -25,8 +25,8 @@ init { storageCache, posixTime } =
         jsonFile =
             Result.withDefault { climbingRoutes = Dict.empty, ascents = Dict.empty, sectors = Dict.empty, areas = Dict.empty, trips = Dict.empty } <| decodedStorage
 
-        ( ascentForm, ascentFormCmd ) =
-            initAscentForm (Just date)
+        ( climbingRoutesPageModel, climbingRoutesPageCmd ) =
+            initClimbingRoutesPage date
     in
     ( { appState =
             case decodedStorage of
@@ -36,28 +36,44 @@ init { storageCache, posixTime } =
                 Result.Err _ ->
                     -- appstate can just default to empty dictionaries
                     Model.Ready
-      , page = ClimbingRoutesPage
       , startUpDate = Date.fromPosix Time.utc (Time.millisToPosix posixTime)
+      , page = ClimbingRoutesPage
+      , modal = Model.Empty
+
+      -- Data
       , climbingRoutes = jsonFile.climbingRoutes
       , ascents = jsonFile.ascents
       , sectors = jsonFile.sectors
       , areas = jsonFile.areas
       , trips = jsonFile.trips
 
-      -- UI
+      -- Pages
+      , climbingRoutesPageModel = climbingRoutesPageModel
+      }
+    , Cmd.batch [ climbingRoutesPageCmd ]
+    )
+
+
+
+--| Pages
+
+
+initClimbingRoutesPage : Date -> ( ClimbingRoutesPageModel, Cmd Msg )
+initClimbingRoutesPage date =
+    let
+        ( ascentForm, ascentFormCmd ) =
+            initAscentForm (Just date)
+    in
+    ( { climbingRouteForm = initClimbingRouteForm
+      , ascentForm = ascentForm
       , routeFilter = ""
       , routeKindFilter = Nothing
       , selected = []
       , selectState = Select.init "sectors"
       , selectedClimbingRoute = Nothing
       , mediaInput = ""
-      , modal = Model.Empty
-
-      --| Forms
-      , climbingRouteForm = initClimbingRouteForm
-      , ascentForm = ascentForm
       }
-    , Cmd.batch [ ascentFormCmd ]
+    , ascentFormCmd
     )
 
 
@@ -90,7 +106,7 @@ initAscentForm mDate =
       , id = Nothing
       , datePicker = datePicker
       }
-    , Cmd.map ToDatePickerAscentForm datePickerFx
+    , Cmd.map (ClimbingRoutesPageMessage << ToDatePickerAscentForm) datePickerFx
     )
 
 
@@ -103,32 +119,41 @@ ascentFormDatePickerSettings =
 --| Selections
 
 
-sectorSelectConfig : Select.Config Message.Msg Sector
+sectorSelectConfig : Select.Config Msg Sector
 sectorSelectConfig =
     let
-        r : Select.RequiredConfig Message.Msg Sector
+        r : Select.RequiredConfig Msg Sector
         r =
             { filter = \x y -> DataUtilities.filterSectorsByName x y |> Utilities.listToMaybe
             , toLabel = .name
-            , onSelect = Message.SelectSector
-            , toMsg = Message.SelectMsg
+            , onSelect = ClimbingRoutesPageMessage << SelectSector
+            , toMsg = wrapCrpMessage SelectMsg
             }
     in
     Select.newConfig r
         |> Select.withMultiSelection True
-        |> Select.withOnRemoveItem Message.OnRemoveSectorSelection
+        |> Select.withOnRemoveItem (wrapCrpMessage OnRemoveSectorSelection)
 
 
-formSectorSelectConfig : Select.Config Message.Msg Sector
+formSectorSelectConfig : Select.Config Msg Sector
 formSectorSelectConfig =
     let
         r : Select.RequiredConfig Message.Msg Sector
         r =
             { filter = \x y -> DataUtilities.filterSectorsByName x y |> Utilities.listToMaybe
             , toLabel = .name
-            , onSelect = Message.FormSelectSector
-            , toMsg = Message.FormSelectSectorMsg
+            , onSelect = wrapCrpMessage FormSelectSector
+            , toMsg = wrapCrpMessage FormSelectSectorMsg
             }
     in
     Select.newConfig r
-        |> Select.withOnRemoveItem Message.OnFormRemoveSectorSelection
+        |> Select.withOnRemoveItem (wrapCrpMessage OnFormRemoveSectorSelection)
+
+
+
+--| Utilities
+
+
+wrapCrpMessage : (a -> ClimbingRoutesPageMsg) -> a -> Msg
+wrapCrpMessage msg =
+    ClimbingRoutesPageMessage << msg

@@ -10,7 +10,7 @@ import Html.Styled as H exposing (Html)
 import Html.Styled.Attributes as A
 import Html.Styled.Events as E
 import Init
-import Message exposing (Msg(..))
+import Message exposing (ClimbingRoutesPageMsg(..), Msg(..))
 import Modal
 import Model exposing (Model, Page)
 import ModelAccessors as MA
@@ -28,7 +28,7 @@ view model =
         , H.div [ A.css [], A.id "route-container" ] <|
             List.map
                 (\route ->
-                    H.div [ A.id <| "route-" ++ String.fromInt route.id, A.css [ Tw.border, Tw.border_solid, Tw.py_4 ], E.onClick <| Message.OnClimbingRouteClicked (Just route) ]
+                    H.div [ A.id <| "route-" ++ String.fromInt route.id, A.css [ Tw.border, Tw.border_solid, Tw.py_4 ], E.onClick <| w OnClimbingRouteClicked (Just route) ]
                         [ viewRouteRow model route, viewRouteDetail model route ]
                 )
                 (sortedAndFilteredRoutes model)
@@ -39,28 +39,31 @@ view model =
 viewFilters : Model -> Html Msg
 viewFilters model =
     let
+        m =
+            model.climbingRoutesPageModel
+
         routes =
             sortedAndFilteredRoutes model
 
         onRouteFilter =
             Criterium.textCriterium
                 "route"
-                model.routeFilter
-                (\value -> Message.SetRouteFilter value)
+                m.routeFilter
+                (\value -> w SetRouteFilter value)
 
         onSectorFilter =
             H.fromUnstyled <|
                 Select.view
                     Init.sectorSelectConfig
-                    model.selectState
+                    m.selectState
                     (Dict.toList model.sectors |> List.map Tuple.second)
-                    model.selected
+                    m.selected
 
         onKindFilter =
-            Criteria.climbingRouteKindCriterium SetClimbingRouteKindFilter
+            Criteria.climbingRouteKindCriterium (w SetClimbingRouteKindFilter)
     in
     H.div []
-        [ H.h2 [] [ H.text <| Utilities.stringFromList [ (String.fromInt << List.length) routes, " routes " ], viewAddButton model (Message.SetModal Model.ClimbingRouteFormModal) ]
+        [ H.h2 [] [ H.text <| Utilities.stringFromList [ (String.fromInt << List.length) routes, " routes " ], viewAddButton model (SetModal Model.ClimbingRouteFormModal) ]
         , H.div []
             [ onRouteFilter
             , onSectorFilter
@@ -106,11 +109,14 @@ viewRouteImage climbingRoute =
 viewRouteMedia : Model -> ClimbingRoute -> Html Msg
 viewRouteMedia model route =
     let
+        m =
+            model.climbingRoutesPageModel
+
         hasMedia =
             (not << List.isEmpty) route.media
 
         addMediaInput =
-            Criterium.textCriterium "media" model.mediaInput (\_ -> Message.Dummy)
+            Criterium.textCriterium "media" m.mediaInput (\_ -> Message.Dummy)
 
         addMediaButton =
             viewAddButton model ((\_ -> Message.Dummy) route)
@@ -118,7 +124,7 @@ viewRouteMedia model route =
     H.div []
         [ H.div [] [ H.text <| Utilities.stringFromList [ String.fromInt <| List.length route.media, " media:" ] ]
         , if hasMedia then
-            H.ul [] <| List.map (\m -> H.li [] [ H.a [ A.css [ Tw.break_words ], A.href m, A.target "_blank" ] [ H.text m ] ]) route.media
+            H.ul [] <| List.map (\media -> H.li [] [ H.a [ A.css [ Tw.break_words ], A.href media, A.target "_blank" ] [ H.text media ] ]) route.media
 
           else
             H.text ""
@@ -158,7 +164,7 @@ viewAscentsList model route =
 
 isSelected : Model -> ClimbingRoute -> Bool
 isSelected model route =
-    model.selectedClimbingRoute == Just route
+    model.climbingRoutesPageModel.selectedClimbingRoute == Just route
 
 
 viewRouteRow : Model -> ClimbingRoute -> Html Msg
@@ -186,7 +192,15 @@ viewAddButton model msg =
 sortedAndFilteredRoutes : Model -> List ClimbingRoute
 sortedAndFilteredRoutes model =
     let
+        m =
+            model.climbingRoutesPageModel
+
         routes =
             Dict.toList model.climbingRoutes |> List.map Tuple.second
     in
-    (DataUtilities.filterRoutes model.routeFilter model.selected model.routeKindFilter >> DataUtilities.sortRoutes) routes
+    (DataUtilities.filterRoutes m.routeFilter m.selected m.routeKindFilter >> DataUtilities.sortRoutes) routes
+
+
+w : (a -> Message.ClimbingRoutesPageMsg) -> a -> Msg
+w msg =
+    ClimbingRoutesPageMessage << msg

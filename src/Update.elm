@@ -2,8 +2,8 @@ module Update exposing (..)
 
 import Browser.Dom
 import Command
-import Data exposing (AscentKind(..), ClimbingRouteKind(..), Trip, encodedJsonFile, jsonFileDecoder)
-import DatePicker exposing (DateEvent(..), DatePicker)
+import Data exposing (AscentKind(..), ClimbingRouteKind(..), encodedJsonFile, jsonFileDecoder)
+import DatePicker exposing (DateEvent(..))
 import File
 import File.Download
 import File.Select
@@ -11,8 +11,8 @@ import Form exposing (newId)
 import Init
 import Json.Decode exposing (decodeString)
 import Json.Encode exposing (encode)
-import Message exposing (Msg(..))
-import Model exposing (ModalContent(..), Model)
+import Message exposing (ClimbingRoutesPageMsg(..), Msg(..))
+import Model exposing (ClimbingRoutesPageModel, ModalContent(..), Model, Page(..))
 import ModelAccessors as MA
 import Select
 import Task
@@ -21,18 +21,6 @@ import Utilities
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    let
-        newSelected maybeItem default =
-            case maybeItem of
-                Nothing ->
-                    []
-
-                Just item ->
-                    Utilities.addIfNotPresent item default
-
-        removeFromSelected item =
-            List.filter (\c -> c /= item)
-    in
     case msg of
         Dummy ->
             ( model, Cmd.none )
@@ -74,6 +62,65 @@ update msg model =
             in
             ( model, File.Download.string "result.json" "application/json" result )
 
+        SetModal content ->
+            ( { model | modal = content }, Cmd.none )
+
+        -- Pages
+        ClimbingRoutesPageMessage crpMsg ->
+            let
+                ( newCrpModel, newCrpMsg ) =
+                    updateClimbingRoutesPage crpMsg model.climbingRoutesPageModel
+            in
+            ( { model | climbingRoutesPageModel = newCrpModel }, newCrpMsg )
+
+        -- Data
+        SaveClimbingRouteForm ->
+            let
+                id =
+                    Maybe.withDefault (newId model.climbingRoutes) model.climbingRoutesPageModel.climbingRouteForm.id
+
+                tag =
+                    "route-" ++ String.fromInt id
+
+                -- "route-container"
+                task =
+                    Browser.Dom.getElement tag
+                        |> Task.andThen (\info -> Browser.Dom.setViewport 0 info.element.y)
+                        |> Task.attempt (\_ -> Dummy)
+            in
+            ( closeModal { model | climbingRoutes = MA.addRouteFromForm model }, task )
+
+        SaveAscentForm ->
+            ( closeModal { model | ascents = MA.addAscentFromForm model }, Cmd.none )
+
+        DeleteClimbingRouteRequested ->
+            ( { model | modal = Model.DeleteClimbingRouteRequestModal }, Cmd.none )
+
+        DeleteClimbingRouteConfirmation route ->
+            ( MA.deleteRoute (closeModal model) route.id, Cmd.none )
+
+        DeleteAscentRequested ascent ->
+            ( { model | modal = Model.DeleteAscentRequestModal ascent }, Cmd.none )
+
+        DeleteAscentConfirmation ascent ->
+            ( MA.deleteAscent (closeModal model) ascent.id, Cmd.none )
+
+
+updateClimbingRoutesPage : ClimbingRoutesPageMsg -> ClimbingRoutesPageModel -> ( ClimbingRoutesPageModel, Cmd Msg )
+updateClimbingRoutesPage msg model =
+    let
+        newSelected maybeItem default =
+            case maybeItem of
+                Nothing ->
+                    []
+
+                Just item ->
+                    Utilities.addIfNotPresent item default
+
+        removeFromSelected item =
+            List.filter (\c -> c /= item)
+    in
+    case msg of
         SetRouteFilter filter ->
             ( { model | routeFilter = filter }, Cmd.none )
 
@@ -106,34 +153,11 @@ update msg model =
         OnClimbingRouteClicked maybeClimbingRoute ->
             ( { model | selectedClimbingRoute = maybeClimbingRoute }, Cmd.none )
 
-        SetModal content ->
-            ( { model | modal = content }, Cmd.none )
-
         UpdateClimbingRouteForm form ->
             ( { model | climbingRouteForm = form }, Cmd.none )
 
         UpdateAscentForm form ->
             ( { model | ascentForm = form }, Cmd.none )
-
-        SaveClimbingRouteForm ->
-            let
-                id =
-                    Maybe.withDefault (newId model.climbingRoutes) model.climbingRouteForm.id
-
-                tag =
-                    "route-" ++ String.fromInt id
-
-                -- "route-container"
-                task =
-                    Browser.Dom.getElement tag
-                        |> Task.andThen (\info -> Browser.Dom.setViewport 0 (Debug.log "height" info.element.y))
-                        |> Debug.log "works"
-                        |> Task.attempt (\_ -> Dummy)
-            in
-            ( closeModal { model | climbingRoutes = MA.addRouteFromForm model }, task )
-
-        SaveAscentForm ->
-            ( closeModal { model | ascents = MA.addAscentFromForm model }, Cmd.none )
 
         FormSelectSector maybeSector ->
             let
@@ -148,18 +172,6 @@ update msg model =
                     \f -> { f | selected = removeFromSelected sector f.selected }
             in
             ( { model | climbingRouteForm = newForm model.climbingRouteForm }, Cmd.none )
-
-        Message.DeleteClimbingRouteRequested ->
-            ( { model | modal = Model.DeleteClimbingRouteRequestModal }, Cmd.none )
-
-        Message.DeleteClimbingRouteConfirmation route ->
-            ( MA.deleteRoute (closeModal model) route.id, Cmd.none )
-
-        Message.DeleteAscentRequested ascent ->
-            ( { model | modal = Model.DeleteAscentRequestModal ascent }, Cmd.none )
-
-        Message.DeleteAscentConfirmation ascent ->
-            ( MA.deleteAscent (closeModal model) ascent.id, Cmd.none )
 
         ToDatePickerAscentForm subMsg ->
             let

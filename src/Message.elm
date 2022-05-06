@@ -1,11 +1,10 @@
 module Message exposing (..)
 
 import Data exposing (Ascent, ClimbingRoute, ClimbingRouteKind, Sector)
-import DatePicker exposing (DatePicker)
+import DatePicker
 import File exposing (File)
 import Model
 import Select
-import Time
 
 
 type Msg
@@ -14,28 +13,33 @@ type Msg
     | JsonSelected File
     | JsonLoaded String
     | ExportRequested
-    | SetPage Model.Page
     | SetModal Model.ModalContent
-      -- Filter
-    | SetRouteFilter String
+      -- Pages
+    | SetPage Model.Page
+    | ClimbingRoutesPageMessage ClimbingRoutesPageMsg
+      -- Data
+    | SaveClimbingRouteForm
+    | DeleteClimbingRouteConfirmation ClimbingRoute
+    | DeleteClimbingRouteRequested
+    | SaveAscentForm
+    | DeleteAscentConfirmation Ascent
+    | DeleteAscentRequested Ascent
+
+
+type ClimbingRoutesPageMsg
+    = -- Filter
+      SetRouteFilter String
     | SelectMsg (Select.Msg Sector)
     | SelectSector (Maybe Sector)
     | OnRemoveSectorSelection Sector
     | SetClimbingRouteKindFilter (Maybe ClimbingRouteKind)
       -- Route list
     | OnClimbingRouteClicked (Maybe ClimbingRoute)
-    | DeleteClimbingRouteRequested
-    | DeleteClimbingRouteConfirmation ClimbingRoute
-      -- Ascent List
-    | DeleteAscentRequested Ascent
-    | DeleteAscentConfirmation Ascent
       --| ClimbingRoute Form
     | UpdateClimbingRouteForm Model.ClimbingRouteForm
-    | SaveClimbingRouteForm
     | FormSelectSector (Maybe Sector)
     | FormSelectSectorMsg (Select.Msg Sector)
     | OnFormRemoveSectorSelection Sector
       --| Ascent Form
     | UpdateAscentForm Model.AscentForm
-    | SaveAscentForm
     | ToDatePickerAscentForm DatePicker.Msg

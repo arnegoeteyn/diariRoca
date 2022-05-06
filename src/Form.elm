@@ -18,10 +18,10 @@ climbingRouteFromForm : Model -> ClimbingRoute
 climbingRouteFromForm model =
     let
         form =
-            model.climbingRouteForm
+            model.climbingRoutesPageModel.climbingRouteForm
 
         id =
-            Maybe.withDefault (newId model.climbingRoutes) model.climbingRouteForm.id
+            Maybe.withDefault (newId model.climbingRoutes) model.climbingRoutesPageModel.climbingRouteForm.id
 
         sectorId =
             List.head form.selected |> Maybe.map .id |> Maybe.withDefault 1
@@ -39,14 +39,17 @@ climbingRouteFromForm model =
 ascentFromForm : Model -> Ascent
 ascentFromForm model =
     let
+        crpModel =
+            model.climbingRoutesPageModel
+
         form =
-            model.ascentForm
+            crpModel.ascentForm
 
         id =
-            Maybe.withDefault (newId model.ascents) model.ascentForm.id
+            Maybe.withDefault (newId model.ascents) crpModel.ascentForm.id
 
         routeId =
-            Maybe.withDefault -1 (Maybe.map .id model.selectedClimbingRoute)
+            Maybe.withDefault -1 (Maybe.map .id crpModel.selectedClimbingRoute)
     in
     { comment = form.comment
     , routeId = routeId
