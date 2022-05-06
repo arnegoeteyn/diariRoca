@@ -12,7 +12,6 @@ import Utilities
 
 
 
--- Check out https://package.elm-lang.org/packages/elm-explorations/test/latest to learn more about testing in Elm!
 --| Values
 
 
@@ -20,7 +19,10 @@ testRemoval : Test
 testRemoval =
     let
         ( model, _ ) =
-            Init.init ""
+            Init.init
+                { storageCache = ""
+                , posixTime = 0
+                }
 
         ( routes, ascents ) =
             data
