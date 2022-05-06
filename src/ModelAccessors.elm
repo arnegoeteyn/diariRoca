@@ -1,7 +1,7 @@
 module ModelAccessors exposing (..)
 
-import Data exposing (Area, Ascent, ClimbingRoute, Sector)
-import Date
+import Data exposing (Area, Ascent, ClimbingRoute, Sector, Trip)
+import Date exposing (Date)
 import Dict exposing (Dict)
 import Form
 import Model exposing (Model)
@@ -114,3 +114,8 @@ deleteAscent m i =
 
 
 --| Trip
+
+
+getTripFromDate : Model -> Date -> Maybe Trip
+getTripFromDate m date =
+    Dict.filter (\_ t -> Date.isBetween t.from t.to date) m.trips |> Dict.values |> List.head
