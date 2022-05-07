@@ -4,6 +4,10 @@ import Dict
 import Set exposing (Set)
 
 
+
+--| Maybe
+
+
 catMaybe : List (Maybe a) -> List a
 catMaybe l =
     List.filterMap identity l
@@ -12,6 +16,10 @@ catMaybe l =
 catMaybeSet : Set (Maybe comparable) -> Set comparable
 catMaybeSet =
     Set.toList >> catMaybe >> Set.fromList
+
+
+
+--| String
 
 
 stringFromList : List String -> String
@@ -30,6 +38,10 @@ stringFromListWith seperator list =
 
         x :: xs ->
             x ++ seperator ++ stringFromListWith seperator xs
+
+
+
+--| List
 
 
 listToMaybe : List a -> Maybe (List a)
@@ -98,3 +110,30 @@ filterAndReplaceList list =
 
                     Just alternative ->
                         alternative :: filterAndReplaceList xs
+
+
+removeFirst : (a -> Bool) -> List a -> List a
+removeFirst f l =
+    List.foldr
+        (\item ( acc, matched ) ->
+            if matched then
+                ( item :: acc, True )
+
+            else if f item then
+                ( item :: acc, False )
+
+            else
+                ( acc, True )
+        )
+        ( [], False )
+        l
+        |> Tuple.first
+
+
+
+--| Misc
+
+
+flip : (a -> b -> c) -> b -> a -> c
+flip f a b =
+    f b a

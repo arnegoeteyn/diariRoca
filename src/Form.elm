@@ -1,6 +1,6 @@
 module Form exposing (..)
 
-import Data exposing (Ascent, AscentKind(..), ClimbingRoute, ClimbingRouteKind(..))
+import Data exposing (Ascent, AscentKind(..), ClimbingRoute, ClimbingRouteKind(..), Media)
 import Dict
 import Model exposing (Model)
 
@@ -12,6 +12,10 @@ import Model exposing (Model)
 newId : Dict.Dict Int a -> Int
 newId dict =
     (Maybe.withDefault 1 <| List.head <| List.sortBy (\x -> x * -1) (Dict.keys dict)) + 1
+
+
+
+--| ClimbingRoute
 
 
 climbingRouteFromForm : Model -> ClimbingRoute
@@ -34,6 +38,15 @@ climbingRouteFromForm model =
     , id = id
     , kind = Maybe.withDefault Sport form.kind
     }
+
+
+mediaFromForm : Model -> Maybe Media
+mediaFromForm model =
+    Maybe.map2 Media model.climbingRoutesPageModel.mediaLink model.climbingRoutesPageModel.mediaLabel
+
+
+
+--| Ascent
 
 
 ascentFromForm : Model -> Ascent

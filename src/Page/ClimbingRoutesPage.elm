@@ -15,7 +15,6 @@ import Modal
 import Model exposing (Model, Page)
 import ModelAccessors as MA
 import Select
-import Tailwind.Breakpoints as B
 import Tailwind.Utilities as Tw
 import Utilities
 import View.ClimbingRoute as ClimbingRoute
@@ -116,22 +115,28 @@ viewRouteMedia model route =
             (not << List.isEmpty) route.media
 
         addMediaInput =
-            Criterium.textCriterium "media" m.mediaInput (\_ -> Message.Dummy)
-
-        addMediaButton =
-            viewAddButton model ((\_ -> Message.Dummy) route)
+            H.div []
+                [ Criterium.maybeTextCriterium "link" m.mediaLink <| w SetMediaLink
+                , Criterium.maybeTextCriterium "label" m.mediaLabel <| w SetMediaLabel
+                , viewAddButton model (AddMediaToRoute route)
+                ]
     in
     H.div []
         [ H.div [] [ H.text <| Utilities.stringFromList [ String.fromInt <| List.length route.media, " media:" ] ]
         , if hasMedia then
-            H.ul [] <| List.map (\media -> H.li [] [ H.a [ A.css [ Tw.break_words ], A.href media, A.target "_blank" ] [ H.text media ] ]) route.media
+            H.ul [] <|
+                List.map
+                    (\media ->
+                        H.li []
+                            [ H.a [ A.css [ Tw.break_words ], A.href media.link, A.target "_blank" ] [ H.text media.label ]
+                            , H.button [ E.onClick <| RemoveMedia route media ] [ H.text "x" ]
+                            ]
+                    )
+                    route.media
 
           else
             H.text ""
-        , H.div []
-            [ addMediaInput
-            , addMediaButton
-            ]
+        , addMediaInput
         ]
 
 
@@ -164,7 +169,7 @@ viewAscentsList model route =
 
 isSelected : Model -> ClimbingRoute -> Bool
 isSelected model route =
-    model.climbingRoutesPageModel.selectedClimbingRoute == Just route
+    Maybe.map .id model.climbingRoutesPageModel.selectedClimbingRoute == Just route.id
 
 
 viewRouteRow : Model -> ClimbingRoute -> Html Msg

@@ -1,6 +1,6 @@
 module Message exposing (..)
 
-import Data exposing (Ascent, ClimbingRoute, ClimbingRouteKind, Sector)
+import Data exposing (Ascent, ClimbingRoute, ClimbingRouteKind, Media, Sector)
 import DatePicker
 import File exposing (File)
 import Model
@@ -19,6 +19,8 @@ type Msg
     | ClimbingRoutesPageMessage ClimbingRoutesPageMsg
       -- Data
     | SaveClimbingRouteForm
+    | AddMediaToRoute ClimbingRoute
+    | RemoveMedia ClimbingRoute Media
     | DeleteClimbingRouteConfirmation ClimbingRoute
     | DeleteClimbingRouteRequested
     | SaveAscentForm
@@ -35,6 +37,9 @@ type ClimbingRoutesPageMsg
     | SetClimbingRouteKindFilter (Maybe ClimbingRouteKind)
       -- Route list
     | OnClimbingRouteClicked (Maybe ClimbingRoute)
+      -- Route Detail
+    | SetMediaLink (Maybe String)
+    | SetMediaLabel (Maybe String)
       --| ClimbingRoute Form
     | UpdateClimbingRouteForm Model.ClimbingRouteForm
     | FormSelectSector (Maybe Sector)

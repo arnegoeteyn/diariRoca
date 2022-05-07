@@ -2,11 +2,9 @@ module Data exposing (..)
 
 import Date exposing (Date)
 import Dict exposing (Dict)
-import Json.Decode exposing (fail, int, string, succeed)
-import Json.Decode.Extra exposing (set)
+import Json.Decode exposing (fail, field, int, string, succeed)
 import Json.Decode.Pipeline exposing (optional, required)
 import Json.Encode
-import Set exposing (Set)
 
 
 type alias JsonFile =
@@ -115,6 +113,10 @@ encodeClimbingRouteKind =
     Json.Encode.string << climbingRouteKindToString
 
 
+type alias Media =
+    { link : String, label : String }
+
+
 type alias ClimbingRoute =
     { id : Int
     , sectorId : Int
@@ -122,12 +124,17 @@ type alias ClimbingRoute =
     , grade : String
     , comment : Maybe String
     , kind : ClimbingRouteKind
-    , media : List String
+    , media : List Media
     }
 
 
 climbingRouteDecoder : Json.Decode.Decoder ClimbingRoute
 climbingRouteDecoder =
+    let
+        mediaDecoder : Json.Decode.Decoder Media
+        mediaDecoder =
+            Json.Decode.map2 Media (field "link" string) (field "label" string)
+    in
     Json.Decode.succeed ClimbingRoute
         |> required "id" int
         |> required "sectorId" int
@@ -135,11 +142,18 @@ climbingRouteDecoder =
         |> required "grade" string
         |> optional "comment" (Json.Decode.map Just string) Nothing
         |> required "kind" climbingRouteKindDecoder
-        |> optional "media" (Json.Decode.list Json.Decode.string) []
+        |> optional "media" (Json.Decode.list mediaDecoder) []
 
 
 encodeClimbingRoute : ClimbingRoute -> Json.Encode.Value
 encodeClimbingRoute route =
+    let
+        mediaEncoder media =
+            Json.Encode.object
+                [ ( "label", Json.Encode.string media.label )
+                , ( "link", Json.Encode.string media.link )
+                ]
+    in
     Json.Encode.object
         [ ( "id", Json.Encode.int route.id )
         , ( "sectorId", Json.Encode.int route.sectorId )
@@ -147,7 +161,7 @@ encodeClimbingRoute route =
         , ( "grade", Json.Encode.string route.grade )
         , ( "comment", encodeNullable Json.Encode.string route.comment )
         , ( "kind", encodeClimbingRouteKind route.kind )
-        , ( "media", Json.Encode.list Json.Encode.string route.media )
+        , ( "media", Json.Encode.list mediaEncoder route.media )
         ]
 
 

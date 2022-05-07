@@ -4,6 +4,7 @@ import Browser.Dom
 import Command
 import Data exposing (AscentKind(..), ClimbingRouteKind(..), encodedJsonFile, jsonFileDecoder)
 import DatePicker exposing (DateEvent(..))
+import Dict
 import File
 import File.Download
 import File.Select
@@ -16,7 +17,7 @@ import Model exposing (ClimbingRoutesPageModel, ModalContent(..), Model, Page(..
 import ModelAccessors as MA
 import Select
 import Task
-import Utilities
+import Utilities exposing (flip)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -82,13 +83,29 @@ update msg model =
                 tag =
                     "route-" ++ String.fromInt id
 
-                -- "route-container"
                 task =
                     Browser.Dom.getElement tag
                         |> Task.andThen (\info -> Browser.Dom.setViewport 0 info.element.y)
                         |> Task.attempt (\_ -> Dummy)
             in
             ( closeModal { model | climbingRoutes = MA.addRouteFromForm model }, task )
+
+        AddMediaToRoute route ->
+            let
+                media =
+                    Form.mediaFromForm model
+
+                newRoute =
+                    { route | media = Maybe.map (flip (::) route.media) media |> Maybe.withDefault route.media }
+            in
+            ( { model | climbingRoutes = Dict.insert route.id newRoute model.climbingRoutes }, Cmd.none )
+
+        RemoveMedia route media ->
+            let
+                newRoute =
+                    { route | media = Utilities.removeFirst ((/=) media) route.media }
+            in
+            ( { model | climbingRoutes = Dict.insert route.id newRoute model.climbingRoutes }, Cmd.none )
 
         SaveAscentForm ->
             ( closeModal { model | ascents = MA.addAscentFromForm model }, Cmd.none )
@@ -194,6 +211,12 @@ updateClimbingRoutesPage msg model =
               }
             , Cmd.none
             )
+
+        SetMediaLink maybeLink ->
+            ( { model | mediaLink = maybeLink }, Cmd.none )
+
+        SetMediaLabel maybeLabel ->
+            ( { model | mediaLabel = maybeLabel }, Cmd.none )
 
 
 updateWithStorage : Msg -> Model -> ( Model, Cmd Msg )

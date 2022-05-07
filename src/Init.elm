@@ -71,7 +71,8 @@ initClimbingRoutesPage date =
       , selected = []
       , selectState = Select.init "sectors"
       , selectedClimbingRoute = Nothing
-      , mediaInput = ""
+      , mediaLink = Nothing
+      , mediaLabel = Nothing
       }
     , ascentFormCmd
     )

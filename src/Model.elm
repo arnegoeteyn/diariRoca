@@ -37,7 +37,8 @@ type alias ClimbingRoutesPageModel =
     -- Forms
     , climbingRouteForm : ClimbingRouteForm
     , ascentForm : AscentForm
-    , mediaInput : String
+    , mediaLink : Maybe String
+    , mediaLabel : Maybe String
     }
 
 
