@@ -75,6 +75,7 @@ viewNavBar model =
                 , navLink Model.AscentsPage "Ascents"
                 , navLink Model.StatsPage "Stats"
                 , H.button [ E.onClick Message.JsonRequested ] [ H.text "Load JSON" ]
+                , H.button [ E.onClick Message.ExportRequested ] [ H.text "Save JSON" ]
                 ]
     in
     H.nav navAttributes
