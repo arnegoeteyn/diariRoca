@@ -10,6 +10,7 @@ import Message exposing (Msg(..))
 import Model exposing (Model, Page(..))
 import Page.AscentsPage
 import Page.ClimbingRoutesPage
+import Page.StatsPage
 import Tailwind.Breakpoints as B
 import Tailwind.Utilities as Tw
 import Update exposing (updateWithStorage)
@@ -31,7 +32,7 @@ mainView model =
                                     Page.AscentsPage.view model
 
                                 StatsPage ->
-                                    H.text "stats"
+                                    Page.StatsPage.view model
                             ]
 
                         Model.NotReady ->

@@ -98,6 +98,11 @@ getAscent m i =
     Dict.get i m.ascents
 
 
+getClimbingRouteFromAscent : Model -> Ascent -> Maybe ClimbingRoute
+getClimbingRouteFromAscent m c =
+    getClimbingRoute m c.routeId
+
+
 addAscentFromForm : Model -> Dict Int Ascent
 addAscentFromForm model =
     let
