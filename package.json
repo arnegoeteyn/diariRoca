@@ -1,0 +1,26 @@
+{
+  "name": "diariroca",
+  "version": "0.0.1",
+  "description": "",
+  "main": "elmapp.config.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "build": "elm-app build",
+    "test": "elm-test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/arnegoeteyn/diariRoca.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/arnegoeteyn/diariRoca/issues"
+  },
+  "homepage": "https://github.com/arnegoeteyn/diariRoca#readme",
+  "devDependencies": {
+    "create-elm-app": "^5.22.0"
+  }
+}
