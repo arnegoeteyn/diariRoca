@@ -1,4 +1,4 @@
-module Message exposing (..)
+module Message exposing (ClimbingRoutesPageMsg(..), Msg(..))
 
 import Data exposing (Ascent, ClimbingRoute, ClimbingRouteKind, Media, Sector)
 import DatePicker

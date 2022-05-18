@@ -1,9 +1,9 @@
-module Init exposing (..)
+module Init exposing (ascentFormDatePickerSettings, formSectorSelectConfig, init, sectorSelectConfig)
 
-import Data exposing (ClimbingRouteKind(..), Sector, jsonFileDecoder)
+import Data exposing (Sector, jsonFileDecoder)
 import DataUtilities
 import Date exposing (Date)
-import DatePicker exposing (DatePicker, defaultSettings)
+import DatePicker exposing (defaultSettings)
 import Dict
 import Json.Decode exposing (decodeString)
 import Message exposing (ClimbingRoutesPageMsg(..), Msg(..))
@@ -29,13 +29,7 @@ init { storageCache, posixTime } =
             initClimbingRoutesPage date
     in
     ( { appState =
-            case decodedStorage of
-                Result.Ok _ ->
-                    Model.Ready
-
-                Result.Err _ ->
-                    -- appstate can just default to empty dictionaries
-                    Model.Ready
+            Model.Ready
       , startUpDate = Date.fromPosix Time.utc (Time.millisToPosix posixTime)
       , page = ClimbingRoutesPage
       , modal = Model.Empty
@@ -50,7 +44,7 @@ init { storageCache, posixTime } =
       -- Pages
       , climbingRoutesPageModel = climbingRoutesPageModel
       }
-    , Cmd.batch [ climbingRoutesPageCmd ]
+    , climbingRoutesPageCmd
     )
 
 

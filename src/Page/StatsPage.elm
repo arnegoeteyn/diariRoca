@@ -1,4 +1,4 @@
-module Page.StatsPage exposing (..)
+module Page.StatsPage exposing (GradeCountDict, PerGradeStat, view)
 
 import Data exposing (ClimbingRouteKind(..))
 import Dict exposing (Dict)

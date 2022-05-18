@@ -1,14 +1,12 @@
-module View.Ascent exposing (..)
+module View.Ascent exposing (viewAscentRow, viewAscentTripIndicator)
 
 import Css
-import Data exposing (Ascent, ClimbingRoute)
+import Data exposing (Ascent)
 import Date
 import Dict exposing (Dict)
 import Html.Styled as H exposing (Html)
 import Html.Styled.Attributes as A
-import Html.Styled.Events as E
 import Message exposing (Msg)
-import Tailwind.Breakpoints as B
 import Tailwind.Utilities as Tw
 
 

@@ -1,7 +1,7 @@
-module UtilitiesTest exposing (..)
+module UtilitiesTest exposing (testRemoveFirst)
 
 import Expect
-import Test exposing (..)
+import Test exposing (Test, describe, test)
 import Utilities
 
 

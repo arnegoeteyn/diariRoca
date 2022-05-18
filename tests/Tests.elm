@@ -1,4 +1,4 @@
-module Tests exposing (..)
+module Tests exposing (testRemoval)
 
 import Data exposing (Ascent, AscentKind(..), ClimbingRoute)
 import Date exposing (Date)
@@ -7,7 +7,7 @@ import Expect
 import Init
 import Model exposing (Model)
 import ModelAccessors as MA
-import Test exposing (..)
+import Test exposing (Test, describe, test)
 import Utilities
 
 

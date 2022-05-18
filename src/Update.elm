@@ -1,8 +1,8 @@
-module Update exposing (..)
+module Update exposing (updateWithStorage)
 
 import Browser.Dom
 import Command
-import Data exposing (AscentKind(..), ClimbingRouteKind(..), encodedJsonFile, jsonFileDecoder)
+import Data exposing (encodedJsonFile, jsonFileDecoder)
 import DatePicker exposing (DateEvent(..))
 import Dict
 import File
@@ -13,7 +13,7 @@ import Init
 import Json.Decode exposing (decodeString)
 import Json.Encode exposing (encode)
 import Message exposing (ClimbingRoutesPageMsg(..), Msg(..))
-import Model exposing (ClimbingRoutesPageModel, ModalContent(..), Model, Page(..))
+import Model exposing (ClimbingRoutesPageModel, ModalContent(..), Model)
 import ModelAccessors as MA
 import Select
 import Task

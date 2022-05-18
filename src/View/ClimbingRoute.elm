@@ -1,11 +1,9 @@
-module View.ClimbingRoute exposing (..)
+module View.ClimbingRoute exposing (viewRouteRow)
 
 import Data exposing (Ascent, ClimbingRoute)
 import Html.Styled as H exposing (Html)
 import Html.Styled.Attributes as A
-import Html.Styled.Events as E
 import Message exposing (Msg)
-import Tailwind.Breakpoints as B
 import Tailwind.Utilities as Tw
 
 

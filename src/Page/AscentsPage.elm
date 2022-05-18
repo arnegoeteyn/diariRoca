@@ -1,4 +1,4 @@
-module Page.AscentsPage exposing (..)
+module Page.AscentsPage exposing (view)
 
 import Css
 import Data exposing (Ascent, Trip)
@@ -43,13 +43,9 @@ viewAscentRow model ascent =
 
 sortedAndFilteredAscents : Model -> List Ascent
 sortedAndFilteredAscents model =
-    let
-        ascents =
-            Dict.toList model.ascents
-                |> List.map Tuple.second
-                |> Utilities.sortByDescending (.date >> Date.toIsoString)
-    in
-    ascents
+    Dict.toList model.ascents
+        |> List.map Tuple.second
+        |> Utilities.sortByDescending (.date >> Date.toIsoString)
 
 
 tripColorDict : Dict Int Trip -> Dict Int Css.Style

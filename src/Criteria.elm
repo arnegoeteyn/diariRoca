@@ -1,7 +1,7 @@
-module Criteria exposing (..)
+module Criteria exposing (climbingRouteKindCriterium)
 
 import Criterium
-import Data exposing (ClimbingRoute, ClimbingRouteKind, climbingRouteKindToString, enumClimbingRouteKind)
+import Data exposing (ClimbingRouteKind, climbingRouteKindToString, enumClimbingRouteKind)
 import Html.Styled as H
 
 

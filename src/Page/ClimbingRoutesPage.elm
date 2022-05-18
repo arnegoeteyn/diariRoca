@@ -1,8 +1,8 @@
-module Page.ClimbingRoutesPage exposing (..)
+module Page.ClimbingRoutesPage exposing (view)
 
 import Criteria
 import Criterium
-import Data exposing (AscentKind(..), ClimbingRoute, ascentKindToString, climbingRouteKindToString)
+import Data exposing (ClimbingRoute, ascentKindToString)
 import DataUtilities
 import Date
 import Dict
@@ -12,7 +12,7 @@ import Html.Styled.Events as E
 import Init
 import Message exposing (ClimbingRoutesPageMsg(..), Msg(..))
 import Modal
-import Model exposing (Model, Page)
+import Model exposing (Model)
 import ModelAccessors as MA
 import Select
 import Tailwind.Utilities as Tw
@@ -93,15 +93,15 @@ viewRouteDetail model route =
 
 
 viewRouteInfo : Model -> ClimbingRoute -> Html Msg
-viewRouteInfo model climbingRoute =
+viewRouteInfo _ climbingRoute =
     H.div [ A.css [] ]
         [ H.text <| Maybe.withDefault "" climbingRoute.comment
         ]
 
 
 viewRouteImage : ClimbingRoute -> Html Msg
-viewRouteImage climbingRoute =
-    H.img (A.src "https://www.barcelona-tourist-guide.com/images/ext/attractions/montserrat/L550/montserrat-barcelona-29.jpg" :: [ A.css [ Tw.col_auto, Tw.mx_auto ] ])
+viewRouteImage _ =
+    H.img [ A.src "https://www.barcelona-tourist-guide.com/images/ext/attractions/montserrat/L550/montserrat-barcelona-29.jpg", A.css [ Tw.col_auto, Tw.mx_auto ] ]
         []
 
 
@@ -186,7 +186,7 @@ viewRouteRow model route =
 
 
 viewAddButton : Model -> Msg -> Html Msg
-viewAddButton model msg =
+viewAddButton _ msg =
     H.button [ E.onClick msg ] [ H.text "+" ]
 
 

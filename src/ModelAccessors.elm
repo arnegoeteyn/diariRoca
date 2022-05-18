@@ -1,12 +1,11 @@
-module ModelAccessors exposing (..)
+module ModelAccessors exposing (addAscentFromForm, addRouteFromForm, deleteAscent, deleteRoute, getAscents, getClimbingRoute, getClimbingRouteName, getSector, getSectorName, getTripFromDate, isAscentOf)
 
 import Data exposing (Area, Ascent, ClimbingRoute, Sector, Trip)
 import Date exposing (Date)
 import Dict exposing (Dict)
 import Form
 import Model exposing (Model)
-import Set
-import Utilities exposing (catMaybe)
+import Utilities
 
 
 

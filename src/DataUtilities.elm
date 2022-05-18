@@ -1,4 +1,4 @@
-module DataUtilities exposing (..)
+module DataUtilities exposing (filterRoutes, filterSectorsByName, sortRoutes)
 
 import Data exposing (ClimbingRoute, ClimbingRouteKind, Sector)
 import Utilities

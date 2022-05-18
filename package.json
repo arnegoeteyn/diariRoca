@@ -22,5 +22,8 @@
   "homepage": "https://github.com/arnegoeteyn/diariRoca#readme",
   "devDependencies": {
     "create-elm-app": "^5.22.0"
+  },
+  "dependencies": {
+    "elm-review": "^2.7.2"
   }
 }

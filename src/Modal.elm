@@ -1,8 +1,8 @@
-module Modal exposing (..)
+module Modal exposing (viewModal)
 
 import Criteria
 import Criterium
-import Data exposing (Ascent, ascentKindFromString, ascentKindToString, climbingRouteKindFromString, climbingRouteKindToString, enumAscentKind, enumClimbingRouteKind)
+import Data exposing (Ascent, ascentKindFromString, ascentKindToString, enumAscentKind)
 import Dict
 import Form exposing (updateComment, updateGrade, updateKind, updateName)
 import Html exposing (Html)
@@ -138,7 +138,7 @@ deleteClimbingRouteConfirmation model =
 
 
 deleteAscentConfirmation : Model -> Ascent -> Html Msg
-deleteAscentConfirmation model ascent =
+deleteAscentConfirmation _ ascent =
     H.div []
         [ H.h2 []
             [ H.text <| Utilities.stringFromList [ "Delete" ] ]

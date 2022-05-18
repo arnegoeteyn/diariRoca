@@ -1,12 +1,11 @@
-module Criterium exposing (..)
+module Criterium exposing (dateCriterium, maybeTextCriterium, selectionCriterium, textCriterium)
 
 import Date exposing (Date)
 import DatePicker
-import Html exposing (Html)
+import Html
 import Html.Styled as H
 import Html.Styled.Attributes as A
 import Html.Styled.Events as E
-import Message exposing (Msg(..))
 
 
 textCriterium : String -> String -> (String -> msg) -> H.Html msg
