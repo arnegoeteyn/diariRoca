@@ -12,6 +12,7 @@ type alias Model =
     , startUpDate : Date
     , page : Page
     , modal : ModalContent
+    , settingsOpen : Bool
 
     -- Data
     , climbingRoutes : Dict Int ClimbingRoute

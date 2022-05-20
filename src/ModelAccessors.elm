@@ -1,4 +1,4 @@
-module ModelAccessors exposing (addAscentFromForm, addRouteFromForm, deleteAscent, deleteRoute, getAscents, getClimbingRoute, getClimbingRouteName, getSector, getSectorName, getTripFromDate, isAscentOf)
+module ModelAccessors exposing (..)
 
 import Data exposing (Area, Ascent, ClimbingRoute, Sector, Trip)
 import Date exposing (Date)
@@ -38,11 +38,6 @@ getSectorName m i =
 getClimbingRoute : Model -> Int -> Maybe ClimbingRoute
 getClimbingRoute m i =
     Dict.get i m.climbingRoutes
-
-
-getClimbingRouteName : Model -> Int -> String
-getClimbingRouteName m i =
-    getClimbingRoute m i |> Maybe.map .name |> Maybe.withDefault "N/A"
 
 
 addRouteFromForm : Model -> Dict Int ClimbingRoute

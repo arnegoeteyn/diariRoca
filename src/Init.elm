@@ -33,6 +33,7 @@ init { storageCache, posixTime } =
       , startUpDate = Date.fromPosix Time.utc (Time.millisToPosix posixTime)
       , page = ClimbingRoutesPage
       , modal = Model.Empty
+      , settingsOpen = False
 
       -- Data
       , climbingRoutes = jsonFile.climbingRoutes

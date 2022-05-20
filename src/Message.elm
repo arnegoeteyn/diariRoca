@@ -14,6 +14,7 @@ type Msg
     | JsonLoaded String
     | ExportRequested
     | SetModal Model.ModalContent
+    | ToggleSettings
       -- Pages
     | SetPage Model.Page
     | ClimbingRoutesPageMessage ClimbingRoutesPageMsg

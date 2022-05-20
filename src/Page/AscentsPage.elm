@@ -19,8 +19,7 @@ import View.Ascent as Ascent exposing (viewAscentTripIndicator)
 view : Model -> H.Html Msg
 view model =
     H.div []
-        [ H.text "ascents"
-        , H.div [ A.css [] ] <|
+        [ H.div [ A.css [] ] <|
             List.map
                 (\ascent ->
                     H.div [ A.css [ Tw.flex, Tw.flex_row ], E.onClick Dummy ]
@@ -34,7 +33,15 @@ view model =
 
 viewAscentRow : Model -> Ascent -> H.Html Msg
 viewAscentRow model ascent =
-    Ascent.viewAscentRow { ascent = ascent, routeName = MA.getClimbingRouteName model ascent.routeId }
+    let
+        maybeRoute =
+            MA.getClimbingRoute model ascent.routeId
+
+        ( routeName, routeGrade ) =
+            Maybe.map (\route -> ( route.name, route.grade )) maybeRoute
+                |> Maybe.withDefault ( "N/A", "N/A" )
+    in
+    Ascent.viewAscentRow { ascent = ascent, routeName = routeName, routeGrade = routeGrade }
 
 
 

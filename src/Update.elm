@@ -66,6 +66,9 @@ update msg model =
         SetModal content ->
             ( { model | modal = content }, Cmd.none )
 
+        ToggleSettings ->
+            ( { model | settingsOpen = not model.settingsOpen }, Cmd.none )
+
         -- Pages
         ClimbingRoutesPageMessage crpMsg ->
             let
