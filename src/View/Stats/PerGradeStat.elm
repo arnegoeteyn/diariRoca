@@ -1,58 +1,56 @@
-module View.Stats.PerGradeStat exposing (countPerGrade, viewChart, viewTable)
+module View.Stats.PerGradeStat exposing (countPerGrade, viewChart, viewHeader, viewTable)
 
 import Axis
 import Data exposing (ClimbingRouteKind(..))
-import Dict exposing (Dict)
+import Dict
 import Html.Styled as H
-import Html.Styled.Attributes as A
 import Message exposing (Msg)
 import Model exposing (Model)
 import ModelAccessors as MA
-import Scale exposing (BandConfig, BandScale, ContinuousScale, defaultBandConfig)
+import Scale exposing (BandScale, ContinuousScale, bandwidth, defaultBandConfig)
 import Set
-import Tailwind.Utilities as Tw
-import Time
 import TypedSvg exposing (g, rect, style, svg, text_)
-import TypedSvg.Attributes exposing (class, textAnchor, transform, viewBox)
+import TypedSvg.Attributes exposing (alignmentBaseline, class, fontSize, transform, viewBox)
 import TypedSvg.Attributes.InPx exposing (height, width, x, y)
 import TypedSvg.Core exposing (Svg, text)
-import TypedSvg.Types exposing (AnchorAlignment(..), Transform(..))
+import TypedSvg.Types exposing (AlignmentBaseline(..), AnchorAlignment(..), Transform(..), px)
 
 
-viewTable : PerGradeStat -> H.Html Msg
-viewTable ( kind, stats ) =
+viewHeader : PerGradeStat -> H.Html Msg
+viewHeader ( kind, stats ) =
     let
         count =
             List.foldl (Tuple.second >> (+)) 0 stats
-
-        title =
+    in
+    H.h2 []
+        [ H.text <|
             case kind of
                 Sport ->
                     "Sport Routes: " ++ String.fromInt count
 
                 Boulder ->
                     "Boulders: " ++ String.fromInt count
-    in
-    H.div []
-        [ H.h2 []
-            [ H.text title ]
-        , H.table
-            []
-          <|
-            List.map
-                (\stat ->
-                    H.tr []
-                        [ H.td [] [ H.text <| Tuple.first stat ]
-                        , H.td [] [ H.text <| String.fromInt <| Tuple.second stat ]
-                        ]
-                )
-                (List.sortBy Tuple.first stats)
         ]
+
+
+viewTable : PerGradeStat -> H.Html Msg
+viewTable ( kind, stats ) =
+    H.table
+        []
+    <|
+        List.map
+            (\stat ->
+                H.tr []
+                    [ H.td [] [ H.text <| Tuple.first stat ]
+                    , H.td [] [ H.text <| String.fromInt <| Tuple.second stat ]
+                    ]
+            )
+            (List.sortBy Tuple.first stats)
 
 
 w : Float
 w =
-    900
+    450
 
 
 h : Float
@@ -65,47 +63,52 @@ padding =
     30
 
 
-xScale : GradeCount -> BandScale String
-xScale stats =
-    List.map Tuple.first stats
-        |> Scale.band { defaultBandConfig | paddingInner = 0.1, paddingOuter = 0.2 } ( 0, w - 2 * padding )
-
-
-yScale : GradeCount -> ContinuousScale Float
-yScale grades =
+xScale : GradeCount -> ContinuousScale Float
+xScale grades =
     Scale.linear
-        ( h - 2 * padding, 0 )
+        ( 0, w - 2 * padding )
         ( 0, Maybe.map (toFloat >> (*) 1.25) (List.maximum (List.map Tuple.second grades)) |> Maybe.withDefault 5 )
 
 
+yScale : GradeCount -> BandScale String
+yScale grades =
+    List.map Tuple.first grades
+        |> List.reverse
+        |> Scale.band { defaultBandConfig | paddingInner = 0.1, paddingOuter = 0.2 } ( 0, h - 2 * padding )
+
+
 xAxis : GradeCount -> Svg msg
-xAxis stats =
-    Axis.bottom [] (Scale.toRenderable identity (xScale stats))
+xAxis grades =
+    Axis.bottom [ Axis.tickCount 5 ] (xScale grades)
 
 
 yAxis : GradeCount -> Svg msg
 yAxis grades =
-    Axis.left [ Axis.tickCount 5 ] (yScale grades)
+    Axis.left [] (Scale.toRenderable identity (yScale grades))
 
 
-column : BandScale String -> ContinuousScale Float -> ( String, Int ) -> Svg msg
+column : ContinuousScale Float -> BandScale String -> ( String, Int ) -> Svg msg
 column calcXScale calcYScale ( grade, count ) =
     let
         fCount =
             toFloat count
+
+        barSize =
+            bandwidth calcYScale
     in
     g [ class [ "column" ] ]
         [ rect
-            [ x <| Scale.convert calcXScale grade
-            , y <| Scale.convert calcYScale fCount
-            , width <| Scale.bandwidth calcXScale
-            , height <| h - Scale.convert calcYScale fCount - 2 * padding
+            [ x <| 1
+            , y <| Scale.convert calcYScale grade
+            , width <| Scale.convert calcXScale fCount
+            , height <| Scale.bandwidth calcYScale
             ]
             []
         , text_
-            [ x <| Scale.convert (Scale.toRenderable identity calcXScale) grade
-            , y <| Scale.convert calcYScale fCount - 5
-            , textAnchor AnchorMiddle
+            [ x <| Scale.convert calcXScale fCount + 10
+            , y <| Scale.convert calcYScale grade + (barSize / 2)
+            , fontSize (px 10)
+            , alignmentBaseline AlignmentCentral
             ]
             [ text <| String.fromInt count ]
         ]
@@ -120,10 +123,10 @@ view ( _, stats ) =
             .column:hover rect { fill: rgb(118, 214, 78); }
             .column:hover text { display: inline; }
           """ ]
-        , g [ transform [ Translate (padding - 1) (h - padding) ] ]
-            [ xAxis stats ]
         , g [ transform [ Translate (padding - 1) padding ] ]
             [ yAxis stats ]
+        , g [ transform [ Translate (padding - 1) (h - padding) ] ]
+            [ xAxis stats ]
         , g [ transform [ Translate padding padding ], class [ "series" ] ] <|
             List.map (column (xScale stats) (yScale stats)) stats
         ]
