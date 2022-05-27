@@ -1,17 +1,18 @@
 module Modal exposing (viewModal)
 
-import Criteria
-import Criterium
 import Data exposing (Ascent, ascentKindFromString, ascentKindToString, enumAscentKind)
 import Dict
-import Form exposing (updateComment, updateGrade, updateKind, updateName)
+import Form.View
+import Forms.Criteria
+import Forms.Criterium
+import Forms.Forms exposing (updateComment, updateGrade, updateKind, updateName)
 import Html exposing (Html)
 import Html.Styled as H exposing (Html)
 import Html.Styled.Attributes as A
 import Html.Styled.Events as E
 import Init
 import Json.Decode as Decode
-import Message exposing (ClimbingRoutesPageMsg(..), Msg(..))
+import Message exposing (ClimbingRoutesPageMsg(..), FormMsg(..), Msg(..))
 import Model exposing (ModalContent(..), Model)
 import Select
 import Tailwind.Utilities as Tw
@@ -56,6 +57,12 @@ viewModal model =
                     Empty ->
                         H.text ""
 
+                    AreaFormModal ->
+                        areaFormModal model
+
+                    SectorFormModal ->
+                        sectorFormModal model
+
                     ClimbingRouteFormModal ->
                         climbingRouteFormModal model
 
@@ -71,6 +78,16 @@ viewModal model =
             ]
 
 
+areaFormModal : Model -> Html Msg
+areaFormModal model =
+    Forms.Forms.areaForm model
+
+
+sectorFormModal : Model -> Html Msg
+sectorFormModal model =
+    Forms.Forms.sectorForm model
+
+
 climbingRouteFormModal : Model -> Html Msg
 climbingRouteFormModal model =
     let
@@ -82,40 +99,55 @@ climbingRouteFormModal model =
 
         f =
             m.climbingRouteForm
+
+        formConfig : Form.View.ViewConfig Model.ClimbingRouteFormValues Msg
+        formConfig =
+            { onChange = FormMessage << ClimbingRouteValues
+            , action = "Save route"
+            , loading = "Saving..."
+            , validation = Form.View.ValidateOnSubmit
+            }
     in
     H.div []
         [ H.h2 []
             [ H.text "New climbingroute" ]
-        , H.form [ A.css [ Tw.flex_col ] ] <|
-            List.map (\x -> H.div [] [ x ])
-                [ Criterium.maybeTextCriterium "name"
-                    f.name
-                    (\x ->
-                        w UpdateClimbingRouteForm <|
-                            updateName f x
-                    )
-                , Criterium.maybeTextCriterium "grade"
-                    m.climbingRouteForm.grade
-                    (\x ->
-                        w UpdateClimbingRouteForm <|
-                            updateGrade f x
-                    )
-                , Criterium.maybeTextCriterium "comment"
-                    m.climbingRouteForm.comment
-                    (\x ->
-                        w UpdateClimbingRouteForm <|
-                            updateComment f x
-                    )
-                , H.fromUnstyled <|
-                    Select.view
-                        Init.formSectorSelectConfig
-                        f.selectState
-                        (Dict.toList model.sectors |> List.map Tuple.second)
-                        f.selected
-                , Criteria.climbingRouteKindCriterium (w UpdateClimbingRouteForm << updateKind f)
-                ]
-                ++ [ H.button [ E.onClick SaveClimbingRouteForm, A.type_ "button" ] [ H.text "Create route" ]
-                   ]
+
+        -- ,
+        --  H.fromUnstyled <|
+        --     Form.View.asHtml
+        --         formConfig
+        --         (Forms.Forms.climbingRouteForm model)
+        --         model.climbingRouteForm
+        -- , H.form [ A.css [ Tw.flex_col ] ] <|
+        --     List.map (\x -> H.div [] [ x ])
+        --         [ Criterium.maybeTextCriterium "name"
+        --             f.name
+        --             (\x ->
+        --                 w UpdateClimbingRouteForm <|
+        --                     updateName f x
+        --             )
+        --         , Criterium.maybeTextCriterium "grade"
+        --             m.climbingRouteForm.grade
+        --             (\x ->
+        --                 w UpdateClimbingRouteForm <|
+        --                     updateGrade f x
+        --             )
+        --         , Criterium.maybeTextCriterium "comment"
+        --             m.climbingRouteForm.comment
+        --             (\x ->
+        --                 w UpdateClimbingRouteForm <|
+        --                     updateComment f x
+        --             )
+        --         , H.fromUnstyled <|
+        --             Select.view
+        --                 Init.formSectorSelectConfig
+        --                 f.selectState
+        --                 (Dict.toList model.sectors |> List.map Tuple.second)
+        --                 f.selected
+        --         , Criteria.climbingRouteKindCriterium (w UpdateClimbingRouteForm << updateKind f)
+        --         ]
+        --         ++ [ H.button [ E.onClick SaveClimbingRouteForm, A.type_ "button" ] [ H.text "Create route" ]
+        --            ]
         ]
 
 
@@ -163,27 +195,26 @@ ascentFormModal model =
             [ H.text "New ascent" ]
         , H.form [ A.css [ Tw.flex_col ] ] <|
             List.map (\x -> H.div [] [ x ])
-                [ Criterium.maybeTextCriterium "comment"
-                    f.comment
-                    (\x ->
-                        w UpdateAscentForm <|
-                            updateComment f x
-                    )
-                , Criterium.selectionCriterium (Nothing :: List.map Just enumAscentKind)
-                    "kind"
-                    (\k ->
-                        case k of
-                            Nothing ->
-                                ""
-
-                            Just x ->
-                                ascentKindToString x
-                    )
-                    ascentKindFromString
-                    (\s ->
-                        w UpdateAscentForm <| updateKind f s
-                    )
-                , Criterium.dateCriterium f.date Init.ascentFormDatePickerSettings f.datePicker (w ToDatePickerAscentForm)
+                [--      Forms.Criterium.maybeTextCriterium "comment"
+                 --     f.comment
+                 --     (\x ->
+                 --         w UpdateAscentForm <|
+                 --             updateComment f x
+                 --     )
+                 -- , Forms.Criterium.selectionCriterium (Nothing :: List.map Just enumAscentKind)
+                 --     "kind"
+                 --     (\k ->
+                 --         case k of
+                 --             Nothing ->
+                 --                 ""
+                 --             Just x ->
+                 --                 ascentKindToString x
+                 --     )
+                 --     ascentKindFromString
+                 --     (\s ->
+                 --         w UpdateAscentForm <| updateKind f s
+                 --     )
+                 -- , Forms.Criterium.dateCriterium f.date Init.ascentFormDatePickerSettings f.datePicker (w ToDatePickerAscentForm)
                 ]
                 ++ [ H.button [ E.onClick SaveAscentForm, A.type_ "button" ] [ H.text "Create ascent" ]
                    ]

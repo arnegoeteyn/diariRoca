@@ -3,7 +3,7 @@ module ModelAccessors exposing (..)
 import Data exposing (Area, Ascent, ClimbingRoute, Sector, Trip)
 import Date exposing (Date)
 import Dict exposing (Dict)
-import Form
+import Forms.Forms
 import Model exposing (Model)
 import Utilities
 
@@ -44,7 +44,7 @@ addRouteFromForm : Model -> Dict Int ClimbingRoute
 addRouteFromForm model =
     let
         newRoute =
-            Form.climbingRouteFromForm model
+            Forms.Forms.climbingRouteFromForm model
     in
     Dict.insert newRoute.id newRoute model.climbingRoutes
 
@@ -101,7 +101,7 @@ addAscentFromForm : Model -> Dict Int Ascent
 addAscentFromForm model =
     let
         newAscent =
-            Form.ascentFromForm model
+            Forms.Forms.ascentFromForm model
     in
     Dict.insert newAscent.id newAscent model.ascents
 

@@ -1,9 +1,11 @@
-module Message exposing (ClimbingRoutesPageMsg(..), Msg(..))
+module Message exposing (..)
 
-import Data exposing (Ascent, ClimbingRoute, ClimbingRouteKind, Media, Sector)
+import Data exposing (Area, Ascent, ClimbingRoute, ClimbingRouteKind, Media, Sector)
 import DatePicker
 import File exposing (File)
-import Model
+import Form.View
+import Forms.Form exposing (Form)
+import Model exposing (AreaForm, AreaFormValues, ClimbingRouteFormValues, SectorForm, SectorFormValues, ValidatedSectorFormValuesConstructor)
 import Select
 
 
@@ -13,12 +15,14 @@ type Msg
     | JsonSelected File
     | JsonLoaded String
     | ExportRequested
-    | SetModal Model.ModalContent
+    | SetModal Model.ModalContent -- TODO: Should not be a message
     | ToggleSettings
       -- Pages
     | SetPage Model.Page
     | ClimbingRoutesPageMessage ClimbingRoutesPageMsg
       -- Data
+    | OpenAreaForm (Maybe Area)
+    | OpenSectorForm (Maybe Area)
     | SaveClimbingRouteForm
     | AddMediaToRoute ClimbingRoute
     | RemoveMedia ClimbingRoute Media
@@ -27,6 +31,8 @@ type Msg
     | SaveAscentForm
     | DeleteAscentConfirmation Ascent
     | DeleteAscentRequested Ascent
+      -- Extensions
+    | FormMessage FormMsg
 
 
 type ClimbingRoutesPageMsg
@@ -49,3 +55,20 @@ type ClimbingRoutesPageMsg
       --| Ascent Form
     | UpdateAscentForm Model.AscentForm
     | ToDatePickerAscentForm DatePicker.Msg
+
+
+
+--| Forms
+
+
+type FormMsg
+    = UpdateAreaForm AreaForm
+    | SaveAreaForm
+      -- Sector
+    | UpdateSectorForm SectorForm
+    | SectorFormSelectArea (Maybe Area)
+    | SectorFormSelectAreaMsg (Select.Msg Area)
+    | SaveSectorForm
+      -- ClimbingRoute
+    | NewClimbingRoute ClimbingRoute
+    | ClimbingRouteValues (Form.View.Model ClimbingRouteFormValues)

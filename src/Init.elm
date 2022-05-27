@@ -1,13 +1,15 @@
-module Init exposing (ascentFormDatePickerSettings, formSectorSelectConfig, init, sectorSelectConfig)
+module Init exposing (..)
 
-import Data exposing (Sector, jsonFileDecoder)
+import Data exposing (Area, Sector, jsonFileDecoder)
 import DataUtilities
 import Date exposing (Date)
 import DatePicker exposing (defaultSettings)
 import Dict
+import Form.View
+import Forms.Form exposing (Form(..))
 import Json.Decode exposing (decodeString)
-import Message exposing (ClimbingRoutesPageMsg(..), Msg(..))
-import Model exposing (AscentForm, ClimbingRouteForm, ClimbingRoutesPageModel, Model, Page(..))
+import Message exposing (ClimbingRoutesPageMsg(..), FormMsg(..), Msg(..))
+import Model exposing (AreaForm, AreaFormValues, AscentForm, ClimbingRouteForm, ClimbingRoutesPageModel, Model, Page(..), SectorForm, SectorFormValues, ValidatedSectorFormValuesConstructor)
 import Select
 import Time
 import Utilities
@@ -42,6 +44,13 @@ init { storageCache, posixTime } =
       , areas = jsonFile.areas
       , trips = jsonFile.trips
 
+      -- Forms
+      , areaForm = initAreaForm
+      , sectorForm = initSectorForm
+      , climbingRouteForm = Idle { name = "", grade = "" }
+      , areaFormId = -1
+      , sectorFormId = -1
+
       -- Pages
       , climbingRoutesPageModel = climbingRoutesPageModel
       }
@@ -49,7 +58,38 @@ init { storageCache, posixTime } =
     )
 
 
+initAreaForm : AreaForm
+initAreaForm =
+    Idle
+        { name = ""
+        , country = ""
+        }
 
+
+initSectorForm : SectorForm
+initSectorForm =
+    Idle
+        { name = ""
+        , areaId = ( [], Select.init "sectorFormAreaId" )
+        }
+
+
+sectorFormAreaSelectConfig : Select.Config Msg Area
+sectorFormAreaSelectConfig =
+    let
+        r : Select.RequiredConfig Message.Msg Area
+        r =
+            { filter = \x y -> DataUtilities.filterAreasByName x y |> Utilities.listToMaybe
+            , toLabel = .name
+            , onSelect = FormMessage << SectorFormSelectArea
+            , toMsg = FormMessage << SectorFormSelectAreaMsg
+            }
+    in
+    Select.newConfig r
+
+
+
+-- |> Select.withOnRemoveItem (wrapCrpMessage OnFormRemoveSectorSelection)
 --| Pages
 
 

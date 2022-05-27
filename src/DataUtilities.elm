@@ -1,7 +1,56 @@
-module DataUtilities exposing (filterRoutes, filterSectorsByName, sortRoutes)
+module DataUtilities exposing (filterAreasByName, filterRoutes, filterSectorsByName, sortRoutes)
 
-import Data exposing (ClimbingRoute, ClimbingRouteKind, Sector)
+import Data exposing (Area, ClimbingRoute, ClimbingRouteKind, Sector)
 import Utilities
+
+
+type alias Match a =
+    String -> a -> Bool
+
+
+type alias Filter a =
+    String -> List a -> List a
+
+
+
+-- | Generic
+
+
+matchByName : Match { a | name : String }
+matchByName filter item =
+    String.contains (String.toLower filter) (String.toLower item.name)
+
+
+
+--| Area
+
+
+matchAreaByName : Match Area
+matchAreaByName =
+    matchByName
+
+
+filterAreasByName : Filter Area
+filterAreasByName filter areas =
+    List.filter (matchAreaByName filter) areas
+
+
+
+--| Sector
+
+
+matchSectorByName : Match Sector
+matchSectorByName =
+    matchByName
+
+
+filterSectorsByName : Filter Sector
+filterSectorsByName filter sectors =
+    List.filter (matchSectorByName filter) sectors
+
+
+
+--| ClimbingRoute
 
 
 sortRoutes : List ClimbingRoute -> List ClimbingRoute
@@ -41,13 +90,3 @@ matchRouteByKind kind route =
 filterRoutesByKind : Maybe ClimbingRouteKind -> List ClimbingRoute -> List ClimbingRoute
 filterRoutesByKind kind =
     List.filter (matchRouteByKind kind)
-
-
-matchSectorByName : String -> Sector -> Bool
-matchSectorByName filter sector =
-    String.contains (String.toLower filter) (String.toLower sector.name)
-
-
-filterSectorsByName : String -> List Sector -> List Sector
-filterSectorsByName filter sectors =
-    List.filter (matchSectorByName filter) sectors

@@ -2,18 +2,19 @@ module Update exposing (updateWithStorage)
 
 import Browser.Dom
 import Command
-import Data exposing (encodedJsonFile, jsonFileDecoder)
+import Data exposing (Area, encodedJsonFile, jsonFileDecoder)
 import DatePicker exposing (DateEvent(..))
 import Dict
 import File
 import File.Download
 import File.Select
-import Form exposing (newId)
-import Init
+import Forms.Form as Form exposing (mapAndReturn)
+import Forms.Forms exposing (newId)
+import Init exposing (initAreaForm, initSectorForm)
 import Json.Decode exposing (decodeString)
 import Json.Encode exposing (encode)
-import Message exposing (ClimbingRoutesPageMsg(..), Msg(..))
-import Model exposing (ClimbingRoutesPageModel, ModalContent(..), Model)
+import Message exposing (ClimbingRoutesPageMsg(..), FormMsg(..), Msg(..))
+import Model exposing (AreaFormValues, ClimbingRoutesPageModel, ModalContent(..), Model)
 import ModelAccessors as MA
 import Select
 import Task
@@ -78,6 +79,20 @@ update msg model =
             ( { model | climbingRoutesPageModel = newCrpModel }, newCrpMsg )
 
         -- Data
+        OpenAreaForm maybeArea ->
+            let
+                areaId =
+                    Maybe.map .id maybeArea |> Maybe.withDefault (newId model.areas)
+            in
+            ( { model | modal = AreaFormModal, areaFormId = areaId, areaForm = initAreaForm }, Cmd.none )
+
+        OpenSectorForm maybeSector ->
+            let
+                sectorId =
+                    Maybe.map .id maybeSector |> Maybe.withDefault (newId model.sectors)
+            in
+            ( { model | modal = SectorFormModal, sectorFormId = sectorId, sectorForm = initSectorForm }, Cmd.none )
+
         SaveClimbingRouteForm ->
             let
                 id =
@@ -96,7 +111,7 @@ update msg model =
         AddMediaToRoute route ->
             let
                 media =
-                    Form.mediaFromForm model
+                    Forms.Forms.mediaFromForm model
 
                 newRoute =
                     { route | media = Maybe.map (flip (::) route.media) media |> Maybe.withDefault route.media }
@@ -124,6 +139,73 @@ update msg model =
 
         DeleteAscentConfirmation ascent ->
             ( MA.deleteAscent (closeModal model) ascent.id, Cmd.none )
+
+        FormMessage formMessage ->
+            case formMessage of
+                UpdateAreaForm values ->
+                    ( { model | areaForm = values }, Cmd.none )
+
+                SaveAreaForm ->
+                    let
+                        ( newForm, maybeArea ) =
+                            Forms.Forms.validateAreaForm model
+                    in
+                    ( case maybeArea of
+                        Just area ->
+                            { model | areaForm = newForm, modal = Empty, areas = Dict.insert area.id area model.areas }
+
+                        _ ->
+                            { model | areaForm = newForm }
+                    , Cmd.none
+                    )
+
+                UpdateSectorForm values ->
+                    ( { model | sectorForm = values }, Cmd.none )
+
+                SectorFormSelectArea maybeArea ->
+                    let
+                        newForm =
+                            \f ->
+                                { f
+                                    | areaId =
+                                        Tuple.mapFirst
+                                            (\_ -> Maybe.withDefault [] <| Maybe.map List.singleton maybeArea)
+                                            f.areaId
+                                }
+                    in
+                    ( { model | sectorForm = Form.map newForm model.sectorForm }, Cmd.none )
+
+                SectorFormSelectAreaMsg subMsg ->
+                    let
+                        ( updatedForm, cmd ) =
+                            mapAndReturn
+                                (\values ->
+                                    let
+                                        ( updated, selectCmd ) =
+                                            Select.update Init.sectorFormAreaSelectConfig subMsg (Tuple.second values.areaId)
+                                    in
+                                    ( { values | areaId = Tuple.mapSecond (\_ -> updated) values.areaId }, selectCmd )
+                                )
+                                model.sectorForm
+                    in
+                    ( { model | sectorForm = updatedForm }, cmd )
+
+                SaveSectorForm ->
+                    let
+                        ( newForm, maybeSector ) =
+                            Forms.Forms.validateSectorForm model
+                    in
+                    ( case maybeSector of
+                        Just sector ->
+                            { model | sectorForm = newForm, modal = Empty, sectors = Dict.insert sector.id sector model.sectors }
+
+                        _ ->
+                            { model | sectorForm = newForm }
+                    , Cmd.none
+                    )
+
+                _ ->
+                    ( model, Cmd.none )
 
 
 updateClimbingRoutesPage : ClimbingRoutesPageMsg -> ClimbingRoutesPageModel -> ( ClimbingRoutesPageModel, Cmd Msg )

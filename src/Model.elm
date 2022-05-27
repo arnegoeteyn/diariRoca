@@ -1,9 +1,10 @@
-module Model exposing (AppState(..), AscentForm, ClimbingRouteForm, ClimbingRoutesPageModel, ModalContent(..), Model, Page(..))
+module Model exposing (..)
 
 import Data exposing (Area, Ascent, AscentKind, ClimbingRoute, ClimbingRouteKind, Sector, Trip)
 import Date exposing (Date)
 import DatePicker exposing (DatePicker)
 import Dict exposing (Dict)
+import Forms.Form exposing (Form)
 import Select
 
 
@@ -20,6 +21,13 @@ type alias Model =
     , sectors : Dict Int Sector
     , areas : Dict Int Area
     , trips : Dict Int Trip
+
+    -- Forms
+    , areaForm : AreaForm
+    , areaFormId : Int
+    , sectorForm : SectorForm
+    , sectorFormId : Int
+    , climbingRouteForm : Form ClimbingRouteFormValues ClimbingRoute
 
     -- Pages
     , climbingRoutesPageModel : ClimbingRoutesPageModel
@@ -71,6 +79,8 @@ type alias AscentForm =
 
 type ModalContent
     = Empty
+    | AreaFormModal
+    | SectorFormModal
     | ClimbingRouteFormModal
     | AscentFormModal
     | DeleteClimbingRouteRequestModal
@@ -81,3 +91,51 @@ type Page
     = ClimbingRoutesPage
     | AscentsPage
     | StatsPage
+
+
+
+--| Forms
+
+
+type alias SelectionCriterium item =
+    ( List item, Select.State )
+
+
+type alias AreaFormValues =
+    { name : String
+    , country : String
+    }
+
+
+type alias AreaForm =
+    Form AreaFormValues AreaFormValues
+
+
+type alias SectorFormValues =
+    { name : String
+    , areaId : SelectionCriterium Area
+    }
+
+
+type alias ValidatedSectorFormValues =
+    { name : String
+    , areaId : Int
+    }
+
+
+type alias ValidatedSectorFormValuesConstructor =
+    ValidatedSectorFormValues
+
+
+type alias SectorForm =
+    Form SectorFormValues ValidatedSectorFormValuesConstructor
+
+
+type alias ValidatedSectorForm =
+    Form SectorFormValues ValidatedSectorFormValues
+
+
+type alias ClimbingRouteFormValues =
+    { name : String
+    , grade : String
+    }

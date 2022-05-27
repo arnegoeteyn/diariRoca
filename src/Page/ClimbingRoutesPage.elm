@@ -1,11 +1,11 @@
 module Page.ClimbingRoutesPage exposing (view)
 
-import Criteria
-import Criterium
 import Data exposing (ClimbingRoute, ascentKindToString)
 import DataUtilities
 import Date
 import Dict
+import Forms.Criteria
+import Forms.Criterium
 import Html.Styled as H exposing (Html)
 import Html.Styled.Attributes as A
 import Html.Styled.Events as E
@@ -44,12 +44,13 @@ viewFilters model =
         routes =
             sortedAndFilteredRoutes model
 
-        onRouteFilter =
-            Criterium.textCriterium
-                "route"
-                m.routeFilter
-                (\value -> w SetRouteFilter value)
-
+        -- onRouteFilter =
+        --     Forms.Criterium.textCriterium
+        --         "route"
+        --         .routeFilter
+        --         identity
+        --         SetRouteFilter
+        -- (\value -> w SetRouteFilter value)
         onSectorFilter =
             H.fromUnstyled <|
                 Select.view
@@ -59,13 +60,18 @@ viewFilters model =
                     m.selected
 
         onKindFilter =
-            Criteria.climbingRouteKindCriterium (w SetClimbingRouteKindFilter)
+            Forms.Criteria.climbingRouteKindCriterium (w SetClimbingRouteKindFilter)
     in
     H.div []
-        [ H.h2 [] [ H.text <| Utilities.stringFromList [ (String.fromInt << List.length) routes, " routes " ], viewAddButton model (SetModal Model.ClimbingRouteFormModal) ]
+        [ H.h2 []
+            [ H.text <| Utilities.stringFromList [ (String.fromInt << List.length) routes, " routes " ]
+            , viewAddButton model (SetModal Model.ClimbingRouteFormModal)
+            , viewAddButton model (OpenAreaForm Nothing)
+            , viewAddButton model (OpenSectorForm Nothing)
+            ]
         , H.div []
-            [ onRouteFilter
-            , onSectorFilter
+            [ -- onRouteFilter
+              onSectorFilter
             , onKindFilter
             ]
         ]
@@ -116,9 +122,10 @@ viewRouteMedia model route =
 
         addMediaInput =
             H.div []
-                [ Criterium.maybeTextCriterium "link" m.mediaLink <| w SetMediaLink
-                , Criterium.maybeTextCriterium "label" m.mediaLabel <| w SetMediaLabel
-                , viewAddButton model (AddMediaToRoute route)
+                [ --     Forms.Criterium.maybeTextCriterium "link" m.mediaLink <| w SetMediaLink
+                  -- , Forms.Criterium.maybeTextCriterium "label" m.mediaLabel <| w SetMediaLabel
+                  -- ,
+                  viewAddButton model (AddMediaToRoute route)
                 ]
     in
     H.div []
