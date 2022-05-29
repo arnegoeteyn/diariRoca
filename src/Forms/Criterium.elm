@@ -1,9 +1,9 @@
-module Forms.Criterium exposing (selectionWithSearch, textCriterium)
+module Forms.Criterium exposing (selectionCriterium, selectionWithSearchCriterium, textCriterium)
 
 import Data exposing (Area)
 import Date exposing (Date)
 import DatePicker
-import Forms.Form exposing (Form(..), extract, map)
+import Forms.Form as Form exposing (Form(..), extract)
 import Html
 import Html.Styled as H
 import Html.Styled.Attributes as A
@@ -20,35 +20,23 @@ textCriterium placeholder extractor wrapper toMsg form =
             [ A.type_ "text"
             , A.placeholder placeholder
             , A.value (extract extractor form)
-            , E.onInput (\x -> FormMessage << toMsg <| map (wrapper x) form)
+            , E.onInput (\x -> FormMessage << toMsg <| Form.map (wrapper x) form)
             ]
             []
         ]
 
 
-
--- maybeTextCriterium : String -> Maybe String -> (Maybe String -> msg) -> H.Html msg
--- maybeTextCriterium placeholder value toMsg =
---     textCriterium placeholder
---         (Maybe.withDefault "" value)
---         (\s ->
---             toMsg
---                 (if String.isEmpty s then
---                     Nothing
---                  else
---                     Just s
---                 )
---         )
-
-
-selectionCriterium : List a -> String -> (a -> String) -> (String -> a) -> (a -> msg) -> H.Html msg
-selectionCriterium options placeholder toString fromString toMsg =
-    H.select [ E.onInput <| (fromString >> toMsg), A.placeholder placeholder ]
+selectionCriterium : String -> (b -> String) -> (String -> a -> a) -> List b -> (Form a r -> FormMsg) -> Form a r -> H.Html Msg
+selectionCriterium placeholder toString wrapper options toMsg form =
+    H.select
+        [ E.onInput (\x -> FormMessage << toMsg <| Form.map (wrapper x) form)
+        , A.placeholder placeholder
+        ]
         (List.map (\i -> H.option [] [ H.text <| toString i ]) options)
 
 
-selectionWithSearch : String -> Select.Config Msg item -> (e -> SelectionCriterium item) -> List item -> Form e r -> H.Html Msg
-selectionWithSearch label init extractor options form =
+selectionWithSearchCriterium : String -> Select.Config Msg item -> (e -> SelectionCriterium item) -> List item -> Form e r -> H.Html Msg
+selectionWithSearchCriterium label init extractor options form =
     H.div []
         [ H.text label
         , H.fromUnstyled <|

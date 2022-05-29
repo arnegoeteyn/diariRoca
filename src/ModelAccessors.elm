@@ -40,15 +40,6 @@ getClimbingRoute m i =
     Dict.get i m.climbingRoutes
 
 
-addRouteFromForm : Model -> Dict Int ClimbingRoute
-addRouteFromForm model =
-    let
-        newRoute =
-            Forms.Forms.climbingRouteFromForm model
-    in
-    Dict.insert newRoute.id newRoute model.climbingRoutes
-
-
 deleteRoute : Model -> Int -> Model
 deleteRoute model i =
     case Dict.get i model.climbingRoutes of

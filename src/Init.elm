@@ -1,11 +1,10 @@
 module Init exposing (..)
 
-import Data exposing (Area, Sector, jsonFileDecoder)
+import Data exposing (Area, ClimbingRouteKind(..), Sector, climbingRouteKindToString, jsonFileDecoder)
 import DataUtilities
 import Date exposing (Date)
 import DatePicker exposing (defaultSettings)
 import Dict
-import Form.View
 import Forms.Form exposing (Form(..))
 import Json.Decode exposing (decodeString)
 import Message exposing (ClimbingRoutesPageMsg(..), FormMsg(..), Msg(..))
@@ -46,10 +45,11 @@ init { storageCache, posixTime } =
 
       -- Forms
       , areaForm = initAreaForm
-      , sectorForm = initSectorForm
-      , climbingRouteForm = Idle { name = "", grade = "" }
       , areaFormId = -1
       , sectorFormId = -1
+      , sectorForm = initSectorForm
+      , climbingRouteForm = initClimbingRouteForm
+      , climbingRouteFormId = -1
 
       -- Pages
       , climbingRoutesPageModel = climbingRoutesPageModel
@@ -74,18 +74,15 @@ initSectorForm =
         }
 
 
-sectorFormAreaSelectConfig : Select.Config Msg Area
-sectorFormAreaSelectConfig =
-    let
-        r : Select.RequiredConfig Message.Msg Area
-        r =
-            { filter = \x y -> DataUtilities.filterAreasByName x y |> Utilities.listToMaybe
-            , toLabel = .name
-            , onSelect = FormMessage << SectorFormSelectArea
-            , toMsg = FormMessage << SectorFormSelectAreaMsg
-            }
-    in
-    Select.newConfig r
+initClimbingRouteForm : ClimbingRouteForm
+initClimbingRouteForm =
+    Idle
+        { name = ""
+        , grade = ""
+        , comment = ""
+        , kind = climbingRouteKindToString Sport
+        , sectorId = ( [], Select.init "climbingRouteFormSectorId" )
+        }
 
 
 
@@ -99,8 +96,8 @@ initClimbingRoutesPage date =
         ( ascentForm, ascentFormCmd ) =
             initAscentForm (Just date)
     in
-    ( { climbingRouteForm = initClimbingRouteForm
-      , ascentForm = ascentForm
+    ( { -- climbingRouteForm = initClimbingRouteForm
+        ascentForm = ascentForm
       , routeFilter = ""
       , routeKindFilter = Nothing
       , selected = []
@@ -115,19 +112,17 @@ initClimbingRoutesPage date =
 
 
 --| Forms
-
-
-initClimbingRouteForm : ClimbingRouteForm
-initClimbingRouteForm =
-    { name = Nothing
-    , grade = Nothing
-    , sectorId = Nothing
-    , comment = Nothing
-    , kind = Nothing
-    , id = Nothing
-    , selected = []
-    , selectState = Select.init "formSector"
-    }
+-- initClimbingRouteForm : ClimbingRouteForm
+-- initClimbingRouteForm =
+--     { name = Nothing
+--     , grade = Nothing
+--     , sectorId = Nothing
+--     , comment = Nothing
+--     , kind = Nothing
+--     , id = Nothing
+--     , selected = []
+--     , selectState = Select.init "formSector"
+--     }
 
 
 initAscentForm : Maybe Date -> ( AscentForm, Cmd Msg )
@@ -155,6 +150,34 @@ ascentFormDatePickerSettings =
 --| Selections
 
 
+sectorFormAreaSelectConfig : Select.Config Msg Area
+sectorFormAreaSelectConfig =
+    let
+        r : Select.RequiredConfig Message.Msg Area
+        r =
+            { filter = \x y -> DataUtilities.filterAreasByName x y |> Utilities.listToMaybe
+            , toLabel = .name
+            , onSelect = FormMessage << SectorFormSelectArea
+            , toMsg = FormMessage << SectorFormSelectAreaMsg
+            }
+    in
+    Select.newConfig r
+
+
+climbingRouteFormSectorSelectConfig : Select.Config Msg Sector
+climbingRouteFormSectorSelectConfig =
+    let
+        r : Select.RequiredConfig Message.Msg Sector
+        r =
+            { filter = \x y -> DataUtilities.filterSectorsByName x y |> Utilities.listToMaybe
+            , toLabel = .name
+            , onSelect = FormMessage << ClimbingRouteFormSelectSector
+            , toMsg = FormMessage << ClimbingRouteFormSelectSectorMsg
+            }
+    in
+    Select.newConfig r
+
+
 sectorSelectConfig : Select.Config Msg Sector
 sectorSelectConfig =
     let
@@ -171,22 +194,20 @@ sectorSelectConfig =
         |> Select.withOnRemoveItem (wrapCrpMessage OnRemoveSectorSelection)
 
 
-formSectorSelectConfig : Select.Config Msg Sector
-formSectorSelectConfig =
-    let
-        r : Select.RequiredConfig Message.Msg Sector
-        r =
-            { filter = \x y -> DataUtilities.filterSectorsByName x y |> Utilities.listToMaybe
-            , toLabel = .name
-            , onSelect = wrapCrpMessage FormSelectSector
-            , toMsg = wrapCrpMessage FormSelectSectorMsg
-            }
-    in
-    Select.newConfig r
-        |> Select.withOnRemoveItem (wrapCrpMessage OnFormRemoveSectorSelection)
 
-
-
+-- formSectorSelectConfig : Select.Config Msg Sector
+-- formSectorSelectConfig =
+--     let
+--         r : Select.RequiredConfig Message.Msg Sector
+--         r =
+--             { filter = \x y -> DataUtilities.filterSectorsByName x y |> Utilities.listToMaybe
+--             , toLabel = .name
+--             , onSelect = wrapCrpMessage FormSelectSector
+--             , toMsg = wrapCrpMessage FormSelectSectorMsg
+--             }
+--     in
+--     Select.newConfig r
+--         |> Select.withOnRemoveItem (wrapCrpMessage OnFormRemoveSectorSelection)
 --| Utilities
 
 

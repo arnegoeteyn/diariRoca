@@ -1,4 +1,4 @@
-module Data exposing (Area, Ascent, AscentKind(..), ClimbingRoute, ClimbingRouteKind(..), JsonFile, Media, Sector, Trip, ascentKindFromString, ascentKindToString, climbingRouteKindFromString, climbingRouteKindToString, encodedJsonFile, enumAscentKind, enumClimbingRouteKind, jsonFileDecoder)
+module Data exposing (Area, Ascent, AscentKind(..), ClimbingRoute, ClimbingRouteKind(..), JsonFile, Media, Sector, Trip, ascentKindFromString, ascentKindToString, climbingRouteKindEnum, climbingRouteKindFromString, climbingRouteKindToString, encodedJsonFile, enumAscentKind, jsonFileDecoder)
 
 import Date exposing (Date)
 import Dict exposing (Dict)
@@ -103,8 +103,8 @@ climbingRouteKindToString kind =
             "boulder"
 
 
-enumClimbingRouteKind : List ClimbingRouteKind
-enumClimbingRouteKind =
+climbingRouteKindEnum : List ClimbingRouteKind
+climbingRouteKindEnum =
     [ Sport, Boulder ]
 
 

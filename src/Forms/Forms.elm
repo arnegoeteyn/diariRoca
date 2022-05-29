@@ -1,16 +1,15 @@
 module Forms.Forms exposing (..)
 
-import Data exposing (Area, Ascent, AscentKind(..), ClimbingRoute, ClimbingRouteKind(..), Media, Sector)
+import Data exposing (Area, Ascent, AscentKind(..), ClimbingRoute, ClimbingRouteKind(..), Media, Sector, climbingRouteKindEnum, climbingRouteKindFromString, climbingRouteKindToString)
 import Dict
-import Form exposing (Form)
-import Forms.Criterium exposing (selectionWithSearch, textCriterium)
-import Forms.Form as Form exposing (Form(..), invalidateField)
+import Forms.Criterium exposing (selectionCriterium, selectionWithSearchCriterium, textCriterium)
+import Forms.Form as Form exposing (Form(..), append, succeed)
 import Html.Styled as H
 import Html.Styled.Attributes as A
 import Html.Styled.Events as E
 import Init
 import Message exposing (FormMsg(..), Msg(..))
-import Model exposing (AreaForm, AreaFormValues, ClimbingRouteFormValues, Model, SectorForm, SectorFormValues, ValidatedSectorFormValues, ValidatedSectorFormValuesConstructor)
+import Model exposing (AreaForm, AreaFormValues, ClimbingRouteForm, ClimbingRouteFormValues, Model, SectorForm, SectorFormValues, ValidatedClimbingRouteFormValues, ValidatedSectorFormValues, ValidatedSectorFormValuesConstructor)
 import Tailwind.Utilities as Tw
 
 
@@ -44,10 +43,10 @@ areaForm model =
 
 validateAreaForm : Model -> ( AreaForm, Maybe Area )
 validateAreaForm model =
-    Form.initValidate AreaFormValues model.areaForm
-        |> Form.validate2
+    Form.succeed AreaFormValues model.areaForm
+        |> Form.append
             (validateNonEmpty .name "Area can't have an empty name")
-        |> Form.validate2
+        |> Form.append
             (validateNonEmpty .country "Area must belong to a country")
         |> areaFromForm model
 
@@ -73,7 +72,7 @@ sectorForm : Model -> H.Html Msg
 sectorForm model =
     H.form []
         [ textCriterium "Name" .name updateName UpdateSectorForm model.sectorForm
-        , selectionWithSearch "Area" Init.sectorFormAreaSelectConfig .areaId (Dict.values model.areas) model.sectorForm
+        , selectionWithSearchCriterium "Area" Init.sectorFormAreaSelectConfig .areaId (Dict.values model.areas) model.sectorForm
         , H.button [ A.type_ "button", E.onClick (FormMessage SaveSectorForm) ] [ H.text "Save" ]
         , viewErrors model.sectorForm
         ]
@@ -81,10 +80,10 @@ sectorForm model =
 
 validateSectorForm : Model -> ( SectorForm, Maybe Sector )
 validateSectorForm model =
-    Form.initValidate ValidatedSectorFormValues model.sectorForm
-        |> Form.validate2
+    Form.succeed ValidatedSectorFormValues model.sectorForm
+        |> Form.append
             (validateNonEmpty .name "Sector can't have an empty name")
-        |> Form.validate2
+        |> Form.append
             (.areaId >> Tuple.first >> List.head >> Maybe.map .id >> Result.fromMaybe "A valid area must be selected")
         |> sectorFromForm model
 
@@ -103,78 +102,62 @@ sectorFromForm model form =
 
 
 
--- |> validate2 (\a -> Ok (\x -> x "1"))
--- Form.succeed
---     (\name country _ ->
---         (FormMessage << SaveAreaForm) <| areaFromFormValues { name = name, country = country } model.areaFormId
---     )
---     |> Form.append nameField
---     |> Form.append countryField
---     |> Form.append testField
---     |> Form.section "New Sector"
--- areaFromFormValues : AreaFormValues -> Int -> Area
--- areaFromFormValues values id =
---     { name = values.name
---     , country = values.country
---     , id = id
---     }
 --| ClimbingRoute
--- let
---     gradeField =
---         Form.textField
---             { parser = Ok
---             , value = .grade
---             , update = \value values -> { values | grade = value }
---             , error = always Nothing
---             , attributes =
---                 { label = "Grade", placeholder = "Grade of the route" }
---             }
--- in
--- Form.succeed
---     (\name grade ->
---         (FormMessage << NewClimbingRoute) <|
---             climbingRouteFromForm2 model
---                 { name = name
---                 , grade = grade
---                 }
---     )
---     |> Form.append nameField
---     |> Form.append gradeField
---     |> Form.section "New Route"
 
 
-climbingRouteFromForm2 : Model -> ClimbingRouteFormValues -> ClimbingRoute
-climbingRouteFromForm2 model values =
-    { id = -1
-    , sectorId = -1
-    , name = values.name
-    , grade = values.grade
-    , comment = Nothing
-    , kind = Sport
-    , media = []
-    }
+climbingRouteForm : Model -> H.Html Msg
+climbingRouteForm model =
+    H.form []
+        [ textCriterium "Name" .name updateName UpdateClimbingRouteForm model.climbingRouteForm
+        , textCriterium "Grade" .grade updateGrade UpdateClimbingRouteForm model.climbingRouteForm
+        , selectionWithSearchCriterium "Sector" Init.climbingRouteFormSectorSelectConfig .sectorId (Dict.values model.sectors) model.climbingRouteForm
+        , textCriterium "Comment" .comment updateComment UpdateClimbingRouteForm model.climbingRouteForm
+        , selectionCriterium "Kind" climbingRouteKindToString updateKind climbingRouteKindEnum UpdateClimbingRouteForm model.climbingRouteForm
+        , H.button [ A.type_ "button", E.onClick (FormMessage SaveClimbingRouteForm) ] [ H.text "Save" ]
+        , viewErrors model.climbingRouteForm
+        ]
 
 
-climbingRouteFromForm : Model -> ClimbingRoute
-climbingRouteFromForm model =
-    let
-        form =
-            model.climbingRoutesPageModel.climbingRouteForm
+validateClimbingRouteForm : Model -> ( ClimbingRouteForm, Maybe ClimbingRoute )
+validateClimbingRouteForm model =
+    Form.succeed ValidatedClimbingRouteFormValues model.climbingRouteForm
+        |> Form.append
+            (validateNonEmpty .name "Route can't have an empty name")
+        |> Form.append
+            (validateNonEmpty .grade "Route can't have no grade")
+        |> Form.append
+            (\values ->
+                if String.isEmpty values.comment then
+                    Ok Nothing
 
-        id =
-            Maybe.withDefault (newId model.climbingRoutes) model.climbingRoutesPageModel.climbingRouteForm.id
+                else
+                    Just values.comment |> Ok
+            )
+        |> Form.append
+            (.kind >> climbingRouteKindFromString >> Result.fromMaybe "A valid routeKind must be selected")
+        |> Form.append
+            (.sectorId >> Tuple.first >> List.head >> Maybe.map .id >> Result.fromMaybe "A valid sector must be selected")
+        |> climbingRouteFromForm model
+        |> Debug.log "validated"
 
-        sectorId =
-            List.head form.selected |> Maybe.map .id |> Maybe.withDefault 1
-    in
-    { name = Maybe.withDefault "" form.name
-    , grade = Maybe.withDefault "" form.grade
-    , comment = form.comment
-    , media = []
-    , sectorId = sectorId
-    , id = id
-    , kind = Maybe.withDefault Sport form.kind
-    }
+
+climbingRouteFromForm : Model -> Model.ValidatedClimbingRouteForm -> ( ClimbingRouteForm, Maybe ClimbingRoute )
+climbingRouteFromForm model form =
+    case form of
+        Valid climbingRouteValues values ->
+            ( Idle values
+            , Just <| ClimbingRoute model.climbingRouteFormId climbingRouteValues.sectorId climbingRouteValues.name climbingRouteValues.grade climbingRouteValues.comment climbingRouteValues.kind []
+            )
+
+        Invalid errors values ->
+            ( Invalid errors values, Nothing )
+
+        _ ->
+            ( form, Nothing )
+
+
+
+--| Old
 
 
 mediaFromForm : Model -> Maybe Media
@@ -232,9 +215,9 @@ updateAreaId value form =
     { form | areaId = value }
 
 
-updateName : a -> { b | name : a } -> { b | name : a }
-updateName value form =
-    { form | name = value }
+updateComment : a -> { b | comment : a } -> { b | comment : a }
+updateComment value form =
+    { form | comment = value }
 
 
 updateCountry : a -> { b | country : a } -> { b | country : a }
@@ -242,20 +225,16 @@ updateCountry value form =
     { form | country = value }
 
 
-
--- TODO REMOVE
-
-
-updateGrade : { a | grade : b } -> b -> { a | grade : b }
-updateGrade form value =
+updateGrade : a -> { b | grade : a } -> { b | grade : a }
+updateGrade value form =
     { form | grade = value }
 
 
-updateComment : { a | comment : b } -> b -> { a | comment : b }
-updateComment form value =
-    { form | comment = value }
-
-
-updateKind : { a | kind : b } -> b -> { a | kind : b }
-updateKind form value =
+updateKind : a -> { b | kind : a } -> { b | kind : a }
+updateKind value form =
     { form | kind = value }
+
+
+updateName : a -> { b | name : a } -> { b | name : a }
+updateName value form =
+    { form | name = value }

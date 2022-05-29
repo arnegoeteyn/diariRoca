@@ -1,4 +1,4 @@
-module Forms.Form exposing (Form(..), extract, initValidate, invalidateField, map, mapAndReturn, mapErrors, validate, validate2)
+module Forms.Form exposing (Form(..), append, extract, map, mapAndReturn, mapErrors, succeed)
 
 import Result.Extra as RExtra
 
@@ -63,27 +63,13 @@ extract extractor =
     extractor << get
 
 
-validate : (Form a r -> Result (List String) r) -> Form a r -> Form a r
-validate f form =
-    let
-        result =
-            f form
-    in
-    case result of
-        Err list ->
-            Invalid list (get form)
-
-        Ok resultValue ->
-            Valid resultValue (get form)
-
-
-initValidate : r -> Form a x -> Form a r
-initValidate r f =
+succeed : r -> Form a x -> Form a r
+succeed r f =
     Valid r (get f)
 
 
-validate2 : (a -> Result String b) -> Form a (b -> c) -> Form a c
-validate2 f form =
+append : (a -> Result String b) -> Form a (b -> c) -> Form a c
+append f form =
     let
         result =
             f <| get form
@@ -96,13 +82,8 @@ validate2 f form =
             Invalid (x :: errors form) (get form)
 
 
-invalidateField : (a -> Bool) -> (a -> b) -> String -> List String -> Form a r -> ( List String, Maybe b )
-invalidateField invalid extractor err errorList form =
-    if invalid <| get form then
-        ( err :: errorList, Nothing )
 
-    else
-        ( errorList, Just <| (extractor << get) form )
+--| Local
 
 
 errors : Form a r -> List String

@@ -27,7 +27,8 @@ type alias Model =
     , areaFormId : Int
     , sectorForm : SectorForm
     , sectorFormId : Int
-    , climbingRouteForm : Form ClimbingRouteFormValues ClimbingRoute
+    , climbingRouteForm : ClimbingRouteForm
+    , climbingRouteFormId : Int
 
     -- Pages
     , climbingRoutesPageModel : ClimbingRoutesPageModel
@@ -44,7 +45,7 @@ type alias ClimbingRoutesPageModel =
     , selectState : Select.State
 
     -- Forms
-    , climbingRouteForm : ClimbingRouteForm
+    -- , climbingRouteForm : ClimbingRouteForm
     , ascentForm : AscentForm
     , mediaLink : Maybe String
     , mediaLabel : Maybe String
@@ -54,18 +55,6 @@ type alias ClimbingRoutesPageModel =
 type AppState
     = NotReady
     | Ready
-
-
-type alias ClimbingRouteForm =
-    { name : Maybe String
-    , grade : Maybe String
-    , comment : Maybe String
-    , sectorId : Maybe Int
-    , kind : Maybe ClimbingRouteKind
-    , id : Maybe Int
-    , selected : List Sector
-    , selectState : Select.State
-    }
 
 
 type alias AscentForm =
@@ -138,4 +127,28 @@ type alias ValidatedSectorForm =
 type alias ClimbingRouteFormValues =
     { name : String
     , grade : String
+    , comment : String
+    , sectorId : SelectionCriterium Sector
+    , kind : String
     }
+
+
+type alias ValidatedClimbingRouteFormValues =
+    { name : String
+    , grade : String
+    , comment : Maybe String
+    , kind : ClimbingRouteKind
+    , sectorId : Int
+    }
+
+
+type alias ClimbingRouteForm =
+    Form ClimbingRouteFormValues ValidatedClimbingRouteFormValues
+
+
+type alias ValidatedClimbingRouteFormValuesConstructor =
+    ValidatedClimbingRouteFormValues
+
+
+type alias ValidatedClimbingRouteForm =
+    Form ClimbingRouteFormValues ValidatedClimbingRouteFormValues

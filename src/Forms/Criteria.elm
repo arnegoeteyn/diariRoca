@@ -1,6 +1,6 @@
 module Forms.Criteria exposing (climbingRouteKindCriterium)
 
-import Data exposing (ClimbingRouteKind, climbingRouteKindToString, enumClimbingRouteKind)
+import Data exposing (ClimbingRouteKind, climbingRouteKindEnum, climbingRouteKindToString)
 import Forms.Criterium
 import Html.Styled as H
 

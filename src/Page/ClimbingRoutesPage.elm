@@ -65,7 +65,7 @@ viewFilters model =
     H.div []
         [ H.h2 []
             [ H.text <| Utilities.stringFromList [ (String.fromInt << List.length) routes, " routes " ]
-            , viewAddButton model (SetModal Model.ClimbingRouteFormModal)
+            , viewAddButton model (OpenClimbingRouteForm Nothing)
             , viewAddButton model (OpenAreaForm Nothing)
             , viewAddButton model (OpenSectorForm Nothing)
             ]

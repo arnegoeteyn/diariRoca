@@ -2,7 +2,7 @@ module Update exposing (updateWithStorage)
 
 import Browser.Dom
 import Command
-import Data exposing (Area, encodedJsonFile, jsonFileDecoder)
+import Data exposing (Area, climbingRouteKindEnum, encodedJsonFile, jsonFileDecoder)
 import DatePicker exposing (DateEvent(..))
 import Dict
 import File
@@ -10,7 +10,7 @@ import File.Download
 import File.Select
 import Forms.Form as Form exposing (mapAndReturn)
 import Forms.Forms exposing (newId)
-import Init exposing (initAreaForm, initSectorForm)
+import Init exposing (initAreaForm, initClimbingRouteForm, initSectorForm)
 import Json.Decode exposing (decodeString)
 import Json.Encode exposing (encode)
 import Message exposing (ClimbingRoutesPageMsg(..), FormMsg(..), Msg(..))
@@ -93,20 +93,18 @@ update msg model =
             in
             ( { model | modal = SectorFormModal, sectorFormId = sectorId, sectorForm = initSectorForm }, Cmd.none )
 
-        SaveClimbingRouteForm ->
+        OpenClimbingRouteForm maybeClimbingRoute ->
             let
-                id =
-                    Maybe.withDefault (newId model.climbingRoutes) model.climbingRoutesPageModel.climbingRouteForm.id
-
-                tag =
-                    "route-" ++ String.fromInt id
-
-                task =
-                    Browser.Dom.getElement tag
-                        |> Task.andThen (\info -> Browser.Dom.setViewport 0 info.element.y)
-                        |> Task.attempt (\_ -> Dummy)
+                climbingRouteId =
+                    Maybe.map .id maybeClimbingRoute |> Maybe.withDefault (newId model.climbingRoutes)
             in
-            ( closeModal { model | climbingRoutes = MA.addRouteFromForm model }, task )
+            ( { model
+                | modal = ClimbingRouteFormModal
+                , climbingRouteFormId = climbingRouteId
+                , climbingRouteForm = initClimbingRouteForm
+              }
+            , Cmd.none
+            )
 
         AddMediaToRoute route ->
             let
@@ -204,6 +202,59 @@ update msg model =
                     , Cmd.none
                     )
 
+                UpdateClimbingRouteForm values ->
+                    ( { model | climbingRouteForm = values }, Cmd.none )
+
+                ClimbingRouteFormSelectSector maybeSector ->
+                    let
+                        newForm =
+                            \f ->
+                                { f
+                                    | sectorId =
+                                        Tuple.mapFirst
+                                            (\_ -> Maybe.withDefault [] <| Maybe.map List.singleton maybeSector)
+                                            f.sectorId
+                                }
+                    in
+                    ( { model | climbingRouteForm = Form.map newForm model.climbingRouteForm }, Cmd.none )
+
+                ClimbingRouteFormSelectSectorMsg subMsg ->
+                    let
+                        ( updatedForm, cmd ) =
+                            mapAndReturn
+                                (\values ->
+                                    let
+                                        ( updated, selectCmd ) =
+                                            Select.update Init.climbingRouteFormSectorSelectConfig subMsg (Tuple.second values.sectorId)
+                                    in
+                                    ( { values | sectorId = Tuple.mapSecond (\_ -> updated) values.sectorId }, selectCmd )
+                                )
+                                model.climbingRouteForm
+                    in
+                    ( { model | climbingRouteForm = updatedForm }, cmd )
+
+                SaveClimbingRouteForm ->
+                    let
+                        ( newForm, maybeClimbingRoute ) =
+                            Forms.Forms.validateClimbingRouteForm model
+
+                        tag =
+                            "route-" ++ String.fromInt model.climbingRouteFormId
+
+                        task =
+                            Browser.Dom.getElement tag
+                                |> Task.andThen (\info -> Browser.Dom.setViewport 0 info.element.y)
+                                |> Task.attempt (\_ -> Dummy)
+                    in
+                    ( case maybeClimbingRoute of
+                        Just climbingRoute ->
+                            { model | climbingRouteForm = newForm, modal = Empty, climbingRoutes = Dict.insert climbingRoute.id climbingRoute model.climbingRoutes }
+
+                        _ ->
+                            { model | climbingRouteForm = newForm }
+                    , task
+                    )
+
                 _ ->
                     ( model, Cmd.none )
 
@@ -236,16 +287,6 @@ updateClimbingRoutesPage msg model =
             in
             ( { model | selectState = updated }, cmd )
 
-        FormSelectSectorMsg subMsg ->
-            let
-                ( updated, cmd ) =
-                    Select.update Init.formSectorSelectConfig subMsg model.climbingRouteForm.selectState
-
-                f =
-                    \x -> { x | selectState = updated }
-            in
-            ( { model | climbingRouteForm = f model.climbingRouteForm }, cmd )
-
         SelectSector maybeSector ->
             ( { model | selected = newSelected maybeSector model.selected }, Cmd.none )
 
@@ -255,25 +296,8 @@ updateClimbingRoutesPage msg model =
         OnClimbingRouteClicked maybeClimbingRoute ->
             ( { model | selectedClimbingRoute = maybeClimbingRoute }, Cmd.none )
 
-        UpdateClimbingRouteForm form ->
-            ( { model | climbingRouteForm = form }, Cmd.none )
-
         UpdateAscentForm form ->
             ( { model | ascentForm = form }, Cmd.none )
-
-        FormSelectSector maybeSector ->
-            let
-                newForm =
-                    \f -> { f | selected = newSelected maybeSector f.selected }
-            in
-            ( { model | climbingRouteForm = newForm model.climbingRouteForm }, Cmd.none )
-
-        OnFormRemoveSectorSelection sector ->
-            let
-                newForm =
-                    \f -> { f | selected = removeFromSelected sector f.selected }
-            in
-            ( { model | climbingRouteForm = newForm model.climbingRouteForm }, Cmd.none )
 
         ToDatePickerAscentForm subMsg ->
             let
