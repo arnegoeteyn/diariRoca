@@ -156,7 +156,7 @@ deleteAscentConfirmation _ ascent =
 
 ascentFormModal : Model -> Html Msg
 ascentFormModal model =
-    Debug.todo "Ascent modal"
+    H.text "todo"
 
 
 

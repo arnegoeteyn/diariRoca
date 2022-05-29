@@ -138,7 +138,6 @@ validateClimbingRouteForm model =
         |> Form.append
             (.sectorId >> Tuple.first >> List.head >> Maybe.map .id >> Result.fromMaybe "A valid sector must be selected")
         |> climbingRouteFromForm model
-        |> Debug.log "validated"
 
 
 climbingRouteFromForm : Model -> Model.ValidatedClimbingRouteForm -> ( ClimbingRouteForm, Maybe ClimbingRoute )
