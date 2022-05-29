@@ -1,4 +1,4 @@
-module Forms.Criterium exposing (selectionCriterium, selectionWithSearchCriterium, textCriterium)
+module Forms.Criterium exposing (dateCriterium, selectionCriterium, selectionWithSearchCriterium, textCriterium)
 
 import Data exposing (Area)
 import Date exposing (Date)
@@ -9,7 +9,7 @@ import Html.Styled as H
 import Html.Styled.Attributes as A
 import Html.Styled.Events as E
 import Message exposing (FormMsg, Msg(..))
-import Model exposing (SelectionCriterium)
+import Model exposing (DateCriterium, SelectionCriterium)
 import Select
 
 
@@ -48,8 +48,12 @@ selectionWithSearchCriterium label init extractor options form =
         ]
 
 
-dateCriterium : Maybe Date -> DatePicker.Settings -> DatePicker.DatePicker -> (DatePicker.Msg -> msg) -> H.Html msg
-dateCriterium date settings datePicker toMsg =
-    DatePicker.view date settings datePicker
-        |> Html.map toMsg
+dateCriterium : String -> DatePicker.Settings -> (a -> DateCriterium) -> (DatePicker.Msg -> FormMsg) -> Form a r -> H.Html Msg
+dateCriterium label settings extractor toMsg form =
+    let
+        dateData =
+            extract extractor form
+    in
+    DatePicker.view ((Just << Date.fromRataDie << Tuple.first) dateData) settings (Tuple.second dateData)
+        |> Html.map (FormMessage << toMsg)
         |> H.fromUnstyled

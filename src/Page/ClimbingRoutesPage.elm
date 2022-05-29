@@ -156,7 +156,7 @@ viewAscentsList model route =
     H.div [ A.css [] ]
         [ H.h3 [ A.css [] ]
             [ H.text (Utilities.stringFromList [ String.fromInt <| List.length ascents, " ascents:" ])
-            , viewAddButton model (SetModal Model.AscentFormModal)
+            , viewAddButton model (OpenAscentForm Nothing route)
             ]
         , H.div [ A.css [ Tw.grid, Tw.grid_cols_1, Tw.divide_solid, Tw.divide_y_2, Tw.divide_x_0 ] ] <|
             List.map

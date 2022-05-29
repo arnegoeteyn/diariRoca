@@ -88,43 +88,10 @@ climbingRouteFormModal model =
         [ H.h2 [] [ H.text "New climbingroute" ], Forms.Forms.climbingRouteForm model ]
 
 
-
--- ,
---  H.fromUnstyled <|
---     Form.View.asHtml
---         formConfig
---         (Forms.Forms.climbingRouteForm model)
---         model.climbingRouteForm
--- , H.form [ A.css [ Tw.flex_col ] ] <|
---     List.map (\x -> H.div [] [ x ])
---         [ Criterium.maybeTextCriterium "name"
---             f.name
---             (\x ->
---                 w UpdateClimbingRouteForm <|
---                     updateName f x
---             )
---         , Criterium.maybeTextCriterium "grade"
---             m.climbingRouteForm.grade
---             (\x ->
---                 w UpdateClimbingRouteForm <|
---                     updateGrade f x
---             )
---         , Criterium.maybeTextCriterium "comment"
---             m.climbingRouteForm.comment
---             (\x ->
---                 w UpdateClimbingRouteForm <|
---                     updateComment f x
---             )
---         , H.fromUnstyled <|
---             Select.view
---                 Init.formSectorSelectConfig
---                 f.selectState
---                 (Dict.toList model.sectors |> List.map Tuple.second)
---                 f.selected
---         , Criteria.climbingRouteKindCriterium (w UpdateClimbingRouteForm << updateKind f)
---         ]
---         ++ [ H.button [ E.onClick SaveClimbingRouteForm, A.type_ "button" ] [ H.text "Create route" ]
---            ]
+ascentFormModal : Model -> Html Msg
+ascentFormModal model =
+    H.div []
+        [ H.h2 [] [ H.text "New ascent" ], Forms.Forms.ascentForm model ]
 
 
 deleteClimbingRouteConfirmation : Model -> Html Msg
@@ -152,11 +119,6 @@ deleteAscentConfirmation _ ascent =
             [ H.text <| Utilities.stringFromList [ "Delete" ] ]
         , H.button [ E.onClick <| Message.DeleteAscentConfirmation ascent ] [ H.text "confirm" ]
         ]
-
-
-ascentFormModal : Model -> Html Msg
-ascentFormModal model =
-    H.text "todo"
 
 
 

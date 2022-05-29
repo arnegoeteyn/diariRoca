@@ -1,6 +1,6 @@
 module Init exposing (..)
 
-import Data exposing (Area, ClimbingRouteKind(..), Sector, climbingRouteKindToString, jsonFileDecoder)
+import Data exposing (Area, AscentKind(..), ClimbingRouteKind(..), Sector, ascentKindToString, climbingRouteKindToString, jsonFileDecoder)
 import DataUtilities
 import Date exposing (Date)
 import DatePicker exposing (defaultSettings)
@@ -28,6 +28,9 @@ init { storageCache, posixTime } =
 
         ( climbingRoutesPageModel, climbingRoutesPageCmd ) =
             initClimbingRoutesPage date
+
+        ( ascentForm, ascentFormCmd ) =
+            initAscentForm date
     in
     ( { appState =
             Model.Ready
@@ -50,11 +53,14 @@ init { storageCache, posixTime } =
       , sectorForm = initSectorForm
       , climbingRouteForm = initClimbingRouteForm
       , climbingRouteFormId = -1
+      , ascentForm = ascentForm
+      , ascentFormId = -1
+      , ascentFormRouteId = -1
 
       -- Pages
       , climbingRoutesPageModel = climbingRoutesPageModel
       }
-    , climbingRoutesPageCmd
+    , Cmd.batch [ climbingRoutesPageCmd, ascentFormCmd ]
     )
 
 
@@ -85,20 +91,24 @@ initClimbingRouteForm =
         }
 
 
-
--- |> Select.withOnRemoveItem (wrapCrpMessage OnFormRemoveSectorSelection)
---| Pages
+initAscentForm : Date -> ( AscentForm, Cmd Msg )
+initAscentForm date =
+    let
+        ( datePicker, datePickerFx ) =
+            DatePicker.init
+    in
+    ( Idle
+        { comment = ""
+        , kind = ascentKindToString Onsight
+        , date = ( Date.toRataDie date, datePicker )
+        }
+    , Cmd.map (FormMessage << AscentFormToDatePicker) datePickerFx
+    )
 
 
 initClimbingRoutesPage : Date -> ( ClimbingRoutesPageModel, Cmd Msg )
 initClimbingRoutesPage date =
-    let
-        ( ascentForm, ascentFormCmd ) =
-            initAscentForm (Just date)
-    in
-    ( { -- climbingRouteForm = initClimbingRouteForm
-        ascentForm = ascentForm
-      , routeFilter = ""
+    ( { routeFilter = ""
       , routeKindFilter = Nothing
       , selected = []
       , selectState = Select.init "sectors"
@@ -106,39 +116,12 @@ initClimbingRoutesPage date =
       , mediaLink = Nothing
       , mediaLabel = Nothing
       }
-    , ascentFormCmd
+    , Cmd.none
     )
 
 
 
---| Forms
--- initClimbingRouteForm : ClimbingRouteForm
--- initClimbingRouteForm =
---     { name = Nothing
---     , grade = Nothing
---     , sectorId = Nothing
---     , comment = Nothing
---     , kind = Nothing
---     , id = Nothing
---     , selected = []
---     , selectState = Select.init "formSector"
---     }
-
-
-initAscentForm : Maybe Date -> ( AscentForm, Cmd Msg )
-initAscentForm mDate =
-    let
-        ( datePicker, datePickerFx ) =
-            DatePicker.init
-    in
-    ( { comment = Nothing
-      , date = mDate
-      , kind = Nothing
-      , id = Nothing
-      , datePicker = datePicker
-      }
-    , Cmd.map (ClimbingRoutesPageMessage << ToDatePickerAscentForm) datePickerFx
-    )
+--| Dates
 
 
 ascentFormDatePickerSettings : DatePicker.Settings
@@ -192,23 +175,6 @@ sectorSelectConfig =
     Select.newConfig r
         |> Select.withMultiSelection True
         |> Select.withOnRemoveItem (wrapCrpMessage OnRemoveSectorSelection)
-
-
-
--- formSectorSelectConfig : Select.Config Msg Sector
--- formSectorSelectConfig =
---     let
---         r : Select.RequiredConfig Message.Msg Sector
---         r =
---             { filter = \x y -> DataUtilities.filterSectorsByName x y |> Utilities.listToMaybe
---             , toLabel = .name
---             , onSelect = wrapCrpMessage FormSelectSector
---             , toMsg = wrapCrpMessage FormSelectSectorMsg
---             }
---     in
---     Select.newConfig r
---         |> Select.withOnRemoveItem (wrapCrpMessage OnFormRemoveSectorSelection)
---| Utilities
 
 
 wrapCrpMessage : (a -> ClimbingRoutesPageMsg) -> a -> Msg

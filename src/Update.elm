@@ -3,6 +3,7 @@ module Update exposing (updateWithStorage)
 import Browser.Dom
 import Command
 import Data exposing (Area, climbingRouteKindEnum, encodedJsonFile, jsonFileDecoder)
+import Date
 import DatePicker exposing (DateEvent(..))
 import Dict
 import File
@@ -10,7 +11,7 @@ import File.Download
 import File.Select
 import Forms.Form as Form exposing (mapAndReturn)
 import Forms.Forms exposing (newId)
-import Init exposing (initAreaForm, initClimbingRouteForm, initSectorForm)
+import Init exposing (initAreaForm, initAscentForm, initClimbingRouteForm, initSectorForm)
 import Json.Decode exposing (decodeString)
 import Json.Encode exposing (encode)
 import Message exposing (ClimbingRoutesPageMsg(..), FormMsg(..), Msg(..))
@@ -106,6 +107,23 @@ update msg model =
             , Cmd.none
             )
 
+        OpenAscentForm maybeAscent climbingRoute ->
+            let
+                ascentId =
+                    Maybe.map .id maybeAscent |> Maybe.withDefault (newId model.ascents)
+
+                ( ascentForm, ascentCmd ) =
+                    initAscentForm model.startUpDate
+            in
+            ( { model
+                | modal = AscentFormModal
+                , ascentFormRouteId = climbingRoute.id
+                , ascentFormId = ascentId
+                , ascentForm = ascentForm
+              }
+            , ascentCmd
+            )
+
         AddMediaToRoute route ->
             let
                 media =
@@ -122,9 +140,6 @@ update msg model =
                     { route | media = Utilities.removeFirst ((/=) media) route.media }
             in
             ( { model | climbingRoutes = Dict.insert route.id newRoute model.climbingRoutes }, Cmd.none )
-
-        SaveAscentForm ->
-            ( closeModal { model | ascents = MA.addAscentFromForm model }, Cmd.none )
 
         DeleteClimbingRouteRequested ->
             ( { model | modal = Model.DeleteClimbingRouteRequestModal }, Cmd.none )
@@ -255,8 +270,50 @@ update msg model =
                     , task
                     )
 
-                _ ->
-                    ( model, Cmd.none )
+                -- Ascent
+                UpdateAscentForm values ->
+                    ( { model | ascentForm = values }, Cmd.none )
+
+                AscentFormToDatePicker subMsg ->
+                    let
+                        ( updatedForm, dateEvent ) =
+                            mapAndReturn
+                                (\values ->
+                                    let
+                                        ( updated, selectCmd ) =
+                                            DatePicker.update Init.ascentFormDatePickerSettings subMsg (Tuple.second values.date)
+                                    in
+                                    ( { values | date = Tuple.mapSecond (\_ -> updated) values.date }, selectCmd )
+                                )
+                                model.ascentForm
+
+                        newDate =
+                            Form.map
+                                (\values ->
+                                    case dateEvent of
+                                        Picked date ->
+                                            { values | date = Tuple.mapFirst (\_ -> Date.toRataDie date) values.date }
+
+                                        _ ->
+                                            values
+                                )
+                                updatedForm
+                    in
+                    ( { model | ascentForm = newDate }, Cmd.none )
+
+                SaveAscentForm ->
+                    let
+                        ( newForm, maybeAscent ) =
+                            Forms.Forms.validateAscentForm model
+                    in
+                    ( case maybeAscent of
+                        Just ascent ->
+                            { model | ascentForm = newForm, modal = Empty, ascents = Dict.insert ascent.id ascent model.ascents }
+
+                        _ ->
+                            { model | ascentForm = newForm }
+                    , Cmd.none
+                    )
 
 
 updateClimbingRoutesPage : ClimbingRoutesPageMsg -> ClimbingRoutesPageModel -> ( ClimbingRoutesPageModel, Cmd Msg )
@@ -295,31 +352,6 @@ updateClimbingRoutesPage msg model =
 
         OnClimbingRouteClicked maybeClimbingRoute ->
             ( { model | selectedClimbingRoute = maybeClimbingRoute }, Cmd.none )
-
-        UpdateAscentForm form ->
-            ( { model | ascentForm = form }, Cmd.none )
-
-        ToDatePickerAscentForm subMsg ->
-            let
-                ( newDatePicker, dateEvent ) =
-                    DatePicker.update Init.ascentFormDatePickerSettings subMsg model.ascentForm.datePicker
-
-                newDate =
-                    case dateEvent of
-                        Picked changedDate ->
-                            Just changedDate
-
-                        _ ->
-                            model.ascentForm.date
-
-                newForm =
-                    (\f -> { f | date = newDate, datePicker = newDatePicker }) model.ascentForm
-            in
-            ( { model
-                | ascentForm = newForm
-              }
-            , Cmd.none
-            )
 
         SetMediaLink maybeLink ->
             ( { model | mediaLink = maybeLink }, Cmd.none )

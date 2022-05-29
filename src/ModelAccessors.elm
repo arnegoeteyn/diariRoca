@@ -88,15 +88,6 @@ getClimbingRouteFromAscent m c =
     getClimbingRoute m c.routeId
 
 
-addAscentFromForm : Model -> Dict Int Ascent
-addAscentFromForm model =
-    let
-        newAscent =
-            Forms.Forms.ascentFromForm model
-    in
-    Dict.insert newAscent.id newAscent model.ascents
-
-
 deleteAscent : Model -> Int -> Model
 deleteAscent m i =
     { m | ascents = Dict.remove i m.ascents }

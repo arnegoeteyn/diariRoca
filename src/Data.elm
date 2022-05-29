@@ -1,4 +1,4 @@
-module Data exposing (Area, Ascent, AscentKind(..), ClimbingRoute, ClimbingRouteKind(..), JsonFile, Media, Sector, Trip, ascentKindFromString, ascentKindToString, climbingRouteKindEnum, climbingRouteKindFromString, climbingRouteKindToString, encodedJsonFile, enumAscentKind, jsonFileDecoder)
+module Data exposing (Area, Ascent, AscentKind(..), ClimbingRoute, ClimbingRouteKind(..), JsonFile, Media, Sector, Trip, ascentKindEnum, ascentKindFromString, ascentKindToString, climbingRouteKindEnum, climbingRouteKindFromString, climbingRouteKindToString, encodedJsonFile, jsonFileDecoder)
 
 import Date exposing (Date)
 import Dict exposing (Dict)
@@ -186,8 +186,8 @@ type AscentKind
     | Repeat
 
 
-enumAscentKind : List AscentKind
-enumAscentKind =
+ascentKindEnum : List AscentKind
+ascentKindEnum =
     [ Onsight, Flash, SecondGo, Redpoint, Repeat ]
 
 

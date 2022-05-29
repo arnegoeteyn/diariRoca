@@ -1,15 +1,16 @@
 module Forms.Forms exposing (..)
 
-import Data exposing (Area, Ascent, AscentKind(..), ClimbingRoute, ClimbingRouteKind(..), Media, Sector, climbingRouteKindEnum, climbingRouteKindFromString, climbingRouteKindToString)
+import Data exposing (Area, Ascent, AscentKind(..), ClimbingRoute, ClimbingRouteKind(..), Media, Sector, ascentKindEnum, ascentKindFromString, ascentKindToString, climbingRouteKindEnum, climbingRouteKindFromString, climbingRouteKindToString)
+import Date
 import Dict
-import Forms.Criterium exposing (selectionCriterium, selectionWithSearchCriterium, textCriterium)
-import Forms.Form as Form exposing (Form(..), append, succeed)
+import Forms.Criterium exposing (dateCriterium, selectionCriterium, selectionWithSearchCriterium, textCriterium)
+import Forms.Form as Form exposing (Form(..))
 import Html.Styled as H
 import Html.Styled.Attributes as A
 import Html.Styled.Events as E
-import Init
+import Init exposing (ascentFormDatePickerSettings)
 import Message exposing (FormMsg(..), Msg(..))
-import Model exposing (AreaForm, AreaFormValues, ClimbingRouteForm, ClimbingRouteFormValues, Model, SectorForm, SectorFormValues, ValidatedClimbingRouteFormValues, ValidatedSectorFormValues, ValidatedSectorFormValuesConstructor)
+import Model exposing (AreaForm, AreaFormValues, AscentForm, ClimbingRouteForm, Model, SectorForm, ValidatedAscentFormValues, ValidatedClimbingRouteFormValues, ValidatedSectorFormValues)
 import Tailwind.Utilities as Tw
 
 
@@ -156,39 +157,69 @@ climbingRouteFromForm model form =
 
 
 
+--| Ascent
+
+
+ascentForm : Model -> H.Html Msg
+ascentForm model =
+    H.form []
+        [ textCriterium "Comment" .comment updateComment UpdateAscentForm model.ascentForm
+        , selectionCriterium "Kind" ascentKindToString updateKind ascentKindEnum UpdateAscentForm model.ascentForm
+        , dateCriterium "Date" ascentFormDatePickerSettings .date AscentFormToDatePicker model.ascentForm
+        , H.button [ A.type_ "button", E.onClick (FormMessage SaveAscentForm) ] [ H.text "Save" ]
+        , viewErrors model.ascentForm
+        ]
+
+
+validateAscentForm : Model -> ( AscentForm, Maybe Ascent )
+validateAscentForm model =
+    Form.succeed ValidatedAscentFormValues model.ascentForm
+        |> Form.append
+            (\values -> Ok <| Date.fromRataDie <| Tuple.first values.date)
+        |> Form.append
+            (.kind >> ascentKindFromString >> Result.fromMaybe "A valid ascentKind must be selected")
+        |> Form.append
+            (\_ -> Ok model.ascentFormId)
+        |> Form.append
+            (\values ->
+                if String.isEmpty values.comment then
+                    Ok Nothing
+
+                else
+                    Just values.comment |> Ok
+            )
+        |> Form.append
+            (\_ -> Ok model.ascentFormRouteId)
+        |> ascentFromForm model
+
+
+ascentFromForm : Model -> Model.ValidatedAscentForm -> ( AscentForm, Maybe Ascent )
+ascentFromForm model form =
+    case form of
+        Valid ascentFormValues values ->
+            ( Idle values
+            , Just <|
+                Ascent model.ascentFormId
+                    ascentFormValues.climbingRouteId
+                    ascentFormValues.date
+                    ascentFormValues.comment
+                    ascentFormValues.kind
+            )
+
+        Invalid errors values ->
+            ( Invalid errors values, Nothing )
+
+        _ ->
+            ( form, Nothing )
+
+
+
 --| Old
 
 
 mediaFromForm : Model -> Maybe Media
 mediaFromForm model =
     Maybe.map2 Media model.climbingRoutesPageModel.mediaLink model.climbingRoutesPageModel.mediaLabel
-
-
-
---| Ascent
-
-
-ascentFromForm : Model -> Ascent
-ascentFromForm model =
-    let
-        crpModel =
-            model.climbingRoutesPageModel
-
-        form =
-            crpModel.ascentForm
-
-        id =
-            Maybe.withDefault (newId model.ascents) crpModel.ascentForm.id
-
-        routeId =
-            Maybe.withDefault -1 (Maybe.map .id crpModel.selectedClimbingRoute)
-    in
-    { comment = form.comment
-    , routeId = routeId
-    , id = id
-    , kind = Maybe.withDefault Redpoint form.kind
-    , date = Maybe.withDefault model.startUpDate form.date
-    }
 
 
 

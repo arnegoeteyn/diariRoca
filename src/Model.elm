@@ -6,6 +6,7 @@ import DatePicker exposing (DatePicker)
 import Dict exposing (Dict)
 import Forms.Form exposing (Form)
 import Select
+import Time exposing (Posix)
 
 
 type alias Model =
@@ -29,6 +30,9 @@ type alias Model =
     , sectorFormId : Int
     , climbingRouteForm : ClimbingRouteForm
     , climbingRouteFormId : Int
+    , ascentForm : AscentForm
+    , ascentFormId : Int
+    , ascentFormRouteId : Int
 
     -- Pages
     , climbingRoutesPageModel : ClimbingRoutesPageModel
@@ -45,8 +49,6 @@ type alias ClimbingRoutesPageModel =
     , selectState : Select.State
 
     -- Forms
-    -- , climbingRouteForm : ClimbingRouteForm
-    , ascentForm : AscentForm
     , mediaLink : Maybe String
     , mediaLabel : Maybe String
     }
@@ -55,15 +57,6 @@ type alias ClimbingRoutesPageModel =
 type AppState
     = NotReady
     | Ready
-
-
-type alias AscentForm =
-    { comment : Maybe String
-    , kind : Maybe AscentKind
-    , date : Maybe Date
-    , id : Maybe Int
-    , datePicker : DatePicker
-    }
 
 
 type ModalContent
@@ -88,6 +81,10 @@ type Page
 
 type alias SelectionCriterium item =
     ( List item, Select.State )
+
+
+type alias DateCriterium =
+    ( Int, DatePicker )
 
 
 type alias AreaFormValues =
@@ -152,3 +149,31 @@ type alias ValidatedClimbingRouteFormValuesConstructor =
 
 type alias ValidatedClimbingRouteForm =
     Form ClimbingRouteFormValues ValidatedClimbingRouteFormValues
+
+
+type alias AscentFormValues =
+    { date : DateCriterium
+    , kind : String
+    , comment : String
+    }
+
+
+type alias ValidatedAscentFormValues =
+    { date : Date
+    , kind : AscentKind
+    , id : Int
+    , comment : Maybe String
+    , climbingRouteId : Int
+    }
+
+
+type alias AscentForm =
+    Form AscentFormValues ValidatedAscentFormValues
+
+
+type alias ValidatedAscentFormValuesConstructor =
+    ValidatedAscentFormValues
+
+
+type alias ValidatedAscentForm =
+    Form AscentFormValues ValidatedAscentFormValues

@@ -5,7 +5,7 @@ import DatePicker
 import File exposing (File)
 import Form.View
 import Forms.Form exposing (Form)
-import Model exposing (AreaForm, AreaFormValues, ClimbingRouteForm, ClimbingRouteFormValues, SectorForm, SectorFormValues, ValidatedSectorFormValuesConstructor)
+import Model exposing (AreaForm, AreaFormValues, AscentForm, ClimbingRouteForm, ClimbingRouteFormValues, SectorForm, SectorFormValues, ValidatedSectorFormValuesConstructor)
 import Select
 
 
@@ -24,11 +24,11 @@ type Msg
     | OpenAreaForm (Maybe Area)
     | OpenSectorForm (Maybe Area)
     | OpenClimbingRouteForm (Maybe ClimbingRoute)
+    | OpenAscentForm (Maybe Ascent) ClimbingRoute
     | AddMediaToRoute ClimbingRoute
     | RemoveMedia ClimbingRoute Media
     | DeleteClimbingRouteConfirmation ClimbingRoute
     | DeleteClimbingRouteRequested
-    | SaveAscentForm
     | DeleteAscentConfirmation Ascent
     | DeleteAscentRequested Ascent
       -- Extensions
@@ -47,13 +47,11 @@ type ClimbingRoutesPageMsg
       -- Route Detail
     | SetMediaLink (Maybe String)
     | SetMediaLabel (Maybe String)
-      --| ClimbingRoute Form
-      --| Ascent Form
-    | UpdateAscentForm Model.AscentForm
-    | ToDatePickerAscentForm DatePicker.Msg
 
 
 
+--| ClimbingRoute Form
+--| Ascent Form
 --| Forms
 
 
@@ -70,6 +68,7 @@ type FormMsg
     | ClimbingRouteFormSelectSector (Maybe Sector)
     | ClimbingRouteFormSelectSectorMsg (Select.Msg Sector)
     | SaveClimbingRouteForm
-      -- weg
-    | NewClimbingRoute ClimbingRoute
-    | ClimbingRouteValues (Form.View.Model ClimbingRouteFormValues)
+      -- Ascent
+    | UpdateAscentForm AscentForm
+    | AscentFormToDatePicker DatePicker.Msg
+    | SaveAscentForm
