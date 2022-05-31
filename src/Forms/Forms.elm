@@ -3,7 +3,7 @@ module Forms.Forms exposing (..)
 import Data exposing (Area, Ascent, AscentKind(..), ClimbingRoute, ClimbingRouteKind(..), Media, Sector, ascentKindEnum, ascentKindFromString, ascentKindToString, climbingRouteKindEnum, climbingRouteKindFromString, climbingRouteKindToString)
 import Date
 import Dict
-import Forms.Criterium exposing (dateCriterium, selectionCriterium, selectionWithSearchCriterium, textCriterium)
+import Forms.Criterium exposing (dateCriterium, formSelectionCriterium, formTextCriterium, selectionWithSearchCriterium)
 import Forms.Form as Form exposing (Form(..))
 import Html.Styled as H
 import Html.Styled.Attributes as A
@@ -35,8 +35,8 @@ viewErrors form =
 areaForm : Model -> H.Html Msg
 areaForm model =
     H.form []
-        [ textCriterium "Name" .name updateName UpdateAreaForm model.areaForm
-        , textCriterium "Country" .country updateCountry UpdateAreaForm model.areaForm
+        [ formTextCriterium "Name" .name updateName UpdateAreaForm model.areaForm
+        , formTextCriterium "Country" .country updateCountry UpdateAreaForm model.areaForm
         , H.button [ A.type_ "button", E.onClick (FormMessage SaveAreaForm) ] [ H.text "Save" ]
         , viewErrors model.areaForm
         ]
@@ -72,7 +72,7 @@ areaFromForm model form =
 sectorForm : Model -> H.Html Msg
 sectorForm model =
     H.form []
-        [ textCriterium "Name" .name updateName UpdateSectorForm model.sectorForm
+        [ formTextCriterium "Name" .name updateName UpdateSectorForm model.sectorForm
         , selectionWithSearchCriterium "Area" Init.sectorFormAreaSelectConfig .areaId (Dict.values model.areas) model.sectorForm
         , H.button [ A.type_ "button", E.onClick (FormMessage SaveSectorForm) ] [ H.text "Save" ]
         , viewErrors model.sectorForm
@@ -109,11 +109,11 @@ sectorFromForm model form =
 climbingRouteForm : Model -> H.Html Msg
 climbingRouteForm model =
     H.form []
-        [ textCriterium "Name" .name updateName UpdateClimbingRouteForm model.climbingRouteForm
-        , textCriterium "Grade" .grade updateGrade UpdateClimbingRouteForm model.climbingRouteForm
+        [ formTextCriterium "Name" .name updateName UpdateClimbingRouteForm model.climbingRouteForm
+        , formTextCriterium "Grade" .grade updateGrade UpdateClimbingRouteForm model.climbingRouteForm
         , selectionWithSearchCriterium "Sector" Init.climbingRouteFormSectorSelectConfig .sectorId (Dict.values model.sectors) model.climbingRouteForm
-        , textCriterium "Comment" .comment updateComment UpdateClimbingRouteForm model.climbingRouteForm
-        , selectionCriterium "Kind" climbingRouteKindToString updateKind climbingRouteKindEnum UpdateClimbingRouteForm model.climbingRouteForm
+        , formTextCriterium "Comment" .comment updateComment UpdateClimbingRouteForm model.climbingRouteForm
+        , formSelectionCriterium "Kind" (\_ -> List.map climbingRouteKindToString climbingRouteKindEnum) updateKind UpdateClimbingRouteForm model.climbingRouteForm
         , H.button [ A.type_ "button", E.onClick (FormMessage SaveClimbingRouteForm) ] [ H.text "Save" ]
         , viewErrors model.climbingRouteForm
         ]
@@ -163,8 +163,8 @@ climbingRouteFromForm model form =
 ascentForm : Model -> H.Html Msg
 ascentForm model =
     H.form []
-        [ textCriterium "Comment" .comment updateComment UpdateAscentForm model.ascentForm
-        , selectionCriterium "Kind" ascentKindToString updateKind ascentKindEnum UpdateAscentForm model.ascentForm
+        [ formTextCriterium "Comment" .comment updateComment UpdateAscentForm model.ascentForm
+        , formSelectionCriterium "Kind" (\_ -> List.map ascentKindToString ascentKindEnum) updateKind UpdateAscentForm model.ascentForm
         , dateCriterium "Date" ascentFormDatePickerSettings .date AscentFormToDatePicker model.ascentForm
         , H.button [ A.type_ "button", E.onClick (FormMessage SaveAscentForm) ] [ H.text "Save" ]
         , viewErrors model.ascentForm

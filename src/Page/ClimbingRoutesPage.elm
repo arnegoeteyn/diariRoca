@@ -1,11 +1,10 @@
 module Page.ClimbingRoutesPage exposing (view)
 
-import Data exposing (ClimbingRoute, ascentKindToString)
+import Data exposing (ClimbingRoute, ascentKindToString, climbingRouteKindEnum, climbingRouteKindFromString, climbingRouteKindToString)
 import DataUtilities
 import Date
 import Dict
-import Forms.Criteria
-import Forms.Criterium
+import Forms.Criterium exposing (selectionCriterium)
 import Html.Styled as H exposing (Html)
 import Html.Styled.Attributes as A
 import Html.Styled.Events as E
@@ -44,13 +43,14 @@ viewFilters model =
         routes =
             sortedAndFilteredRoutes model
 
-        -- onRouteFilter =
-        --     Forms.Criterium.textCriterium
-        --         "route"
-        --         .routeFilter
-        --         identity
-        --         SetRouteFilter
-        -- (\value -> w SetRouteFilter value)
+        onRouteFilter =
+            Forms.Criterium.textCriterium
+                "route"
+                .routeFilter
+                identity
+                (w SetRouteFilter)
+                m
+
         onSectorFilter =
             H.fromUnstyled <|
                 Select.view
@@ -60,7 +60,11 @@ viewFilters model =
                     m.selected
 
         onKindFilter =
-            Forms.Criteria.climbingRouteKindCriterium (w SetClimbingRouteKindFilter)
+            selectionCriterium "Kind"
+                (\_ -> "" :: List.map climbingRouteKindToString climbingRouteKindEnum)
+                climbingRouteKindFromString
+                (w SetClimbingRouteKindFilter)
+                Nothing
     in
     H.div []
         [ H.h2 []
@@ -70,8 +74,8 @@ viewFilters model =
             , viewAddButton model (OpenSectorForm Nothing)
             ]
         , H.div []
-            [ -- onRouteFilter
-              onSectorFilter
+            [ onRouteFilter
+            , onSectorFilter
             , onKindFilter
             ]
         ]
