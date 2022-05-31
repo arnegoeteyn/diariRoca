@@ -219,7 +219,11 @@ ascentFromForm model form =
 
 mediaFromForm : Model -> Maybe Media
 mediaFromForm model =
-    Maybe.map2 Media model.climbingRoutesPageModel.mediaLink model.climbingRoutesPageModel.mediaLabel
+    if List.any (\f -> (String.isEmpty << f) model.climbingRoutesPageModel) [ .mediaLink, .mediaLabel ] then
+        Nothing
+
+    else
+        Just <| Media model.climbingRoutesPageModel.mediaLink model.climbingRoutesPageModel.mediaLabel
 
 
 

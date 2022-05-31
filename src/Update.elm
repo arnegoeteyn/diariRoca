@@ -353,11 +353,11 @@ updateClimbingRoutesPage msg model =
         OnClimbingRouteClicked maybeClimbingRoute ->
             ( { model | selectedClimbingRoute = maybeClimbingRoute }, Cmd.none )
 
-        SetMediaLink maybeLink ->
-            ( { model | mediaLink = maybeLink }, Cmd.none )
+        SetMediaLink link ->
+            ( { model | mediaLink = link }, Cmd.none )
 
-        SetMediaLabel maybeLabel ->
-            ( { model | mediaLabel = maybeLabel }, Cmd.none )
+        SetMediaLabel label ->
+            ( { model | mediaLabel = label }, Cmd.none )
 
 
 updateWithStorage : Msg -> Model -> ( Model, Cmd Msg )

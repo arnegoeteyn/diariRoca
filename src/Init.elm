@@ -113,8 +113,8 @@ initClimbingRoutesPage date =
       , selected = []
       , selectState = Select.init "sectors"
       , selectedClimbingRoute = Nothing
-      , mediaLink = Nothing
-      , mediaLabel = Nothing
+      , mediaLink = ""
+      , mediaLabel = ""
       }
     , Cmd.none
     )

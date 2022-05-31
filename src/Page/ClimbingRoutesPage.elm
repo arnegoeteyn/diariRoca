@@ -4,7 +4,7 @@ import Data exposing (ClimbingRoute, ascentKindToString, climbingRouteKindEnum, 
 import DataUtilities
 import Date
 import Dict
-import Forms.Criterium exposing (selectionCriterium)
+import Forms.Criterium exposing (selectionCriterium, textCriterium)
 import Html.Styled as H exposing (Html)
 import Html.Styled.Attributes as A
 import Html.Styled.Events as E
@@ -126,10 +126,11 @@ viewRouteMedia model route =
 
         addMediaInput =
             H.div []
-                [ --     Forms.Criterium.maybeTextCriterium "link" m.mediaLink <| w SetMediaLink
-                  -- , Forms.Criterium.maybeTextCriterium "label" m.mediaLabel <| w SetMediaLabel
-                  -- ,
-                  viewAddButton model (AddMediaToRoute route)
+                [ textCriterium "Link" .mediaLink identity (w SetMediaLink) m
+                , textCriterium "Link" .mediaLabel identity (w SetMediaLabel) m
+                , viewAddButton
+                    model
+                    (AddMediaToRoute route)
                 ]
     in
     H.div []

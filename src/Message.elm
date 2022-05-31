@@ -45,14 +45,8 @@ type ClimbingRoutesPageMsg
       -- Route list
     | OnClimbingRouteClicked (Maybe ClimbingRoute)
       -- Route Detail
-    | SetMediaLink (Maybe String)
-    | SetMediaLabel (Maybe String)
-
-
-
---| ClimbingRoute Form
---| Ascent Form
---| Forms
+    | SetMediaLink String
+    | SetMediaLabel String
 
 
 type FormMsg

@@ -49,8 +49,8 @@ type alias ClimbingRoutesPageModel =
     , selectState : Select.State
 
     -- Forms
-    , mediaLink : Maybe String
-    , mediaLabel : Maybe String
+    , mediaLink : String
+    , mediaLabel : String
     }
 
 
