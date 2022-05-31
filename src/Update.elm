@@ -65,8 +65,8 @@ update msg model =
             in
             ( model, File.Download.string "result.json" "application/json" result )
 
-        SetModal content ->
-            ( { model | modal = content }, Cmd.none )
+        CloseModal ->
+            ( { model | modal = Model.Empty }, Cmd.none )
 
         ToggleSettings ->
             ( { model | settingsOpen = not model.settingsOpen }, Cmd.none )

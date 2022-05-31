@@ -15,7 +15,7 @@ type Msg
     | JsonSelected File
     | JsonLoaded String
     | ExportRequested
-    | SetModal Model.ModalContent -- TODO: Should not be a message
+    | CloseModal
     | ToggleSettings
       -- Pages
     | SetPage Model.Page

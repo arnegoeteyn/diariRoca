@@ -20,7 +20,7 @@ viewModal model =
 
     else
         H.div
-            [ E.onClick (SetModal Model.Empty)
+            [ E.onClick CloseModal
             , A.css
                 [ Tw.absolute
                 , Tw.top_0
