@@ -3,9 +3,7 @@ module Message exposing (..)
 import Data exposing (Area, Ascent, ClimbingRoute, ClimbingRouteKind, Media, Sector)
 import DatePicker
 import File exposing (File)
-import Form.View
-import Forms.Form exposing (Form)
-import Model exposing (AreaForm, AreaFormValues, AscentForm, ClimbingRouteForm, ClimbingRouteFormValues, SectorForm, SectorFormValues, ValidatedSectorFormValuesConstructor)
+import Model exposing (AreaForm, AscentForm, ClimbingRouteForm, SectorForm)
 import Select
 
 
@@ -24,11 +22,11 @@ type Msg
     | OpenAreaForm (Maybe Area)
     | OpenSectorForm (Maybe Area)
     | OpenClimbingRouteForm (Maybe ClimbingRoute)
-    | OpenAscentForm (Maybe Ascent) ClimbingRoute
     | AddMediaToRoute ClimbingRoute
     | RemoveMedia ClimbingRoute Media
     | DeleteClimbingRouteConfirmation ClimbingRoute
     | DeleteClimbingRouteRequested
+    | OpenAscentForm (Maybe Ascent) ClimbingRoute
     | DeleteAscentConfirmation Ascent
     | DeleteAscentRequested Ascent
       -- Extensions

@@ -173,6 +173,7 @@ viewAscentsList model route =
                             ]
                         , H.div [ A.css [] ] [ H.text <| Maybe.withDefault "" ascent.comment ]
                         , H.div [] [ H.button [ E.onClick <| Message.DeleteAscentRequested ascent ] [ H.text "Delete ascent" ] ]
+                        , H.div [] [ H.button [ E.onClick <| Message.OpenAscentForm (Just ascent) route ] [ H.text "Edit ascent" ] ]
                         ]
                 )
                 ascents

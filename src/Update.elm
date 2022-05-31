@@ -2,7 +2,7 @@ module Update exposing (updateWithStorage)
 
 import Browser.Dom
 import Command
-import Data exposing (Area, climbingRouteKindEnum, encodedJsonFile, jsonFileDecoder)
+import Data exposing (Ascent, ClimbingRoute, encodedJsonFile, jsonFileDecoder)
 import Date
 import DatePicker exposing (DateEvent(..))
 import Dict
@@ -15,11 +15,11 @@ import Init exposing (initAreaForm, initAscentForm, initClimbingRouteForm, initS
 import Json.Decode exposing (decodeString)
 import Json.Encode exposing (encode)
 import Message exposing (ClimbingRoutesPageMsg(..), FormMsg(..), Msg(..))
-import Model exposing (AreaFormValues, ClimbingRoutesPageModel, ModalContent(..), Model)
+import Model exposing (ClimbingRoutesPageModel, ModalContent(..), Model)
 import ModelAccessors as MA
 import Select
 import Task
-import Utilities exposing (flip)
+import Utilities exposing (flip, replaceFirst)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -109,17 +109,12 @@ update msg model =
 
         OpenAscentForm maybeAscent climbingRoute ->
             let
-                ascentId =
-                    Maybe.map .id maybeAscent |> Maybe.withDefault (newId model.ascents)
-
                 ( ascentForm, ascentCmd ) =
-                    initAscentForm model.startUpDate
+                    initAscentForm model.startUpDate maybeAscent
             in
             ( { model
                 | modal = AscentFormModal
-                , ascentFormRouteId = climbingRoute.id
-                , ascentFormId = ascentId
-                , ascentForm = ascentForm
+                , ascentForm = ( ascentForm, Just ( maybeAscent, climbingRoute ) )
               }
             , ascentCmd
             )
@@ -272,7 +267,7 @@ update msg model =
 
                 -- Ascent
                 UpdateAscentForm values ->
-                    ( { model | ascentForm = values }, Cmd.none )
+                    ( { model | ascentForm = replaceFirst values model.ascentForm }, Cmd.none )
 
                 AscentFormToDatePicker subMsg ->
                     let
@@ -285,7 +280,7 @@ update msg model =
                                     in
                                     ( { values | date = Tuple.mapSecond (\_ -> updated) values.date }, selectCmd )
                                 )
-                                model.ascentForm
+                                (Tuple.first model.ascentForm)
 
                         newDate =
                             Form.map
@@ -299,7 +294,7 @@ update msg model =
                                 )
                                 updatedForm
                     in
-                    ( { model | ascentForm = newDate }, Cmd.none )
+                    ( { model | ascentForm = replaceFirst newDate model.ascentForm }, Cmd.none )
 
                 SaveAscentForm ->
                     let
@@ -308,10 +303,14 @@ update msg model =
                     in
                     ( case maybeAscent of
                         Just ascent ->
-                            { model | ascentForm = newForm, modal = Empty, ascents = Dict.insert ascent.id ascent model.ascents }
+                            { model
+                                | ascentForm = replaceFirst newForm model.ascentForm
+                                , modal = Empty
+                                , ascents = Dict.insert ascent.id ascent model.ascents
+                            }
 
                         _ ->
-                            { model | ascentForm = newForm }
+                            { model | ascentForm = replaceFirst newForm model.ascentForm }
                     , Cmd.none
                     )
 

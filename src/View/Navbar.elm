@@ -9,8 +9,6 @@ import Material.Icons.Round as IconsRound
 import Material.Icons.Types exposing (Coloring(..))
 import Message exposing (Msg(..))
 import Model exposing (Model)
-import Svg.Styled as Svg exposing (svg)
-import Svg.Styled.Attributes as SvgAttr exposing (path)
 import Tailwind.Breakpoints as B
 import Tailwind.Utilities as Tw
 import Utilities

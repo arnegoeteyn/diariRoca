@@ -1,6 +1,6 @@
 module Init exposing (..)
 
-import Data exposing (Area, AscentKind(..), ClimbingRouteKind(..), Sector, ascentKindToString, climbingRouteKindToString, jsonFileDecoder)
+import Data exposing (Area, Ascent, AscentKind(..), ClimbingRouteKind(..), Sector, ascentKindToString, climbingRouteKindToString, jsonFileDecoder)
 import DataUtilities
 import Date exposing (Date)
 import DatePicker exposing (defaultSettings)
@@ -8,7 +8,7 @@ import Dict
 import Forms.Form exposing (Form(..))
 import Json.Decode exposing (decodeString)
 import Message exposing (ClimbingRoutesPageMsg(..), FormMsg(..), Msg(..))
-import Model exposing (AreaForm, AreaFormValues, AscentForm, ClimbingRouteForm, ClimbingRoutesPageModel, Model, Page(..), SectorForm, SectorFormValues, ValidatedSectorFormValuesConstructor)
+import Model exposing (AreaForm, AscentForm, ClimbingRouteForm, ClimbingRoutesPageModel, Model, Page(..), SectorForm)
 import Select
 import Time
 import Utilities
@@ -30,7 +30,7 @@ init { storageCache, posixTime } =
             initClimbingRoutesPage date
 
         ( ascentForm, ascentFormCmd ) =
-            initAscentForm date
+            initAscentForm date Nothing
     in
     ( { appState =
             Model.Ready
@@ -53,9 +53,7 @@ init { storageCache, posixTime } =
       , sectorForm = initSectorForm
       , climbingRouteForm = initClimbingRouteForm
       , climbingRouteFormId = -1
-      , ascentForm = ascentForm
-      , ascentFormId = -1
-      , ascentFormRouteId = -1
+      , ascentForm = ( ascentForm, Nothing )
 
       -- Pages
       , climbingRoutesPageModel = climbingRoutesPageModel
@@ -91,16 +89,16 @@ initClimbingRouteForm =
         }
 
 
-initAscentForm : Date -> ( AscentForm, Cmd Msg )
-initAscentForm date =
+initAscentForm : Date -> Maybe Ascent -> ( AscentForm, Cmd Msg )
+initAscentForm date maybeAscent =
     let
         ( datePicker, datePickerFx ) =
             DatePicker.init
     in
     ( Idle
-        { comment = ""
-        , kind = ascentKindToString Onsight
-        , date = ( Date.toRataDie date, datePicker )
+        { comment = Maybe.andThen .comment maybeAscent |> Maybe.withDefault ""
+        , kind = ascentKindToString <| Maybe.withDefault Onsight <| Maybe.map .kind maybeAscent
+        , date = ( Date.toRataDie (Maybe.map .date maybeAscent |> Maybe.withDefault date), datePicker )
         }
     , Cmd.map (FormMessage << AscentFormToDatePicker) datePickerFx
     )

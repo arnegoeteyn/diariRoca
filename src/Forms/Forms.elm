@@ -2,7 +2,7 @@ module Forms.Forms exposing (..)
 
 import Data exposing (Area, Ascent, AscentKind(..), ClimbingRoute, ClimbingRouteKind(..), Media, Sector, ascentKindEnum, ascentKindFromString, ascentKindToString, climbingRouteKindEnum, climbingRouteKindFromString, climbingRouteKindToString)
 import Date
-import Dict
+import Dict exposing (Dict)
 import Forms.Criterium exposing (dateCriterium, formSelectionCriterium, formTextCriterium, selectionWithSearchCriterium)
 import Forms.Form as Form exposing (Form(..))
 import Html.Styled as H
@@ -162,44 +162,61 @@ climbingRouteFromForm model form =
 
 ascentForm : Model -> H.Html Msg
 ascentForm model =
+    let
+        form =
+            Tuple.first model.ascentForm
+    in
     H.form []
-        [ formTextCriterium "Comment" .comment updateComment UpdateAscentForm model.ascentForm
-        , formSelectionCriterium "Kind" (\_ -> List.map ascentKindToString ascentKindEnum) updateKind UpdateAscentForm model.ascentForm
-        , dateCriterium "Date" ascentFormDatePickerSettings .date AscentFormToDatePicker model.ascentForm
+        [ formTextCriterium "Comment" .comment updateComment UpdateAscentForm form
+        , formSelectionCriterium "Kind"
+            (\_ -> List.map ascentKindToString ascentKindEnum)
+            updateKind
+            UpdateAscentForm
+            form
+        , dateCriterium "Date" ascentFormDatePickerSettings .date AscentFormToDatePicker form
         , H.button [ A.type_ "button", E.onClick (FormMessage SaveAscentForm) ] [ H.text "Save" ]
-        , viewErrors model.ascentForm
+        , viewErrors form
         ]
 
 
 validateAscentForm : Model -> ( AscentForm, Maybe Ascent )
 validateAscentForm model =
-    Form.succeed ValidatedAscentFormValues model.ascentForm
-        |> Form.append
-            (\values -> Ok <| Date.fromRataDie <| Tuple.first values.date)
-        |> Form.append
-            (.kind >> ascentKindFromString >> Result.fromMaybe "A valid ascentKind must be selected")
-        |> Form.append
-            (\_ -> Ok model.ascentFormId)
-        |> Form.append
-            (\values ->
-                if String.isEmpty values.comment then
-                    Ok Nothing
+    let
+        form =
+            Tuple.first model.ascentForm
+    in
+    case Tuple.second model.ascentForm of
+        Nothing ->
+            ( form, Nothing )
 
-                else
-                    Just values.comment |> Ok
-            )
-        |> Form.append
-            (\_ -> Ok model.ascentFormRouteId)
-        |> ascentFromForm model
+        Just ( maybeAscent, climbingRoute ) ->
+            Form.succeed ValidatedAscentFormValues form
+                |> Form.append
+                    (\_ -> Ok <| idForForm model.ascents maybeAscent)
+                |> Form.append
+                    (\_ -> Ok climbingRoute.id)
+                |> Form.append
+                    (\values -> Ok <| Date.fromRataDie <| Tuple.first values.date)
+                |> Form.append
+                    (.kind >> ascentKindFromString >> Result.fromMaybe "A valid ascentKind must be selected")
+                |> Form.append
+                    (\values ->
+                        if String.isEmpty values.comment then
+                            Ok Nothing
+
+                        else
+                            Just values.comment |> Ok
+                    )
+                |> ascentFromForm
 
 
-ascentFromForm : Model -> Model.ValidatedAscentForm -> ( AscentForm, Maybe Ascent )
-ascentFromForm model form =
+ascentFromForm : Model.ValidatedAscentForm -> ( AscentForm, Maybe Ascent )
+ascentFromForm form =
     case form of
         Valid ascentFormValues values ->
             ( Idle values
             , Just <|
-                Ascent model.ascentFormId
+                Ascent ascentFormValues.id
                     ascentFormValues.climbingRouteId
                     ascentFormValues.date
                     ascentFormValues.comment
@@ -224,6 +241,15 @@ mediaFromForm model =
 
     else
         Just <| Media model.climbingRoutesPageModel.mediaLink model.climbingRoutesPageModel.mediaLabel
+
+
+
+--| General Utilties
+
+
+idForForm : Dict Int { a | id : Int } -> Maybe { a | id : Int } -> Int
+idForForm dict m =
+    Maybe.map .id m |> Maybe.withDefault (newId dict)
 
 
 

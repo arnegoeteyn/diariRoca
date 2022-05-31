@@ -6,7 +6,6 @@ import DatePicker exposing (DatePicker)
 import Dict exposing (Dict)
 import Forms.Form exposing (Form)
 import Select
-import Time exposing (Posix)
 
 
 type alias Model =
@@ -30,9 +29,7 @@ type alias Model =
     , sectorFormId : Int
     , climbingRouteForm : ClimbingRouteForm
     , climbingRouteFormId : Int
-    , ascentForm : AscentForm
-    , ascentFormId : Int
-    , ascentFormRouteId : Int
+    , ascentForm : ( AscentForm, Maybe AscentFormMeta )
 
     -- Pages
     , climbingRoutesPageModel : ClimbingRoutesPageModel
@@ -109,12 +106,8 @@ type alias ValidatedSectorFormValues =
     }
 
 
-type alias ValidatedSectorFormValuesConstructor =
-    ValidatedSectorFormValues
-
-
 type alias SectorForm =
-    Form SectorFormValues ValidatedSectorFormValuesConstructor
+    Form SectorFormValues ValidatedSectorFormValues
 
 
 type alias ValidatedSectorForm =
@@ -143,12 +136,12 @@ type alias ClimbingRouteForm =
     Form ClimbingRouteFormValues ValidatedClimbingRouteFormValues
 
 
-type alias ValidatedClimbingRouteFormValuesConstructor =
-    ValidatedClimbingRouteFormValues
-
-
 type alias ValidatedClimbingRouteForm =
     Form ClimbingRouteFormValues ValidatedClimbingRouteFormValues
+
+
+type alias AscentFormMeta =
+    ( Maybe Ascent, ClimbingRoute )
 
 
 type alias AscentFormValues =
@@ -159,20 +152,16 @@ type alias AscentFormValues =
 
 
 type alias ValidatedAscentFormValues =
-    { date : Date
-    , kind : AscentKind
-    , id : Int
-    , comment : Maybe String
+    { id : Int
     , climbingRouteId : Int
+    , date : Date
+    , kind : AscentKind
+    , comment : Maybe String
     }
 
 
 type alias AscentForm =
     Form AscentFormValues ValidatedAscentFormValues
-
-
-type alias ValidatedAscentFormValuesConstructor =
-    ValidatedAscentFormValues
 
 
 type alias ValidatedAscentForm =

@@ -131,6 +131,15 @@ removeFirst f l =
 
 
 
+--| Tuple
+
+
+replaceFirst : c -> ( a, b ) -> ( c, b )
+replaceFirst c ( a, b ) =
+    ( c, b )
+
+
+
 --| Misc
 
 
