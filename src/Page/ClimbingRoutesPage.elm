@@ -95,6 +95,7 @@ viewRouteDetail model route =
                 ]
             , H.div []
                 [ H.button [ E.onClick Message.DeleteClimbingRouteRequested ] [ H.text "Delete" ]
+                , H.button [ E.onClick <| Message.OpenClimbingRouteForm (Just route) ] [ H.text "Edit route" ]
                 ]
             ]
 
@@ -189,7 +190,7 @@ viewRouteRow : Model -> ClimbingRoute -> Html Msg
 viewRouteRow model route =
     ClimbingRoute.viewRouteRow
         { route = route
-        , sectorName = MA.getSectorName model route.sectorId
+        , sectorName = MA.getSectorNameF model route.sectorId
         , ascents = MA.getAscents model route
         }
 

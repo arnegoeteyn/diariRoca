@@ -2,7 +2,7 @@ module Update exposing (updateWithStorage)
 
 import Browser.Dom
 import Command
-import Data exposing (Ascent, ClimbingRoute, encodedJsonFile, jsonFileDecoder)
+import Data exposing (encodedJsonFile, jsonFileDecoder)
 import Date
 import DatePicker exposing (DateEvent(..))
 import Dict
@@ -95,14 +95,9 @@ update msg model =
             ( { model | modal = SectorFormModal, sectorFormId = sectorId, sectorForm = initSectorForm }, Cmd.none )
 
         OpenClimbingRouteForm maybeClimbingRoute ->
-            let
-                climbingRouteId =
-                    Maybe.map .id maybeClimbingRoute |> Maybe.withDefault (newId model.climbingRoutes)
-            in
             ( { model
                 | modal = ClimbingRouteFormModal
-                , climbingRouteFormId = climbingRouteId
-                , climbingRouteForm = initClimbingRouteForm
+                , climbingRouteForm = ( initClimbingRouteForm (Just model) maybeClimbingRoute, maybeClimbingRoute )
               }
             , Cmd.none
             )
@@ -213,7 +208,7 @@ update msg model =
                     )
 
                 UpdateClimbingRouteForm values ->
-                    ( { model | climbingRouteForm = values }, Cmd.none )
+                    ( { model | climbingRouteForm = replaceFirst values model.climbingRouteForm }, Cmd.none )
 
                 ClimbingRouteFormSelectSector maybeSector ->
                     let
@@ -226,7 +221,7 @@ update msg model =
                                             f.sectorId
                                 }
                     in
-                    ( { model | climbingRouteForm = Form.map newForm model.climbingRouteForm }, Cmd.none )
+                    ( { model | climbingRouteForm = Tuple.mapFirst (Form.map newForm) model.climbingRouteForm }, Cmd.none )
 
                 ClimbingRouteFormSelectSectorMsg subMsg ->
                     let
@@ -239,31 +234,33 @@ update msg model =
                                     in
                                     ( { values | sectorId = Tuple.mapSecond (\_ -> updated) values.sectorId }, selectCmd )
                                 )
-                                model.climbingRouteForm
+                                (Tuple.first model.climbingRouteForm)
                     in
-                    ( { model | climbingRouteForm = updatedForm }, cmd )
+                    ( { model | climbingRouteForm = replaceFirst updatedForm model.climbingRouteForm }, cmd )
 
                 SaveClimbingRouteForm ->
                     let
                         ( newForm, maybeClimbingRoute ) =
                             Forms.Forms.validateClimbingRouteForm model
 
-                        tag =
-                            "route-" ++ String.fromInt model.climbingRouteFormId
-
-                        task =
-                            Browser.Dom.getElement tag
-                                |> Task.andThen (\info -> Browser.Dom.setViewport 0 info.element.y)
-                                |> Task.attempt (\_ -> Dummy)
+                        climbingRouteForm =
+                            replaceFirst newForm model.climbingRouteForm
                     in
-                    ( case maybeClimbingRoute of
+                    case maybeClimbingRoute of
                         Just climbingRoute ->
-                            { model | climbingRouteForm = newForm, modal = Empty, climbingRoutes = Dict.insert climbingRoute.id climbingRoute model.climbingRoutes }
+                            let
+                                tag =
+                                    "route-" ++ String.fromInt climbingRoute.id
+
+                                task =
+                                    Browser.Dom.getElement tag
+                                        |> Task.andThen (\info -> Browser.Dom.setViewport 0 info.element.y)
+                                        |> Task.attempt (\_ -> Dummy)
+                            in
+                            ( { model | climbingRouteForm = climbingRouteForm, modal = Empty, climbingRoutes = Dict.insert climbingRoute.id climbingRoute model.climbingRoutes }, task )
 
                         _ ->
-                            { model | climbingRouteForm = newForm }
-                    , task
-                    )
+                            ( { model | climbingRouteForm = climbingRouteForm }, Cmd.none )
 
                 -- Ascent
                 UpdateAscentForm values ->

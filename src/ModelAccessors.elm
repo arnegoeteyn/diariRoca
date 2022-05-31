@@ -3,7 +3,6 @@ module ModelAccessors exposing (..)
 import Data exposing (Area, Ascent, ClimbingRoute, Sector, Trip)
 import Date exposing (Date)
 import Dict exposing (Dict)
-import Forms.Forms
 import Model exposing (Model)
 import Utilities
 
@@ -26,8 +25,13 @@ getSector m i =
     Dict.get i m.sectors
 
 
-getSectorName : Model -> Int -> String
+getSectorName : Model -> Int -> Maybe String
 getSectorName m i =
+    getSector m i |> Maybe.map .name
+
+
+getSectorNameF : Model -> Int -> String
+getSectorNameF m i =
     getSector m i |> Maybe.map .name |> Maybe.withDefault "N/A"
 
 

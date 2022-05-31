@@ -108,45 +108,68 @@ sectorFromForm model form =
 
 climbingRouteForm : Model -> H.Html Msg
 climbingRouteForm model =
+    let
+        form =
+            Tuple.first model.climbingRouteForm
+    in
     H.form []
-        [ formTextCriterium "Name" .name updateName UpdateClimbingRouteForm model.climbingRouteForm
-        , formTextCriterium "Grade" .grade updateGrade UpdateClimbingRouteForm model.climbingRouteForm
-        , selectionWithSearchCriterium "Sector" Init.climbingRouteFormSectorSelectConfig .sectorId (Dict.values model.sectors) model.climbingRouteForm
-        , formTextCriterium "Comment" .comment updateComment UpdateClimbingRouteForm model.climbingRouteForm
-        , formSelectionCriterium "Kind" (\_ -> List.map climbingRouteKindToString climbingRouteKindEnum) updateKind UpdateClimbingRouteForm model.climbingRouteForm
+        [ formTextCriterium "Name" .name updateName UpdateClimbingRouteForm form
+        , formTextCriterium "Grade" .grade updateGrade UpdateClimbingRouteForm form
+        , selectionWithSearchCriterium "Sector" Init.climbingRouteFormSectorSelectConfig .sectorId (Dict.values model.sectors) form
+        , formTextCriterium "Comment" .comment updateComment UpdateClimbingRouteForm form
+        , formSelectionCriterium "Kind" (\_ -> List.map climbingRouteKindToString climbingRouteKindEnum) updateKind UpdateClimbingRouteForm form
         , H.button [ A.type_ "button", E.onClick (FormMessage SaveClimbingRouteForm) ] [ H.text "Save" ]
-        , viewErrors model.climbingRouteForm
+        , viewErrors form
         ]
 
 
 validateClimbingRouteForm : Model -> ( ClimbingRouteForm, Maybe ClimbingRoute )
 validateClimbingRouteForm model =
-    Form.succeed ValidatedClimbingRouteFormValues model.climbingRouteForm
-        |> Form.append
-            (validateNonEmpty .name "Route can't have an empty name")
-        |> Form.append
-            (validateNonEmpty .grade "Route can't have no grade")
-        |> Form.append
-            (\values ->
-                if String.isEmpty values.comment then
-                    Ok Nothing
+    let
+        form =
+            Tuple.first model.climbingRouteForm
+    in
+    case Tuple.second model.climbingRouteForm of
+        Nothing ->
+            ( form, Nothing )
 
-                else
-                    Just values.comment |> Ok
-            )
-        |> Form.append
-            (.kind >> climbingRouteKindFromString >> Result.fromMaybe "A valid routeKind must be selected")
-        |> Form.append
-            (.sectorId >> Tuple.first >> List.head >> Maybe.map .id >> Result.fromMaybe "A valid sector must be selected")
-        |> climbingRouteFromForm model
+        Just climbingRoute ->
+            Form.succeed ValidatedClimbingRouteFormValues form
+                |> Form.append
+                    (\_ -> Ok climbingRoute.id)
+                |> Form.append
+                    (validateNonEmpty .name "Route can't have an empty name")
+                |> Form.append
+                    (validateNonEmpty .grade "Route can't have no grade")
+                |> Form.append
+                    (\values ->
+                        if String.isEmpty values.comment then
+                            Ok Nothing
+
+                        else
+                            Just values.comment |> Ok
+                    )
+                |> Form.append
+                    (.kind >> climbingRouteKindFromString >> Result.fromMaybe "A valid routeKind must be selected")
+                |> Form.append
+                    (.sectorId >> Tuple.first >> List.head >> Maybe.map .id >> Result.fromMaybe "A valid sector must be selected")
+                |> climbingRouteFromForm
 
 
-climbingRouteFromForm : Model -> Model.ValidatedClimbingRouteForm -> ( ClimbingRouteForm, Maybe ClimbingRoute )
-climbingRouteFromForm model form =
+climbingRouteFromForm : Model.ValidatedClimbingRouteForm -> ( ClimbingRouteForm, Maybe ClimbingRoute )
+climbingRouteFromForm form =
     case form of
         Valid climbingRouteValues values ->
             ( Idle values
-            , Just <| ClimbingRoute model.climbingRouteFormId climbingRouteValues.sectorId climbingRouteValues.name climbingRouteValues.grade climbingRouteValues.comment climbingRouteValues.kind []
+            , Just <|
+                ClimbingRoute
+                    climbingRouteValues.id
+                    climbingRouteValues.sectorId
+                    climbingRouteValues.name
+                    climbingRouteValues.grade
+                    climbingRouteValues.comment
+                    climbingRouteValues.kind
+                    []
             )
 
         Invalid errors values ->

@@ -1,6 +1,6 @@
 module Init exposing (..)
 
-import Data exposing (Area, Ascent, AscentKind(..), ClimbingRouteKind(..), Sector, ascentKindToString, climbingRouteKindToString, jsonFileDecoder)
+import Data exposing (Area, Ascent, AscentKind(..), ClimbingRoute, ClimbingRouteKind(..), Sector, ascentKindToString, climbingRouteKindToString, jsonFileDecoder)
 import DataUtilities
 import Date exposing (Date)
 import DatePicker exposing (defaultSettings)
@@ -9,6 +9,7 @@ import Forms.Form exposing (Form(..))
 import Json.Decode exposing (decodeString)
 import Message exposing (ClimbingRoutesPageMsg(..), FormMsg(..), Msg(..))
 import Model exposing (AreaForm, AscentForm, ClimbingRouteForm, ClimbingRoutesPageModel, Model, Page(..), SectorForm)
+import ModelAccessors as MA
 import Select
 import Time
 import Utilities
@@ -51,8 +52,7 @@ init { storageCache, posixTime } =
       , areaFormId = -1
       , sectorFormId = -1
       , sectorForm = initSectorForm
-      , climbingRouteForm = initClimbingRouteForm
-      , climbingRouteFormId = -1
+      , climbingRouteForm = ( initClimbingRouteForm Nothing Nothing, Nothing )
       , ascentForm = ( ascentForm, Nothing )
 
       -- Pages
@@ -78,14 +78,17 @@ initSectorForm =
         }
 
 
-initClimbingRouteForm : ClimbingRouteForm
-initClimbingRouteForm =
+initClimbingRouteForm : Maybe Model -> Maybe ClimbingRoute -> ClimbingRouteForm
+initClimbingRouteForm maybeModel climbingRoute =
     Idle
-        { name = ""
-        , grade = ""
-        , comment = ""
-        , kind = climbingRouteKindToString Sport
-        , sectorId = ( [], Select.init "climbingRouteFormSectorId" )
+        { name = Maybe.map .name climbingRoute |> Maybe.withDefault ""
+        , grade = Maybe.map .grade climbingRoute |> Maybe.withDefault ""
+        , comment = Maybe.andThen .comment climbingRoute |> Maybe.withDefault ""
+        , kind = climbingRouteKindToString <| (Maybe.withDefault Sport <| Maybe.map .kind climbingRoute)
+        , sectorId =
+            ( Maybe.andThen (\model -> Maybe.andThen (.sectorId >> MA.getSector model) climbingRoute |> Maybe.map List.singleton) maybeModel |> Maybe.withDefault []
+            , Select.init "climbingRouteFormSectorId"
+            )
         }
 
 

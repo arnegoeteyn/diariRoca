@@ -27,8 +27,7 @@ type alias Model =
     , areaFormId : Int
     , sectorForm : SectorForm
     , sectorFormId : Int
-    , climbingRouteForm : ClimbingRouteForm
-    , climbingRouteFormId : Int
+    , climbingRouteForm : ( ClimbingRouteForm, Maybe ClimbingRoute )
     , ascentForm : ( AscentForm, Maybe AscentFormMeta )
 
     -- Pages
@@ -124,7 +123,8 @@ type alias ClimbingRouteFormValues =
 
 
 type alias ValidatedClimbingRouteFormValues =
-    { name : String
+    { id : Int
+    , name : String
     , grade : String
     , comment : Maybe String
     , kind : ClimbingRouteKind
