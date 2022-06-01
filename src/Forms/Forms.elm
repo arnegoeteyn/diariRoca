@@ -129,31 +129,26 @@ validateClimbingRouteForm model =
         form =
             Tuple.first model.climbingRouteForm
     in
-    case Tuple.second model.climbingRouteForm of
-        Nothing ->
-            ( form, Nothing )
+    Form.succeed ValidatedClimbingRouteFormValues form
+        |> Form.append
+            (\_ -> Ok <| idForForm model.climbingRoutes (Tuple.second model.climbingRouteForm))
+        |> Form.append
+            (validateNonEmpty .name "Route can't have an empty name")
+        |> Form.append
+            (validateNonEmpty .grade "Route can't have no grade")
+        |> Form.append
+            (\values ->
+                if String.isEmpty values.comment then
+                    Ok Nothing
 
-        Just climbingRoute ->
-            Form.succeed ValidatedClimbingRouteFormValues form
-                |> Form.append
-                    (\_ -> Ok climbingRoute.id)
-                |> Form.append
-                    (validateNonEmpty .name "Route can't have an empty name")
-                |> Form.append
-                    (validateNonEmpty .grade "Route can't have no grade")
-                |> Form.append
-                    (\values ->
-                        if String.isEmpty values.comment then
-                            Ok Nothing
-
-                        else
-                            Just values.comment |> Ok
-                    )
-                |> Form.append
-                    (.kind >> climbingRouteKindFromString >> Result.fromMaybe "A valid routeKind must be selected")
-                |> Form.append
-                    (.sectorId >> Tuple.first >> List.head >> Maybe.map .id >> Result.fromMaybe "A valid sector must be selected")
-                |> climbingRouteFromForm
+                else
+                    Just values.comment |> Ok
+            )
+        |> Form.append
+            (.kind >> climbingRouteKindFromString >> Result.fromMaybe "A valid routeKind must be selected")
+        |> Form.append
+            (.sectorId >> Tuple.first >> List.head >> Maybe.map .id >> Result.fromMaybe "A valid sector must be selected")
+        |> climbingRouteFromForm
 
 
 climbingRouteFromForm : Model.ValidatedClimbingRouteForm -> ( ClimbingRouteForm, Maybe ClimbingRoute )

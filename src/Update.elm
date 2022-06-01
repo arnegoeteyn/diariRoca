@@ -9,13 +9,13 @@ import Dict
 import File
 import File.Download
 import File.Select
-import Forms.Form as Form exposing (mapAndReturn)
+import Forms.Form as Form exposing (Form)
 import Forms.Forms exposing (newId)
 import Init exposing (initAreaForm, initAscentForm, initClimbingRouteForm, initSectorForm)
 import Json.Decode exposing (decodeString)
 import Json.Encode exposing (encode)
 import Message exposing (ClimbingRoutesPageMsg(..), FormMsg(..), Msg(..))
-import Model exposing (ClimbingRoutesPageModel, ModalContent(..), Model)
+import Model exposing (ClimbingRoutesPageModel, DateCriterium, ModalContent(..), Model, SelectionCriterium)
 import ModelAccessors as MA
 import Select
 import Task
@@ -181,17 +181,14 @@ update msg model =
                 SectorFormSelectAreaMsg subMsg ->
                     let
                         ( updatedForm, cmd ) =
-                            mapAndReturn
-                                (\values ->
-                                    let
-                                        ( updated, selectCmd ) =
-                                            Select.update Init.sectorFormAreaSelectConfig subMsg (Tuple.second values.areaId)
-                                    in
-                                    ( { values | areaId = Tuple.mapSecond (\_ -> updated) values.areaId }, selectCmd )
-                                )
-                                model.sectorForm
+                            updateSelectCriteriumMsg .areaId (\x v -> { v | areaId = x }) Init.sectorFormAreaSelectConfig subMsg model.sectorForm
                     in
-                    ( { model | sectorForm = updatedForm }, cmd )
+                    ( { model
+                        | sectorForm =
+                            updatedForm
+                      }
+                    , cmd
+                    )
 
                 SaveSectorForm ->
                     let
@@ -226,17 +223,14 @@ update msg model =
                 ClimbingRouteFormSelectSectorMsg subMsg ->
                     let
                         ( updatedForm, cmd ) =
-                            mapAndReturn
-                                (\values ->
-                                    let
-                                        ( updated, selectCmd ) =
-                                            Select.update Init.climbingRouteFormSectorSelectConfig subMsg (Tuple.second values.sectorId)
-                                    in
-                                    ( { values | sectorId = Tuple.mapSecond (\_ -> updated) values.sectorId }, selectCmd )
-                                )
-                                (Tuple.first model.climbingRouteForm)
+                            updateSelectCriteriumMsg .sectorId (\x v -> { v | sectorId = x }) Init.climbingRouteFormSectorSelectConfig subMsg (Tuple.first model.climbingRouteForm)
                     in
-                    ( { model | climbingRouteForm = replaceFirst updatedForm model.climbingRouteForm }, cmd )
+                    ( { model
+                        | climbingRouteForm =
+                            replaceFirst updatedForm model.climbingRouteForm
+                      }
+                    , cmd
+                    )
 
                 SaveClimbingRouteForm ->
                     let
@@ -267,31 +261,18 @@ update msg model =
                     ( { model | ascentForm = replaceFirst values model.ascentForm }, Cmd.none )
 
                 AscentFormToDatePicker subMsg ->
-                    let
-                        ( updatedForm, dateEvent ) =
-                            mapAndReturn
-                                (\values ->
-                                    let
-                                        ( updated, selectCmd ) =
-                                            DatePicker.update Init.ascentFormDatePickerSettings subMsg (Tuple.second values.date)
-                                    in
-                                    ( { values | date = Tuple.mapSecond (\_ -> updated) values.date }, selectCmd )
+                    ( { model
+                        | ascentForm =
+                            Tuple.mapFirst
+                                (updateDateCriterium .date
+                                    (\x v -> { v | date = x })
+                                    Init.ascentFormDatePickerSettings
+                                    subMsg
                                 )
-                                (Tuple.first model.ascentForm)
-
-                        newDate =
-                            Form.map
-                                (\values ->
-                                    case dateEvent of
-                                        Picked date ->
-                                            { values | date = Tuple.mapFirst (\_ -> Date.toRataDie date) values.date }
-
-                                        _ ->
-                                            values
-                                )
-                                updatedForm
-                    in
-                    ( { model | ascentForm = replaceFirst newDate model.ascentForm }, Cmd.none )
+                                model.ascentForm
+                      }
+                    , Cmd.none
+                    )
 
                 SaveAscentForm ->
                     let
@@ -375,6 +356,52 @@ updateWithStorage msg model =
 
 
 --| Utilities
+
+
+updateDateCriterium : (values -> DateCriterium) -> (DateCriterium -> values -> values) -> DatePicker.Settings -> DatePicker.Msg -> Form values r -> Form values r
+updateDateCriterium extractor wrapper settings msg form =
+    let
+        ( updatedForm, cmd ) =
+            Form.mapAndReturn
+                (\values ->
+                    let
+                        date =
+                            extractor values
+
+                        ( updated, selectCmd ) =
+                            DatePicker.update settings msg (Tuple.second date)
+                    in
+                    ( wrapper (Tuple.mapSecond (\_ -> updated) date) values, selectCmd )
+                )
+                form
+
+        newDateForm =
+            Form.map
+                (\values ->
+                    case cmd of
+                        Picked newDate ->
+                            wrapper (Tuple.mapFirst (\_ -> Date.toRataDie newDate) (extractor values)) values
+
+                        _ ->
+                            values
+                )
+                updatedForm
+    in
+    newDateForm
+
+
+updateSelectCriteriumMsg : (a -> SelectionCriterium item) -> (SelectionCriterium item -> a -> a) -> Select.Config msg item -> Select.Msg item -> Form a r -> ( Form a r, Cmd msg )
+updateSelectCriteriumMsg extractor wrapper config msg =
+    Form.mapAndReturn
+        (\values ->
+            let
+                ( updated, selectCmd ) =
+                    Select.update config msg (Tuple.second (extractor values))
+            in
+            ( wrapper (Tuple.mapSecond (\_ -> updated) (extractor values)) values
+            , selectCmd
+            )
+        )
 
 
 closeModal : Model -> Model
