@@ -8,7 +8,7 @@ import Dict
 import Forms.Form exposing (Form(..))
 import Json.Decode exposing (decodeString)
 import Message exposing (ClimbingRoutesPageMsg(..), FormMsg(..), Msg(..))
-import Model exposing (AreaForm, AscentForm, ClimbingRouteForm, ClimbingRoutesPageModel, Model, Page(..), SectorForm)
+import Model exposing (AreaForm, AscentForm, ClimbingRouteForm, ClimbingRoutesPageModel, Model, Page(..), SectorForm, SectorsPageModel)
 import ModelAccessors as MA
 import Select
 import Time
@@ -26,9 +26,6 @@ init { storageCache, posixTime } =
 
         jsonFile =
             Result.withDefault { climbingRoutes = Dict.empty, ascents = Dict.empty, sectors = Dict.empty, areas = Dict.empty, trips = Dict.empty } <| decodedStorage
-
-        ( climbingRoutesPageModel, climbingRoutesPageCmd ) =
-            initClimbingRoutesPage date
 
         ( ascentForm, ascentFormCmd ) =
             initAscentForm date Nothing
@@ -56,9 +53,10 @@ init { storageCache, posixTime } =
       , ascentForm = ( ascentForm, Nothing )
 
       -- Pages
-      , climbingRoutesPageModel = climbingRoutesPageModel
+      , climbingRoutesPageModel = initClimbingRoutesPage
+      , sectorsPageModel = initSectorsPage
       }
-    , Cmd.batch [ climbingRoutesPageCmd, ascentFormCmd ]
+    , Cmd.batch [ ascentFormCmd ]
     )
 
 
@@ -107,18 +105,22 @@ initAscentForm date maybeAscent =
     )
 
 
-initClimbingRoutesPage : Date -> ( ClimbingRoutesPageModel, Cmd Msg )
-initClimbingRoutesPage date =
-    ( { routeFilter = ""
-      , routeKindFilter = Nothing
-      , selected = []
-      , selectState = Select.init "sectors"
-      , selectedClimbingRoute = Nothing
-      , mediaLink = ""
-      , mediaLabel = ""
-      }
-    , Cmd.none
-    )
+initClimbingRoutesPage : ClimbingRoutesPageModel
+initClimbingRoutesPage =
+    { routeFilter = ""
+    , routeKindFilter = Nothing
+    , selected = []
+    , selectState = Select.init "sectors"
+    , selectedClimbingRoute = Nothing
+    , mediaLink = ""
+    , mediaLabel = ""
+    }
+
+
+initSectorsPage : SectorsPageModel
+initSectorsPage =
+    { selectedArea = Nothing
+    }
 
 
 

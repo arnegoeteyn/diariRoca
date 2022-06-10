@@ -14,8 +14,8 @@ import Forms.Forms exposing (newId)
 import Init exposing (initAreaForm, initAscentForm, initClimbingRouteForm, initSectorForm)
 import Json.Decode exposing (decodeString)
 import Json.Encode exposing (encode)
-import Message exposing (ClimbingRoutesPageMsg(..), FormMsg(..), Msg(..))
-import Model exposing (ClimbingRoutesPageModel, DateCriterium, ModalContent(..), Model, SelectionCriterium)
+import Message exposing (ClimbingRoutesPageMsg(..), FormMsg(..), Msg(..), SectorsPageMsg(..))
+import Model exposing (ClimbingRoutesPageModel, DateCriterium, ModalContent(..), Model, SectorsPageModel, SelectionCriterium)
 import ModelAccessors as MA
 import Select
 import Task
@@ -78,6 +78,13 @@ update msg model =
                     updateClimbingRoutesPage crpMsg model.climbingRoutesPageModel
             in
             ( { model | climbingRoutesPageModel = newCrpModel }, newCrpMsg )
+
+        SectorsPageMessage spMsg ->
+            let
+                ( newSpModel, newSpMsg ) =
+                    updateSectorsPage spMsg model.sectorsPageModel
+            in
+            ( { model | sectorsPageModel = newSpModel }, newSpMsg )
 
         -- Data
         OpenAreaForm maybeArea ->
@@ -335,6 +342,13 @@ updateClimbingRoutesPage msg model =
 
         SetMediaLabel label ->
             ( { model | mediaLabel = label }, Cmd.none )
+
+
+updateSectorsPage : SectorsPageMsg -> SectorsPageModel -> ( SectorsPageModel, Cmd Msg )
+updateSectorsPage msg model =
+    case msg of
+        AreaSelected area ->
+            ( { model | selectedArea = area }, Cmd.none )
 
 
 updateWithStorage : Msg -> Model -> ( Model, Cmd Msg )

@@ -1,22 +1,22 @@
-module DataUtilities exposing (filterAreasByName, filterRoutes, filterSectorsByName, sortRoutes)
+module DataUtilities exposing (..)
 
 import Data exposing (Area, ClimbingRoute, ClimbingRouteKind, Sector)
 import Utilities
 
 
-type alias Match a =
-    String -> a -> Bool
+type alias Match a comparable =
+    comparable -> a -> Bool
 
 
-type alias Filter a =
-    String -> List a -> List a
+type alias Filter a comparable =
+    comparable -> List a -> List a
 
 
 
 -- | Generic
 
 
-matchByName : Match { a | name : String }
+matchByName : Match { a | name : String } String
 matchByName filter item =
     String.contains (String.toLower filter) (String.toLower item.name)
 
@@ -25,12 +25,17 @@ matchByName filter item =
 --| Area
 
 
-matchAreaByName : Match Area
+sortAreas : List Area -> List Area
+sortAreas =
+    List.sortBy .name
+
+
+matchAreaByName : Match Area String
 matchAreaByName =
     matchByName
 
 
-filterAreasByName : Filter Area
+filterAreasByName : Filter Area String
 filterAreasByName filter areas =
     List.filter (matchAreaByName filter) areas
 
@@ -39,14 +44,24 @@ filterAreasByName filter areas =
 --| Sector
 
 
-matchSectorByName : Match Sector
+matchSectorByName : Match Sector String
 matchSectorByName =
     matchByName
 
 
-filterSectorsByName : Filter Sector
+filterSectorsByName : Filter Sector String
 filterSectorsByName filter sectors =
     List.filter (matchSectorByName filter) sectors
+
+
+matchSectorByAreaId : Match Sector Int
+matchSectorByAreaId id sector =
+    id == sector.areaId
+
+
+filterSectorsByAreaId : Filter Sector Int
+filterSectorsByAreaId filter sectors =
+    List.filter (matchSectorByAreaId filter) sectors
 
 
 

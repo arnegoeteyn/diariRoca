@@ -43,6 +43,7 @@ view model =
             H.ul [ A.css [ Tw.flex, Tw.flex_row, Tw.items_center ] ]
                 [ navLink Model.ClimbingRoutesPage "Routes"
                 , navLink Model.AscentsPage "Ascents"
+                , navLink Model.SectorsPage "Sectors"
                 , navLink Model.StatsPage "Stats"
                 , dropDown model
                 ]

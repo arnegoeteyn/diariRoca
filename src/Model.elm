@@ -32,6 +32,7 @@ type alias Model =
 
     -- Pages
     , climbingRoutesPageModel : ClimbingRoutesPageModel
+    , sectorsPageModel : SectorsPageModel
     }
 
 
@@ -47,6 +48,11 @@ type alias ClimbingRoutesPageModel =
     -- Forms
     , mediaLink : String
     , mediaLabel : String
+    }
+
+
+type alias SectorsPageModel =
+    { selectedArea : Maybe Area
     }
 
 
@@ -69,6 +75,7 @@ type Page
     = ClimbingRoutesPage
     | AscentsPage
     | StatsPage
+    | SectorsPage
 
 
 

@@ -18,6 +18,7 @@ type Msg
       -- Pages
     | SetPage Model.Page
     | ClimbingRoutesPageMessage ClimbingRoutesPageMsg
+    | SectorsPageMessage SectorsPageMsg
       -- Data
     | OpenAreaForm (Maybe Area)
     | OpenSectorForm (Maybe Area)
@@ -45,6 +46,10 @@ type ClimbingRoutesPageMsg
       -- Route Detail
     | SetMediaLink String
     | SetMediaLabel String
+
+
+type SectorsPageMsg
+    = AreaSelected (Maybe Area)
 
 
 type FormMsg
