@@ -73,14 +73,17 @@ dropDown model =
                         ]
                         [ H.text text ]
                 )
-                [ ( Message.JsonRequested, "Load JSON" )
-                , ( Message.ExportRequested, "Save JSON" )
-                ]
+                ([ ( Message.JsonRequested, "Load JSON" )
+                 , ( Message.ExportRequested, "Save JSON" )
+                 ]
+                    ++ (if model.googleDriveAuthorized then
+                            [ ( Message.GoogleDriveJsonRequested, "Load JSON from Google Drive" )
+                            , ( Message.GoogleDriveExportRequested, "Save JSON to Google Drive" )
+                            ]
+
+                        else
+                            [ ( Message.AuthorizeGoogleDrive, "Authorize Google Drive" ) ]
+                       )
+                )
             )
         ]
-
-
-
--- [ H.button [ E.onClick Message.JsonRequested ] [ H.text "Load JSON" ]
--- , H.button [ E.onClick Message.ExportRequested ] [ H.text "Save JSON" ]
--- ])

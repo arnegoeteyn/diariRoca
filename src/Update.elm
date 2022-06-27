@@ -38,25 +38,7 @@ update msg model =
             ( { model | appState = Model.NotReady }, Task.perform JsonLoaded (File.toString file) )
 
         JsonLoaded content ->
-            let
-                result =
-                    decodeString jsonFileDecoder content
-            in
-            case result of
-                Ok file ->
-                    ( { model
-                        | appState = Model.Ready
-                        , climbingRoutes = file.climbingRoutes
-                        , ascents = file.ascents
-                        , sectors = file.sectors
-                        , areas = file.areas
-                        , trips = file.trips
-                      }
-                    , Cmd.none
-                    )
-
-                Err _ ->
-                    ( { model | appState = Model.Ready }, Cmd.none )
+            loadContent model content
 
         ExportRequested ->
             let
@@ -64,6 +46,30 @@ update msg model =
                     encode 5 <| encodedJsonFile { climbingRoutes = model.climbingRoutes, ascents = model.ascents, sectors = model.sectors, areas = model.areas, trips = model.trips }
             in
             ( model, File.Download.string "result.json" "application/json" result )
+
+        AuthorizeGoogleDrive ->
+            ( model, Command.googleDriveCommand Command.Authorize )
+
+        GoogleDriveResponse response ->
+            case String.toLower response.type_ of
+                "authorized" ->
+                    ( { model | googleDriveAuthorized = True }, Cmd.none )
+
+                "filechosen" ->
+                    Maybe.map (loadContent model) response.argument |> Maybe.withDefault ( model, Cmd.none )
+
+                _ ->
+                    ( model, Cmd.none )
+
+        GoogleDriveJsonRequested ->
+            ( model, Command.googleDriveCommand Command.ShowPicker )
+
+        GoogleDriveExportRequested ->
+            let
+                result =
+                    encode 5 <| encodedJsonFile { climbingRoutes = model.climbingRoutes, ascents = model.ascents, sectors = model.sectors, areas = model.areas, trips = model.trips }
+            in
+            ( model, Command.googleDriveCommand (Command.Save result) )
 
         CloseModal ->
             ( { model | modal = Model.Empty }, Cmd.none )
@@ -416,6 +422,29 @@ updateSelectCriteriumMsg extractor wrapper config msg =
             , selectCmd
             )
         )
+
+
+loadContent : Model -> String -> ( Model, Cmd msg )
+loadContent model content =
+    let
+        result =
+            decodeString jsonFileDecoder content
+    in
+    case result of
+        Ok file ->
+            ( { model
+                | appState = Model.Ready
+                , climbingRoutes = file.climbingRoutes
+                , ascents = file.ascents
+                , sectors = file.sectors
+                , areas = file.areas
+                , trips = file.trips
+              }
+            , Cmd.none
+            )
+
+        Err _ ->
+            ( { model | appState = Model.Ready }, Cmd.none )
 
 
 closeModal : Model -> Model

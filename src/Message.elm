@@ -13,6 +13,10 @@ type Msg
     | JsonSelected File
     | JsonLoaded String
     | ExportRequested
+    | AuthorizeGoogleDrive
+    | GoogleDriveResponse { type_ : String, argument : Maybe String }
+    | GoogleDriveJsonRequested
+    | GoogleDriveExportRequested
     | CloseModal
     | ToggleSettings
       -- Pages

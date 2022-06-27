@@ -14,6 +14,7 @@ type alias Model =
     , page : Page
     , modal : ModalContent
     , settingsOpen : Bool
+    , googleDriveAuthorized : Bool
 
     -- Data
     , climbingRoutes : Dict Int ClimbingRoute

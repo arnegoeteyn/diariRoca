@@ -1,6 +1,7 @@
 module Main exposing (main)
 
 import Browser
+import Command
 import Html
 import Html.Styled as H
 import Html.Styled.Events as E
@@ -45,11 +46,16 @@ mainView model =
             )
 
 
+subscriptions : Model -> Sub Msg
+subscriptions _ =
+    Sub.batch [ Command.loadCache JsonLoaded, Command.googleDriveSubscriptionPort GoogleDriveResponse ]
+
+
 main : Program { storageCache : String, posixTime : Int } Model Msg
 main =
     Browser.element
         { view = mainView
         , init = init
         , update = updateWithStorage
-        , subscriptions = \_ -> Sub.none
+        , subscriptions = subscriptions
         }

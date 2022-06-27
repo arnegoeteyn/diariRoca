@@ -50,17 +50,22 @@ viewArea { area, selected } =
 
 
 viewSectors : { selectedSector : Maybe Sector } -> List Sector -> H.Html Msg
-viewSectors options =
+viewSectors options sectors =
     H.div []
-        << List.map
-            (\sector ->
-                H.div
-                    [ A.id <| "sector-" ++ String.fromInt sector.id
-                    , A.css [ TW.border, TW.border_solid, TW.py_4 ]
-                    , E.onClick Message.Dummy
-                    ]
-                    [ viewSectorRow { sector = sector, selected = False } ]
+        [ addButton (OpenSectorForm Nothing)
+        , H.div []
+            (List.map
+                (\sector ->
+                    H.div
+                        [ A.id <| "sector-" ++ String.fromInt sector.id
+                        , A.css [ TW.border, TW.border_solid, TW.py_4 ]
+                        , E.onClick Message.Dummy
+                        ]
+                        [ viewSectorRow { sector = sector, selected = False } ]
+                )
+                sectors
             )
+        ]
 
 
 viewSectorRow : { sector : Sector, selected : Bool } -> Html Msg

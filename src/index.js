@@ -1,18 +1,30 @@
 import './main.css';
 import { Elm } from './Main.elm';
 import * as serviceWorker from './serviceWorker';
+import * as drive from './drive';
 
 const storageKey = "store";
 var savedDB = localStorage.getItem(storageKey);
 savedDB = savedDB ? savedDB : "{}"
+
+const gapiScript = document.createElement('script');
+gapiScript.onload = drive.gapiLoaded;
+gapiScript.src = 'https://apis.google.com/js/api.js';
+
+const gsiScript = document.createElement('script');
+gsiScript.onload = drive.gisLoaded;
+gsiScript.src = 'https://accounts.google.com/gsi/client';
+
+document.head.appendChild(gapiScript);
+document.head.appendChild(gsiScript);
 
 var app = Elm.Main.init({
   node: document.getElementById('root'),
   flags: { storageCache: savedDB, posixTime: Date.parse(new Date()) }
 });
 
-app.ports.storeCache.subscribe(function (val) {
 
+app.ports.storeCache.subscribe(function (val) {
   if (val === null) {
     localStorage.removeItem(storageKey);
   } else {
@@ -20,7 +32,32 @@ app.ports.storeCache.subscribe(function (val) {
   }
 });
 
-// If you want your app to work offline and load faster, you can change
-// unregister() to register() below. Note this comes with some pitfalls.
-// Learn more about service workers: https://bit.ly/CRA-PWA
+app.ports.googleDriveCommandPort.subscribe(function (request) {
+  switch (request.type_.toLowerCase()) {
+    case "authorize":
+      drive.handleAuthClick(onGoogleDriveAuthorized);
+      break;
+
+    case "showpicker":
+      drive.createPicker(onDriveFileChosen);
+      break;
+
+    case "save":
+      console.log(request);
+      drive.saveFile(request.argument);
+      break;
+
+    default:
+      break;
+  }
+});
+
+function onGoogleDriveAuthorized() {
+  app.ports.googleDriveSubscriptionPort.send({ type_: "Authorized", argument: null });
+}
+
+function onDriveFileChosen(content) {
+  app.ports.googleDriveSubscriptionPort.send({ type_: "FileChosen", argument: JSON.stringify(content) });
+}
+
 serviceWorker.register();

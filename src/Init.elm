@@ -36,6 +36,7 @@ init { storageCache, posixTime } =
       , page = ClimbingRoutesPage
       , modal = Model.Empty
       , settingsOpen = False
+      , googleDriveAuthorized = False
 
       -- Data
       , climbingRoutes = jsonFile.climbingRoutes

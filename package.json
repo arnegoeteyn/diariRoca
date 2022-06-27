@@ -25,6 +25,7 @@
     "create-elm-app": "^5.22.0"
   },
   "dependencies": {
+    "@babel/runtime": "^7.18.3",
     "elm-review": "^2.7.2",
     "flowbite": "^1.4.7"
   }
