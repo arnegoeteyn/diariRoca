@@ -6,6 +6,7 @@ import Html.Styled as H
 import Html.Styled.Events as E
 import Init exposing (init)
 import Message exposing (Msg(..))
+import Modal
 import Model exposing (Model, Page(..))
 import Page.AscentsPage
 import Page.ClimbingRoutesPage
@@ -34,6 +35,7 @@ mainView model =
 
                                 SectorsPage ->
                                     Page.SectorsPage.view model
+                            , Modal.viewModal model
                             ]
 
                         Model.NotReady ->

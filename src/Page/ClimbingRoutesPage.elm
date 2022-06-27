@@ -26,7 +26,11 @@ view model =
         , H.div [ A.css [], A.id "route-container" ] <|
             List.map
                 (\route ->
-                    H.div [ A.id <| "route-" ++ String.fromInt route.id, A.css [ Tw.border, Tw.border_solid, Tw.py_4 ], E.onClick <| w OnClimbingRouteClicked (Just route) ]
+                    H.div
+                        [ A.id <| "route-" ++ String.fromInt route.id
+                        , A.css [ Tw.border, Tw.border_solid, Tw.py_4 ]
+                        , E.onClick <| w OnClimbingRouteClicked (Just route)
+                        ]
                         [ viewRouteRow model route, viewRouteDetail model route ]
                 )
                 (sortedAndFilteredRoutes model)
