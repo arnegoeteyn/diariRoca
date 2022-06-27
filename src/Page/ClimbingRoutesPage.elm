@@ -34,7 +34,6 @@ view model =
                         [ viewRouteRow model route, viewRouteDetail model route ]
                 )
                 (sortedAndFilteredRoutes model)
-        , Modal.viewModal model
         ]
 
 
