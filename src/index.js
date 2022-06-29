@@ -43,8 +43,7 @@ app.ports.googleDriveCommandPort.subscribe(function (request) {
       break;
 
     case "save":
-      console.log(request);
-      drive.saveFile(request.argument);
+      drive.saveFile(request.argument, onDriveFileUploaded);
       break;
 
     default:
@@ -58,6 +57,10 @@ function onGoogleDriveAuthorized() {
 
 function onDriveFileChosen(content) {
   app.ports.googleDriveSubscriptionPort.send({ type_: "FileChosen", argument: JSON.stringify(content) });
+}
+
+function onDriveFileUploaded() {
+  alert("uploaded!");
 }
 
 serviceWorker.register();

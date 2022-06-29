@@ -125,10 +125,9 @@ function pickerCallback(data, callback) {
     }
 }
 
-export async function saveFile(content) {
+export async function saveFile(content, callback) {
     const date = new Date();
     const name = "routes_" + date.toISOString().split('T')[0] + '.json';
-    console.log(name);
     const file = new Blob([content], { type: "application/json" });
     var metadata = {
         "name": name,
@@ -146,8 +145,7 @@ export async function saveFile(content) {
         headers: new Headers({ 'Authorization': 'Bearer ' + accessToken }),
         body: form,
     }).then((res) => {
+        callback();
         return res.json();
-    }).then(function (val) {
-        console.log(val);
     });
 }
