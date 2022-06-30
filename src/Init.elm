@@ -46,8 +46,7 @@ init { storageCache, posixTime } =
       , trips = jsonFile.trips
 
       -- Forms
-      , areaForm = initAreaForm
-      , areaFormId = -1
+      , areaForm = ( initAreaForm Nothing, Nothing )
       , sectorFormId = -1
       , sectorForm = initSectorForm
       , climbingRouteForm = ( initClimbingRouteForm Nothing Nothing, Nothing )
@@ -61,11 +60,11 @@ init { storageCache, posixTime } =
     )
 
 
-initAreaForm : AreaForm
-initAreaForm =
+initAreaForm : Maybe Area -> AreaForm
+initAreaForm maybeArea =
     Idle
-        { name = ""
-        , country = ""
+        { name = Maybe.map .name maybeArea |> Maybe.withDefault ""
+        , country = Maybe.map .country maybeArea |> Maybe.withDefault ""
         }
 
 

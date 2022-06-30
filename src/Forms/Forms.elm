@@ -10,7 +10,7 @@ import Html.Styled.Attributes as A
 import Html.Styled.Events as E
 import Init exposing (ascentFormDatePickerSettings)
 import Message exposing (FormMsg(..), Msg(..))
-import Model exposing (AreaForm, AreaFormValues, AscentForm, ClimbingRouteForm, Model, SectorForm, ValidatedAscentFormValues, ValidatedClimbingRouteFormValues, ValidatedSectorFormValues)
+import Model exposing (AreaForm, AreaFormValues, AscentForm, ClimbingRouteForm, Model, SectorForm, ValidatedAreaFormValues, ValidatedAscentFormValues, ValidatedClimbingRouteFormValues, ValidatedSectorFormValues)
 import Tailwind.Utilities as Tw
 
 
@@ -34,21 +34,31 @@ viewErrors form =
 
 areaForm : Model -> H.Html Msg
 areaForm model =
+    let
+        form =
+            Tuple.first model.areaForm
+    in
     H.form []
-        [ formTextCriterium "Name" .name updateName UpdateAreaForm model.areaForm
-        , formTextCriterium "Country" .country updateCountry UpdateAreaForm model.areaForm
+        [ formTextCriterium "Name" .name updateName UpdateAreaForm form
+        , formTextCriterium "Country" .country updateCountry UpdateAreaForm form
         , H.button [ A.type_ "button", E.onClick (FormMessage SaveAreaForm) ] [ H.text "Save" ]
-        , viewErrors model.areaForm
+        , viewErrors form
         ]
 
 
 validateAreaForm : Model -> ( AreaForm, Maybe Area )
 validateAreaForm model =
-    Form.succeed AreaFormValues model.areaForm
+    let
+        form =
+            Tuple.first model.areaForm
+    in
+    Form.succeed ValidatedAreaFormValues form
         |> Form.append
             (validateNonEmpty .name "Area can't have an empty name")
         |> Form.append
             (validateNonEmpty .country "Area must belong to a country")
+        |> Form.append
+            (\_ -> Ok <| idForForm model.areas (Tuple.second model.areaForm))
         |> areaFromForm model
 
 
@@ -56,7 +66,7 @@ areaFromForm : Model -> AreaForm -> ( AreaForm, Maybe Area )
 areaFromForm model form =
     case form of
         Valid areaValues values ->
-            ( Idle values, Just <| Area model.areaFormId areaValues.name areaValues.country )
+            ( Idle values, Just <| Area areaValues.id areaValues.name areaValues.country )
 
         Invalid errors values ->
             ( Invalid errors values, Nothing )
@@ -228,7 +238,7 @@ validateAscentForm model =
                 |> ascentFromForm
 
 
-ascentFromForm : Model.ValidatedAscentForm -> ( AscentForm, Maybe Ascent )
+ascentFromForm : Model.AscentForm -> ( AscentForm, Maybe Ascent )
 ascentFromForm form =
     case form of
         Valid ascentFormValues values ->

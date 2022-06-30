@@ -24,8 +24,7 @@ type alias Model =
     , trips : Dict Int Trip
 
     -- Forms
-    , areaForm : AreaForm
-    , areaFormId : Int
+    , areaForm : ( AreaForm, Maybe Area )
     , sectorForm : SectorForm
     , sectorFormId : Int
     , climbingRouteForm : ( ClimbingRouteForm, Maybe ClimbingRoute )
@@ -68,6 +67,7 @@ type ModalContent
     | SectorFormModal
     | ClimbingRouteFormModal
     | AscentFormModal
+    | DeleteAreaRequestModal Area
     | DeleteClimbingRouteRequestModal
     | DeleteAscentRequestModal Ascent
 
@@ -97,8 +97,15 @@ type alias AreaFormValues =
     }
 
 
+type alias ValidatedAreaFormValues =
+    { name : String
+    , country : String
+    , id : Int
+    }
+
+
 type alias AreaForm =
-    Form AreaFormValues AreaFormValues
+    Form AreaFormValues ValidatedAreaFormValues
 
 
 type alias SectorFormValues =
@@ -169,8 +176,4 @@ type alias ValidatedAscentFormValues =
 
 
 type alias AscentForm =
-    Form AscentFormValues ValidatedAscentFormValues
-
-
-type alias ValidatedAscentForm =
     Form AscentFormValues ValidatedAscentFormValues

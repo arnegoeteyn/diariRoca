@@ -10,7 +10,6 @@ import Html.Styled.Attributes as A
 import Html.Styled.Events as E
 import Init
 import Message exposing (ClimbingRoutesPageMsg(..), Msg(..))
-import Modal
 import Model exposing (Model)
 import ModelAccessors as MA
 import Select

@@ -16,6 +16,35 @@ getArea m i =
     Dict.get i m.areas
 
 
+isSectorOf : Area -> Sector -> Bool
+isSectorOf a s =
+    a.id == s.areaId
+
+
+deleteArea : Model -> Int -> Model
+deleteArea m i =
+    case Dict.get i m.areas of
+        Nothing ->
+            m
+
+        Just a ->
+            let
+                sectorsModel : Model
+                sectorsModel =
+                    Dict.foldr
+                        (\_ value accModel ->
+                            if isSectorOf a value then
+                                deleteSector accModel value.id
+
+                            else
+                                accModel
+                        )
+                        m
+                        m.sectors
+            in
+            { sectorsModel | areas = Dict.remove i m.areas }
+
+
 
 --| Sector
 
@@ -33,6 +62,35 @@ getSectorName m i =
 getSectorNameF : Model -> Int -> String
 getSectorNameF m i =
     getSector m i |> Maybe.map .name |> Maybe.withDefault "N/A"
+
+
+isClimbingRouteOf : Sector -> ClimbingRoute -> Bool
+isClimbingRouteOf s c =
+    s.id == c.sectorId
+
+
+deleteSector : Model -> Int -> Model
+deleteSector m i =
+    case Dict.get i m.sectors of
+        Nothing ->
+            m
+
+        Just s ->
+            let
+                climbingRoutesModel : Model
+                climbingRoutesModel =
+                    Dict.foldr
+                        (\_ value accModel ->
+                            if isClimbingRouteOf s value then
+                                deleteRoute accModel value.id
+
+                            else
+                                accModel
+                        )
+                        m
+                        m.climbingRoutes
+            in
+            { climbingRoutesModel | sectors = Dict.remove i m.sectors }
 
 
 

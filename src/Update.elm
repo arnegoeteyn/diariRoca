@@ -92,13 +92,20 @@ update msg model =
             in
             ( { model | sectorsPageModel = newSpModel }, newSpMsg )
 
-        -- Data
+        -- Data - Area
         OpenAreaForm maybeArea ->
-            let
-                areaId =
-                    Maybe.map .id maybeArea |> Maybe.withDefault (newId model.areas)
-            in
-            ( { model | modal = AreaFormModal, areaFormId = areaId, areaForm = initAreaForm }, Cmd.none )
+            ( { model
+                | modal = AreaFormModal
+                , areaForm = ( initAreaForm maybeArea, maybeArea )
+              }
+            , Cmd.none
+            )
+
+        DeleteAreaRequested area ->
+            ( { model | modal = Model.DeleteAreaRequestModal area }, Cmd.none )
+
+        DeleteAreaConfirmation area ->
+            ( MA.deleteArea (closeModal model) area.id, Cmd.none )
 
         OpenSectorForm maybeSector ->
             let
@@ -113,18 +120,6 @@ update msg model =
                 , climbingRouteForm = ( initClimbingRouteForm (Just model) maybeClimbingRoute, maybeClimbingRoute )
               }
             , Cmd.none
-            )
-
-        OpenAscentForm maybeAscent climbingRoute ->
-            let
-                ( ascentForm, ascentCmd ) =
-                    initAscentForm model.startUpDate maybeAscent
-            in
-            ( { model
-                | modal = AscentFormModal
-                , ascentForm = ( ascentForm, Just ( maybeAscent, climbingRoute ) )
-              }
-            , ascentCmd
             )
 
         AddMediaToRoute route ->
@@ -150,28 +145,49 @@ update msg model =
         DeleteClimbingRouteConfirmation route ->
             ( MA.deleteRoute (closeModal model) route.id, Cmd.none )
 
+        --| Data - Ascent
+        OpenAscentForm maybeAscent climbingRoute ->
+            let
+                ( ascentForm, ascentCmd ) =
+                    initAscentForm model.startUpDate maybeAscent
+            in
+            ( { model
+                | modal = AscentFormModal
+                , ascentForm = ( ascentForm, Just ( maybeAscent, climbingRoute ) )
+              }
+            , ascentCmd
+            )
+
         DeleteAscentRequested ascent ->
             ( { model | modal = Model.DeleteAscentRequestModal ascent }, Cmd.none )
 
         DeleteAscentConfirmation ascent ->
             ( MA.deleteAscent (closeModal model) ascent.id, Cmd.none )
 
+        --| Form
         FormMessage formMessage ->
             case formMessage of
                 UpdateAreaForm values ->
-                    ( { model | areaForm = values }, Cmd.none )
+                    ( { model | areaForm = replaceFirst values model.areaForm }, Cmd.none )
 
                 SaveAreaForm ->
                     let
                         ( newForm, maybeArea ) =
                             Forms.Forms.validateAreaForm model
+
+                        areaForm =
+                            replaceFirst newForm model.areaForm
                     in
                     ( case maybeArea of
                         Just area ->
-                            { model | areaForm = newForm, modal = Empty, areas = Dict.insert area.id area model.areas }
+                            { model
+                                | areaForm = areaForm
+                                , modal = Empty
+                                , areas = Dict.insert area.id area model.areas
+                            }
 
                         _ ->
-                            { model | areaForm = newForm }
+                            { model | areaForm = areaForm }
                     , Cmd.none
                     )
 
@@ -269,7 +285,6 @@ update msg model =
                         _ ->
                             ( { model | climbingRouteForm = climbingRouteForm }, Cmd.none )
 
-                -- Ascent
                 UpdateAscentForm values ->
                     ( { model | ascentForm = replaceFirst values model.ascentForm }, Cmd.none )
 

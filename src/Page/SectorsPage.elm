@@ -24,7 +24,8 @@ viewAreas : { selectedArea : Maybe Area } -> List Area -> H.Html Msg
 viewAreas options areas =
     H.div
         []
-        [ addButton (OpenAreaForm Nothing)
+        [ H.text "Areas"
+        , addButton (OpenAreaForm Nothing)
         , H.div []
             (List.map
                 (\area ->
@@ -46,13 +47,16 @@ viewArea { area, selected } =
         [ A.css [ TW.flex ]
         ]
         [ H.text <| area.name
+        , H.button [ E.onClick <| OpenAreaForm (Just area) ] [ H.text "edit" ]
+        , H.button [ E.onClick <| DeleteAreaRequested area ] [ H.text "delete" ]
         ]
 
 
 viewSectors : { selectedSector : Maybe Sector } -> List Sector -> H.Html Msg
 viewSectors options sectors =
     H.div []
-        [ addButton (OpenSectorForm Nothing)
+        [ H.text "Sectors"
+        , addButton (OpenSectorForm Nothing)
         , H.div []
             (List.map
                 (\sector ->

@@ -1,6 +1,6 @@
 module Modal exposing (viewModal)
 
-import Data exposing (Ascent)
+import Data exposing (Area, Ascent)
 import Forms.Forms
 import Html exposing (Html)
 import Html.Styled as H exposing (Html)
@@ -63,6 +63,9 @@ viewModal model =
                     AscentFormModal ->
                         ascentFormModal model
 
+                    DeleteAreaRequestModal area ->
+                        deleteAreaConfirmation model area
+
                     DeleteClimbingRouteRequestModal ->
                         deleteClimbingRouteConfirmation model
 
@@ -94,6 +97,19 @@ ascentFormModal model =
         [ H.h2 [] [ H.text "New ascent" ], Forms.Forms.ascentForm model ]
 
 
+deleteAreaConfirmation : Model -> Area -> Html Msg
+deleteAreaConfirmation model area =
+    let
+        m =
+            model.sectorsPageModel
+    in
+    H.div []
+        [ H.h2 []
+            [ H.text <| Utilities.stringFromList [ "Delete \"", area.name, "\" " ] ]
+        , H.button [ E.onClick <| Message.DeleteAreaConfirmation area ] [ H.text "confirm" ]
+        ]
+
+
 deleteClimbingRouteConfirmation : Model -> Html Msg
 deleteClimbingRouteConfirmation model =
     let
@@ -119,46 +135,6 @@ deleteAscentConfirmation _ ascent =
             [ H.text <| Utilities.stringFromList [ "Delete" ] ]
         , H.button [ E.onClick <| Message.DeleteAscentConfirmation ascent ] [ H.text "confirm" ]
         ]
-
-
-
--- let
---     m =
---         model.climbingRoutesPageModel
---     _ =
---         m.ascentForm
---     _ msg =
---         ClimbingRoutesPageMessage << msg
--- in
--- H.div []
---     [ H.h2 []
---         [ H.text "New ascent" ]
---     , H.form [ A.css [ Tw.flex_col ] ] <|
---         List.map (\x -> H.div [] [ x ])
---             [--      Forms.Criterium.maybeTextCriterium "comment"
---              --     f.comment
---              --     (\x ->
---              --         w UpdateAscentForm <|
---              --             updateComment f x
---              --     )
---              -- , Forms.Criterium.selectionCriterium (Nothing :: List.map Just enumAscentKind)
---              --     "kind"
---              --     (\k ->
---              --         case k of
---              --             Nothing ->
---              --                 ""
---              --             Just x ->
---              --                 ascentKindToString x
---              --     )
---              --     ascentKindFromString
---              --     (\s ->
---              --         w UpdateAscentForm <| updateKind f s
---              --     )
---              -- , Forms.Criterium.dateCriterium f.date Init.ascentFormDatePickerSettings f.datePicker (w ToDatePickerAscentForm)
---             ]
---             ++ [ H.button [ E.onClick SaveAscentForm, A.type_ "button" ] [ H.text "Create ascent" ]
---                ]
---     ]
 
 
 onClickStopPropagation : msg -> H.Attribute msg

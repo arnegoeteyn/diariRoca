@@ -23,14 +23,18 @@ type Msg
     | SetPage Model.Page
     | ClimbingRoutesPageMessage ClimbingRoutesPageMsg
     | SectorsPageMessage SectorsPageMsg
-      -- Data
+      -- Data - Area
     | OpenAreaForm (Maybe Area)
     | OpenSectorForm (Maybe Area)
+    | DeleteAreaRequested Area
+    | DeleteAreaConfirmation Area
+      -- Data - ClimbingRoute
     | OpenClimbingRouteForm (Maybe ClimbingRoute)
     | AddMediaToRoute ClimbingRoute
     | RemoveMedia ClimbingRoute Media
     | DeleteClimbingRouteConfirmation ClimbingRoute
     | DeleteClimbingRouteRequested
+      -- Data - Ascent
     | OpenAscentForm (Maybe Ascent) ClimbingRoute
     | DeleteAscentConfirmation Ascent
     | DeleteAscentRequested Ascent
