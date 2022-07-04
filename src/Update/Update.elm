@@ -11,7 +11,7 @@ import File.Download
 import File.Select
 import Forms.Form as Form exposing (Form)
 import Forms.Forms exposing (newId)
-import Init exposing (initAreaForm, initAscentForm, initClimbingRouteForm, initSectorForm)
+import Init exposing (initAreaForm, initAscentForm, initClimbingRouteForm, initSectorForm, initTripForm)
 import Json.Decode exposing (decodeString)
 import Json.Encode exposing (encode)
 import Message exposing (ClimbingRoutesPageMsg(..), FormMsg(..), Msg(..), SectorsPageMsg(..))
@@ -94,13 +94,15 @@ update msg model =
             ( { model | sectorsPageModel = newSpModel }, newSpMsg )
 
         -- Data - Trip
-        OpenTripOverview maybeTrip ->
-            case maybeTrip of
-                Just trip ->
-                    ( { model | modal = Model.TripOverviewModal trip }, Cmd.none )
+        OpenTripForm maybeTrip ->
+            let
+                ( tripForm, tripFormCmd ) =
+                    initTripForm maybeTrip model.startUpDate
+            in
+            ( { model | modal = Model.TripFormModal, tripForm = ( tripForm, maybeTrip ) }, tripFormCmd )
 
-                Nothing ->
-                    ( model, Cmd.none )
+        OpenTripOverview trip ->
+            ( { model | modal = Model.TripOverviewModal trip }, Cmd.none )
 
         -- Data - Area
         OpenAreaForm maybeArea ->
@@ -181,6 +183,57 @@ update msg model =
         --| Form
         FormMessage formMessage ->
             case formMessage of
+                -- Trip
+                UpdateTripForm values ->
+                    ( { model | tripForm = replaceFirst values model.tripForm }, Cmd.none )
+
+                FromTripFormToDatePicker subMsg ->
+                    ( { model
+                        | tripForm =
+                            Tuple.mapFirst
+                                (updateDateCriterium .from
+                                    (\x v -> { v | from = x })
+                                    Init.tripFormDatePickerSettings
+                                    subMsg
+                                )
+                                model.tripForm
+                      }
+                    , Cmd.none
+                    )
+
+                ToTripFormToDatePicker subMsg ->
+                    ( { model
+                        | tripForm =
+                            Tuple.mapFirst
+                                (updateDateCriterium .to
+                                    (\x v -> { v | to = x })
+                                    Init.tripFormDatePickerSettings
+                                    subMsg
+                                )
+                                model.tripForm
+                      }
+                    , Cmd.none
+                    )
+
+                SaveTripForm ->
+                    let
+                        ( newForm, maybeTrip ) =
+                            Forms.Forms.validateTripForm model
+                    in
+                    ( case maybeTrip of
+                        Just trip ->
+                            { model
+                                | tripForm = replaceFirst newForm model.tripForm
+                                , modal = Empty
+                                , trips = Dict.insert trip.id trip model.trips
+                            }
+
+                        _ ->
+                            { model | tripForm = replaceFirst newForm model.tripForm }
+                    , Cmd.none
+                    )
+
+                -- Area
                 UpdateAreaForm values ->
                     ( { model | areaForm = replaceFirst values model.areaForm }, Cmd.none )
 

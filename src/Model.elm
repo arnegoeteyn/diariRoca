@@ -24,6 +24,7 @@ type alias Model =
     , trips : Dict Int Trip
 
     -- Forms
+    , tripForm : ( TripForm, Maybe Trip )
     , areaForm : ( AreaForm, Maybe Area )
     , sectorForm : ( SectorForm, Maybe Sector )
     , climbingRouteForm : ( ClimbingRouteForm, Maybe ClimbingRoute )
@@ -62,6 +63,7 @@ type AppState
 
 type ModalContent
     = Empty
+    | TripFormModal
     | TripOverviewModal Trip
     | AreaFormModal
     | SectorFormModal
@@ -90,6 +92,23 @@ type alias SelectionCriterium item =
 
 type alias DateCriterium =
     ( Int, DatePicker )
+
+
+type alias TripFormValues =
+    { from : DateCriterium
+    , to : DateCriterium
+    }
+
+
+type alias ValidatedTripFormValues =
+    { from : Date
+    , to : Date
+    , id : Int
+    }
+
+
+type alias TripForm =
+    Form TripFormValues ValidatedTripFormValues
 
 
 type alias AreaFormValues =

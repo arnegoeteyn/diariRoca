@@ -1,6 +1,6 @@
 module Init exposing (..)
 
-import Data exposing (Area, Ascent, AscentKind(..), ClimbingRoute, ClimbingRouteKind(..), Sector, ascentKindToString, climbingRouteKindToString, jsonFileDecoder)
+import Data exposing (Area, Ascent, AscentKind(..), ClimbingRoute, ClimbingRouteKind(..), Sector, Trip, ascentKindToString, climbingRouteKindToString, jsonFileDecoder)
 import DataUtilities
 import Date exposing (Date)
 import DatePicker exposing (defaultSettings)
@@ -8,7 +8,7 @@ import Dict
 import Forms.Form exposing (Form(..))
 import Json.Decode exposing (decodeString)
 import Message exposing (ClimbingRoutesPageMsg(..), FormMsg(..), Msg(..))
-import Model exposing (AreaForm, AscentForm, ClimbingRouteForm, ClimbingRoutesPageModel, Model, Page(..), SectorForm, SectorsPageModel)
+import Model exposing (AreaForm, AscentForm, ClimbingRouteForm, ClimbingRoutesPageModel, Model, Page(..), SectorForm, SectorsPageModel, TripForm)
 import ModelAccessors as MA
 import Select
 import Time
@@ -29,6 +29,9 @@ init { storageCache, posixTime } =
 
         ( ascentForm, ascentFormCmd ) =
             initAscentForm date Nothing
+
+        ( tripForm, tripFormCmd ) =
+            initTripForm Nothing date
     in
     ( { appState =
             Model.Ready
@@ -46,6 +49,7 @@ init { storageCache, posixTime } =
       , trips = jsonFile.trips
 
       -- Forms
+      , tripForm = ( tripForm, Nothing )
       , areaForm = ( initAreaForm Nothing, Nothing )
       , sectorForm = ( initSectorForm Nothing Nothing, Nothing )
       , climbingRouteForm = ( initClimbingRouteForm Nothing Nothing, Nothing )
@@ -55,7 +59,27 @@ init { storageCache, posixTime } =
       , climbingRoutesPageModel = initClimbingRoutesPage
       , sectorsPageModel = initSectorsPage
       }
-    , Cmd.batch [ ascentFormCmd ]
+    , Cmd.batch [ tripFormCmd, ascentFormCmd ]
+    )
+
+
+initTripForm : Maybe Trip -> Date -> ( TripForm, Cmd Msg )
+initTripForm maybeTrip defaultDate =
+    let
+        ( fromDatePicker, fromDatePickerFx ) =
+            DatePicker.init
+
+        ( toDatePicker, toDatePickerFx ) =
+            DatePicker.init
+    in
+    ( Idle
+        { from = ( Date.toRataDie (Maybe.map .from maybeTrip |> Maybe.withDefault defaultDate), fromDatePicker )
+        , to = ( Date.toRataDie (Maybe.map .to maybeTrip |> Maybe.withDefault defaultDate), toDatePicker )
+        }
+    , Cmd.batch
+        [ Cmd.map (FormMessage << FromTripFormToDatePicker) fromDatePickerFx
+        , Cmd.map (FormMessage << ToTripFormToDatePicker) toDatePickerFx
+        ]
     )
 
 
@@ -133,6 +157,11 @@ initSectorsPage =
 
 
 --| Dates
+
+
+tripFormDatePickerSettings : DatePicker.Settings
+tripFormDatePickerSettings =
+    defaultSettings
 
 
 ascentFormDatePickerSettings : DatePicker.Settings

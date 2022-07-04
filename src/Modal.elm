@@ -57,6 +57,9 @@ viewModal model =
                     TripOverviewModal trip ->
                         tripOverviewModal model trip
 
+                    TripFormModal ->
+                        Forms.Forms.tripForm model
+
                     AreaFormModal ->
                         areaFormModal model
 
@@ -111,6 +114,7 @@ tripOverviewModal model trip =
                 )
                 grades
             )
+        , H.button [ E.onClick <| Message.OpenTripForm (Just trip) ] [ H.text "edit" ]
         ]
 
 

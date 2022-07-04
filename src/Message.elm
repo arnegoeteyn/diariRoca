@@ -3,7 +3,7 @@ module Message exposing (..)
 import Data exposing (Area, Ascent, ClimbingRoute, ClimbingRouteKind, Media, Sector, Trip)
 import DatePicker
 import File exposing (File)
-import Model exposing (AreaForm, AscentForm, ClimbingRouteForm, SectorForm)
+import Model exposing (AreaForm, AscentForm, ClimbingRouteForm, SectorForm, TripForm)
 import Select
 
 
@@ -24,7 +24,8 @@ type Msg
     | ClimbingRoutesPageMessage ClimbingRoutesPageMsg
     | SectorsPageMessage SectorsPageMsg
       -- Data - Trip
-    | OpenTripOverview (Maybe Trip)
+    | OpenTripForm (Maybe Trip)
+    | OpenTripOverview Trip
       -- Data - Area
     | OpenAreaForm (Maybe Area)
     | DeleteAreaRequested Area
@@ -66,7 +67,13 @@ type SectorsPageMsg
 
 
 type FormMsg
-    = UpdateAreaForm AreaForm
+    = -- Trip
+      UpdateTripForm TripForm
+    | FromTripFormToDatePicker DatePicker.Msg
+    | ToTripFormToDatePicker DatePicker.Msg
+    | SaveTripForm
+      -- Area
+    | UpdateAreaForm AreaForm
     | SaveAreaForm
       -- Sector
     | UpdateSectorForm SectorForm

@@ -30,5 +30,13 @@ viewAscentTripIndicator maybeTrip tripDict =
     let
         color =
             Maybe.andThen (\trip -> Dict.get trip.id tripDict) maybeTrip |> Maybe.withDefault Tw.bg_white
+
+        message =
+            case maybeTrip of
+                Just trip ->
+                    E.onClick (Message.OpenTripOverview trip)
+
+                Nothing ->
+                    E.onClick (Message.OpenTripForm Nothing)
     in
-    H.div [ A.css [ color, Tw.pl_10 ], E.onClick (Message.OpenTripOverview maybeTrip) ] []
+    H.div [ A.css [ color, Tw.pl_10 ], message ] []

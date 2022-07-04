@@ -1,6 +1,6 @@
 module Forms.Forms exposing (..)
 
-import Data exposing (Area, Ascent, AscentKind(..), ClimbingRoute, ClimbingRouteKind(..), Media, Sector, ascentKindEnum, ascentKindFromString, ascentKindToString, climbingRouteKindEnum, climbingRouteKindFromString, climbingRouteKindToString)
+import Data exposing (Area, Ascent, AscentKind(..), ClimbingRoute, ClimbingRouteKind(..), Media, Sector, Trip, ascentKindEnum, ascentKindFromString, ascentKindToString, climbingRouteKindEnum, climbingRouteKindFromString, climbingRouteKindToString)
 import Date
 import Dict exposing (Dict)
 import Forms.Criterium exposing (dateCriterium, formSelectionCriterium, formTextCriterium, selectionWithSearchCriterium)
@@ -8,9 +8,9 @@ import Forms.Form as Form exposing (Form(..))
 import Html.Styled as H
 import Html.Styled.Attributes as A
 import Html.Styled.Events as E
-import Init exposing (ascentFormDatePickerSettings)
+import Init exposing (ascentFormDatePickerSettings, tripFormDatePickerSettings)
 import Message exposing (FormMsg(..), Msg(..))
-import Model exposing (AreaForm, AreaFormValues, AscentForm, ClimbingRouteForm, Model, SectorForm, ValidatedAreaFormValues, ValidatedAscentFormValues, ValidatedClimbingRouteFormValues, ValidatedSectorFormValues)
+import Model exposing (AreaForm, AscentForm, ClimbingRouteForm, Model, SectorForm, TripForm, ValidatedAreaFormValues, ValidatedAscentFormValues, ValidatedClimbingRouteFormValues, ValidatedSectorFormValues, ValidatedTripFormValues)
 import Tailwind.Utilities as Tw
 
 
@@ -26,6 +26,58 @@ newId dict =
 viewErrors : Form a r -> H.Html Msg
 viewErrors form =
     H.ul [ A.css [ Tw.text_red_600 ] ] <| Form.mapErrors (\error -> H.li [] [ H.text error ]) form
+
+
+
+--| Trip
+
+
+tripForm : Model -> H.Html Msg
+tripForm model =
+    let
+        form =
+            Tuple.first model.tripForm
+    in
+    H.form []
+        [ dateCriterium "Date" tripFormDatePickerSettings .from FromTripFormToDatePicker form
+        , dateCriterium "Date" tripFormDatePickerSettings .to ToTripFormToDatePicker form
+        , H.button [ A.type_ "button", E.onClick (FormMessage SaveTripForm) ] [ H.text "Save" ]
+        , viewErrors form
+        ]
+
+
+validateTripForm : Model -> ( TripForm, Maybe Trip )
+validateTripForm model =
+    let
+        form =
+            Tuple.first model.tripForm
+    in
+    Form.succeed ValidatedTripFormValues form
+        |> Form.append
+            (\values -> Ok <| Date.fromRataDie <| Tuple.first values.from)
+        |> Form.append
+            (\values -> Ok <| Date.fromRataDie <| Tuple.first values.to)
+        |> Form.append
+            (\_ -> Ok <| idForForm model.trips (Tuple.second model.tripForm))
+        |> tripFromForm
+
+
+tripFromForm : Model.TripForm -> ( TripForm, Maybe Trip )
+tripFromForm form =
+    case form of
+        Valid tripFormValues values ->
+            ( Idle values
+            , Just <|
+                Trip tripFormValues.id
+                    tripFormValues.from
+                    tripFormValues.to
+            )
+
+        Invalid errors values ->
+            ( Invalid errors values, Nothing )
+
+        _ ->
+            ( form, Nothing )
 
 
 
@@ -63,7 +115,7 @@ validateAreaForm model =
 
 
 areaFromForm : Model -> AreaForm -> ( AreaForm, Maybe Area )
-areaFromForm model form =
+areaFromForm _ form =
     case form of
         Valid areaValues values ->
             ( Idle values, Just <| Area areaValues.id areaValues.name areaValues.country )
@@ -110,7 +162,7 @@ validateSectorForm model =
 
 
 sectorFromForm : Model -> Model.ValidatedSectorForm -> ( SectorForm, Maybe Sector )
-sectorFromForm model form =
+sectorFromForm _ form =
     case form of
         Valid sectorValues values ->
             ( Idle values, Just <| Sector sectorValues.id sectorValues.areaId sectorValues.name )
