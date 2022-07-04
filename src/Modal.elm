@@ -1,6 +1,6 @@
 module Modal exposing (viewModal)
 
-import Data exposing (Area, Ascent)
+import Data exposing (Area, Ascent, Sector)
 import Forms.Forms
 import Html exposing (Html)
 import Html.Styled as H exposing (Html)
@@ -66,6 +66,9 @@ viewModal model =
                     DeleteAreaRequestModal area ->
                         deleteAreaConfirmation model area
 
+                    DeleteSectorRequestModal sector ->
+                        deleteSectorConfirmation model sector
+
                     DeleteClimbingRouteRequestModal ->
                         deleteClimbingRouteConfirmation model
 
@@ -75,14 +78,44 @@ viewModal model =
             ]
 
 
+
+--| Area
+
+
 areaFormModal : Model -> Html Msg
 areaFormModal model =
     Forms.Forms.areaForm model
 
 
+deleteAreaConfirmation : Model -> Area -> Html Msg
+deleteAreaConfirmation model area =
+    H.div []
+        [ H.h2 []
+            [ H.text <| Utilities.stringFromList [ "Delete \"", area.name, "\" " ] ]
+        , H.button [ E.onClick <| Message.DeleteAreaConfirmation area ] [ H.text "confirm" ]
+        ]
+
+
+
+--| Sector
+
+
 sectorFormModal : Model -> Html Msg
 sectorFormModal model =
     Forms.Forms.sectorForm model
+
+
+deleteSectorConfirmation : Model -> Sector -> Html Msg
+deleteSectorConfirmation model sector =
+    H.div []
+        [ H.h2 []
+            [ H.text <| Utilities.stringFromList [ "Delete \"", sector.name, "\" " ] ]
+        , H.button [ E.onClick <| Message.DeleteSectorConfirmation sector ] [ H.text "confirm" ]
+        ]
+
+
+
+--| ClimbingRoute
 
 
 climbingRouteFormModal : Model -> Html Msg
@@ -95,19 +128,6 @@ ascentFormModal : Model -> Html Msg
 ascentFormModal model =
     H.div []
         [ H.h2 [] [ H.text "New ascent" ], Forms.Forms.ascentForm model ]
-
-
-deleteAreaConfirmation : Model -> Area -> Html Msg
-deleteAreaConfirmation model area =
-    let
-        m =
-            model.sectorsPageModel
-    in
-    H.div []
-        [ H.h2 []
-            [ H.text <| Utilities.stringFromList [ "Delete \"", area.name, "\" " ] ]
-        , H.button [ E.onClick <| Message.DeleteAreaConfirmation area ] [ H.text "confirm" ]
-        ]
 
 
 deleteClimbingRouteConfirmation : Model -> Html Msg

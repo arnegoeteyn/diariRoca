@@ -25,8 +25,7 @@ type alias Model =
 
     -- Forms
     , areaForm : ( AreaForm, Maybe Area )
-    , sectorForm : SectorForm
-    , sectorFormId : Int
+    , sectorForm : ( SectorForm, Maybe Sector )
     , climbingRouteForm : ( ClimbingRouteForm, Maybe ClimbingRoute )
     , ascentForm : ( AscentForm, Maybe AscentFormMeta )
 
@@ -68,6 +67,7 @@ type ModalContent
     | ClimbingRouteFormModal
     | AscentFormModal
     | DeleteAreaRequestModal Area
+    | DeleteSectorRequestModal Sector
     | DeleteClimbingRouteRequestModal
     | DeleteAscentRequestModal Ascent
 
@@ -117,6 +117,7 @@ type alias SectorFormValues =
 type alias ValidatedSectorFormValues =
     { name : String
     , areaId : Int
+    , id : Int
     }
 
 

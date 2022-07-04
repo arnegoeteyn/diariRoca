@@ -38,10 +38,3 @@ testRemoveFirst =
             \_ ->
                 Expect.equal 0 (countB remove3)
         ]
-
-
-
---     , test "route should be removed" <|
---         \_ ->
---             Expect.equalLists routeIds (Dict.filter (\_ c -> not <| c.id == 1) routes |> mapToId)
---     ]

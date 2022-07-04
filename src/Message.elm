@@ -25,9 +25,12 @@ type Msg
     | SectorsPageMessage SectorsPageMsg
       -- Data - Area
     | OpenAreaForm (Maybe Area)
-    | OpenSectorForm (Maybe Area)
     | DeleteAreaRequested Area
     | DeleteAreaConfirmation Area
+      -- Data - Sector
+    | OpenSectorForm (Maybe Sector)
+    | DeleteSectorRequested Sector
+    | DeleteSectorConfirmation Sector
       -- Data - ClimbingRoute
     | OpenClimbingRouteForm (Maybe ClimbingRoute)
     | AddMediaToRoute ClimbingRoute

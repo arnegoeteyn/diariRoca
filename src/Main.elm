@@ -13,7 +13,7 @@ import Page.AscentsPage
 import Page.ClimbingRoutesPage
 import Page.SectorsPage
 import Page.StatsPage
-import Update exposing (updateWithStorage)
+import Update.Update exposing (updateWithStorage)
 import View.Navbar as Navbar
 
 

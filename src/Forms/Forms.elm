@@ -81,21 +81,31 @@ areaFromForm model form =
 
 sectorForm : Model -> H.Html Msg
 sectorForm model =
+    let
+        form =
+            Tuple.first model.sectorForm
+    in
     H.form []
-        [ formTextCriterium "Name" .name updateName UpdateSectorForm model.sectorForm
-        , selectionWithSearchCriterium "Area" Init.sectorFormAreaSelectConfig .areaId (Dict.values model.areas) model.sectorForm
+        [ formTextCriterium "Name" .name updateName UpdateSectorForm form
+        , selectionWithSearchCriterium "Area" Init.sectorFormAreaSelectConfig .areaId (Dict.values model.areas) form
         , H.button [ A.type_ "button", E.onClick (FormMessage SaveSectorForm) ] [ H.text "Save" ]
-        , viewErrors model.sectorForm
+        , viewErrors form
         ]
 
 
 validateSectorForm : Model -> ( SectorForm, Maybe Sector )
 validateSectorForm model =
-    Form.succeed ValidatedSectorFormValues model.sectorForm
+    let
+        form =
+            Tuple.first model.sectorForm
+    in
+    Form.succeed ValidatedSectorFormValues form
         |> Form.append
             (validateNonEmpty .name "Sector can't have an empty name")
         |> Form.append
             (.areaId >> Tuple.first >> List.head >> Maybe.map .id >> Result.fromMaybe "A valid area must be selected")
+        |> Form.append
+            (\_ -> Ok <| idForForm model.sectors (Tuple.second model.sectorForm))
         |> sectorFromForm model
 
 
@@ -103,7 +113,7 @@ sectorFromForm : Model -> Model.ValidatedSectorForm -> ( SectorForm, Maybe Secto
 sectorFromForm model form =
     case form of
         Valid sectorValues values ->
-            ( Idle values, Just <| Sector model.sectorFormId sectorValues.areaId sectorValues.name )
+            ( Idle values, Just <| Sector sectorValues.id sectorValues.areaId sectorValues.name )
 
         Invalid errors values ->
             ( Invalid errors values, Nothing )

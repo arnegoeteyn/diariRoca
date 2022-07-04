@@ -1,6 +1,6 @@
-module Tests exposing (testRemoval)
+module ModelAccessorsTest exposing (testRemoval)
 
-import Data exposing (Ascent, AscentKind(..), ClimbingRoute)
+import Data exposing (Area, Ascent, AscentKind(..), ClimbingRoute, Sector)
 import Date exposing (Date)
 import Dict exposing (Dict)
 import Expect
@@ -24,12 +24,12 @@ testRemoval =
                 , posixTime = 0
                 }
 
-        ( routes, ascents ) =
+        { areas, sectors, climbingRoutes, ascents } =
             data
 
         updatedModel : Model
         updatedModel =
-            MA.deleteRoute { model | climbingRoutes = routes, ascents = ascents } 1
+            MA.deleteRoute 1 { model | climbingRoutes = climbingRoutes, ascents = ascents }
 
         routeIds =
             mapToId updatedModel.climbingRoutes
@@ -43,7 +43,7 @@ testRemoval =
                 Expect.equalLists ascentIds (Dict.filter (\_ a -> not <| a.routeId == 1) ascents |> mapToId)
         , test "route should be removed" <|
             \_ ->
-                Expect.equalLists routeIds (Dict.filter (\_ c -> not <| c.id == 1) routes |> mapToId)
+                Expect.equalLists routeIds (Dict.filter (\_ c -> not <| c.id == 1) climbingRoutes |> mapToId)
         ]
 
 
@@ -51,23 +51,57 @@ testRemoval =
 --| MockData
 
 
-data : ( Dict Int ClimbingRoute, Dict Int Ascent )
+data : { areas : Dict Int Area, sectors : Dict Int Sector, climbingRoutes : Dict Int ClimbingRoute, ascents : Dict Int Ascent }
 data =
-    ( Dict.empty
-        |> addRoute 1 1
-        |> addRoute 2 1
-        |> addRoute 3 1
-    , Dict.empty
-        |> addAscent 1 1
-        |> addAscent 2 1
-        |> addAscent 3 2
-        |> addAscent 4 1
-        |> addAscent 5 2
-    )
+    { areas =
+        Dict.empty
+            |> addArea 1
+            |> addArea 2
+            |> addArea 3
+    , sectors =
+        Dict.empty
+            |> addSector 1 1
+            |> addSector 2 1
+            |> addSector 3 2
+            |> addSector 4 1
+            |> addSector 5 2
+    , climbingRoutes =
+        Dict.empty
+            |> addRoute 1 1
+            |> addRoute 2 1
+            |> addRoute 3 5
+            |> addRoute 4 3
+            |> addRoute 5 2
+    , ascents =
+        Dict.empty
+            |> addAscent 1 1
+            |> addAscent 2 1
+            |> addAscent 3 2
+            |> addAscent 4 1
+            |> addAscent 5 2
+    }
 
 
 
 --| Utilties
+
+
+addArea : Int -> Dict Int Area -> Dict Int Area
+addArea id =
+    Dict.insert id
+        { id = id
+        , name = ""
+        , country = ""
+        }
+
+
+addSector : Int -> Int -> Dict Int Sector -> Dict Int Sector
+addSector id areaId =
+    Dict.insert id
+        { id = id
+        , areaId = areaId
+        , name = ""
+        }
 
 
 addRoute : Int -> Int -> Dict Int ClimbingRoute -> Dict Int ClimbingRoute

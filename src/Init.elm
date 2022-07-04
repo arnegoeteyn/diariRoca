@@ -47,8 +47,7 @@ init { storageCache, posixTime } =
 
       -- Forms
       , areaForm = ( initAreaForm Nothing, Nothing )
-      , sectorFormId = -1
-      , sectorForm = initSectorForm
+      , sectorForm = ( initSectorForm Nothing Nothing, Nothing )
       , climbingRouteForm = ( initClimbingRouteForm Nothing Nothing, Nothing )
       , ascentForm = ( ascentForm, Nothing )
 
@@ -68,11 +67,20 @@ initAreaForm maybeArea =
         }
 
 
-initSectorForm : SectorForm
-initSectorForm =
+initSectorForm : Maybe Model -> Maybe Sector -> SectorForm
+initSectorForm maybeModel maybeSector =
     Idle
-        { name = ""
-        , areaId = ( [], Select.init "sectorFormAreaId" )
+        { name = Maybe.map .name maybeSector |> Maybe.withDefault ""
+        , areaId =
+            ( Maybe.andThen
+                (\model ->
+                    Maybe.andThen (.areaId >> MA.getArea model) maybeSector
+                        |> Maybe.map List.singleton
+                )
+                maybeModel
+                |> Maybe.withDefault []
+            , Select.init "sectorFormAreaId"
+            )
         }
 
 

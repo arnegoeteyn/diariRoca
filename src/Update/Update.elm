@@ -1,4 +1,4 @@
-module Update exposing (updateWithStorage)
+module Update.Update exposing (updateWithStorage)
 
 import Browser.Dom
 import Command
@@ -19,6 +19,7 @@ import Model exposing (ClimbingRoutesPageModel, DateCriterium, ModalContent(..),
 import ModelAccessors as MA
 import Select
 import Task
+import Update.ClimbingRoutesPageUpdate as ClimbingRoutesPageUpdate
 import Utilities exposing (flip, replaceFirst)
 
 
@@ -81,7 +82,7 @@ update msg model =
         ClimbingRoutesPageMessage crpMsg ->
             let
                 ( newCrpModel, newCrpMsg ) =
-                    updateClimbingRoutesPage crpMsg model.climbingRoutesPageModel
+                    ClimbingRoutesPageUpdate.update crpMsg model.climbingRoutesPageModel
             in
             ( { model | climbingRoutesPageModel = newCrpModel }, newCrpMsg )
 
@@ -105,15 +106,19 @@ update msg model =
             ( { model | modal = Model.DeleteAreaRequestModal area }, Cmd.none )
 
         DeleteAreaConfirmation area ->
-            ( MA.deleteArea (closeModal model) area.id, Cmd.none )
+            ( MA.deleteArea area.id (closeModal model), Cmd.none )
 
+        -- Data - Sector
         OpenSectorForm maybeSector ->
-            let
-                sectorId =
-                    Maybe.map .id maybeSector |> Maybe.withDefault (newId model.sectors)
-            in
-            ( { model | modal = SectorFormModal, sectorFormId = sectorId, sectorForm = initSectorForm }, Cmd.none )
+            ( { model | modal = SectorFormModal, sectorForm = ( initSectorForm (Just model) maybeSector, maybeSector ) }, Cmd.none )
 
+        DeleteSectorRequested sector ->
+            ( { model | modal = Model.DeleteSectorRequestModal sector }, Cmd.none )
+
+        DeleteSectorConfirmation sector ->
+            ( MA.deleteSector sector.id (closeModal model), Cmd.none )
+
+        -- Data - ClimbingRoute
         OpenClimbingRouteForm maybeClimbingRoute ->
             ( { model
                 | modal = ClimbingRouteFormModal
@@ -143,7 +148,7 @@ update msg model =
             ( { model | modal = Model.DeleteClimbingRouteRequestModal }, Cmd.none )
 
         DeleteClimbingRouteConfirmation route ->
-            ( MA.deleteRoute (closeModal model) route.id, Cmd.none )
+            ( MA.deleteRoute route.id (closeModal model), Cmd.none )
 
         --| Data - Ascent
         OpenAscentForm maybeAscent climbingRoute ->
@@ -162,7 +167,7 @@ update msg model =
             ( { model | modal = Model.DeleteAscentRequestModal ascent }, Cmd.none )
 
         DeleteAscentConfirmation ascent ->
-            ( MA.deleteAscent (closeModal model) ascent.id, Cmd.none )
+            ( MA.deleteAscent ascent.id (closeModal model), Cmd.none )
 
         --| Form
         FormMessage formMessage ->
@@ -192,7 +197,7 @@ update msg model =
                     )
 
                 UpdateSectorForm values ->
-                    ( { model | sectorForm = values }, Cmd.none )
+                    ( { model | sectorForm = replaceFirst values model.sectorForm }, Cmd.none )
 
                 SectorFormSelectArea maybeArea ->
                     let
@@ -205,16 +210,16 @@ update msg model =
                                             f.areaId
                                 }
                     in
-                    ( { model | sectorForm = Form.map newForm model.sectorForm }, Cmd.none )
+                    ( { model | sectorForm = Tuple.mapFirst (Form.map newForm) model.sectorForm }, Cmd.none )
 
                 SectorFormSelectAreaMsg subMsg ->
                     let
                         ( updatedForm, cmd ) =
-                            updateSelectCriteriumMsg .areaId (\x v -> { v | areaId = x }) Init.sectorFormAreaSelectConfig subMsg model.sectorForm
+                            updateSelectCriteriumMsg .areaId (\x v -> { v | areaId = x }) Init.sectorFormAreaSelectConfig subMsg (Tuple.first model.sectorForm)
                     in
                     ( { model
                         | sectorForm =
-                            updatedForm
+                            replaceFirst updatedForm model.sectorForm
                       }
                     , cmd
                     )
@@ -223,13 +228,16 @@ update msg model =
                     let
                         ( newForm, maybeSector ) =
                             Forms.Forms.validateSectorForm model
+
+                        sectorForm =
+                            replaceFirst newForm model.sectorForm
                     in
                     ( case maybeSector of
                         Just sector ->
-                            { model | sectorForm = newForm, modal = Empty, sectors = Dict.insert sector.id sector model.sectors }
+                            { model | sectorForm = sectorForm, modal = Empty, sectors = Dict.insert sector.id sector model.sectors }
 
                         _ ->
-                            { model | sectorForm = newForm }
+                            { model | sectorForm = sectorForm }
                     , Cmd.none
                     )
 
@@ -319,50 +327,6 @@ update msg model =
                             { model | ascentForm = replaceFirst newForm model.ascentForm }
                     , Cmd.none
                     )
-
-
-updateClimbingRoutesPage : ClimbingRoutesPageMsg -> ClimbingRoutesPageModel -> ( ClimbingRoutesPageModel, Cmd Msg )
-updateClimbingRoutesPage msg model =
-    let
-        newSelected maybeItem default =
-            case maybeItem of
-                Nothing ->
-                    []
-
-                Just item ->
-                    Utilities.addIfNotPresent item default
-
-        removeFromSelected item =
-            List.filter (\c -> c /= item)
-    in
-    case msg of
-        SetRouteFilter filter ->
-            ( { model | routeFilter = filter }, Cmd.none )
-
-        SetClimbingRouteKindFilter kind ->
-            ( { model | routeKindFilter = kind }, Cmd.none )
-
-        SelectMsg subMsg ->
-            let
-                ( updated, cmd ) =
-                    Select.update Init.sectorSelectConfig subMsg model.selectState
-            in
-            ( { model | selectState = updated }, cmd )
-
-        SelectSector maybeSector ->
-            ( { model | selected = newSelected maybeSector model.selected }, Cmd.none )
-
-        OnRemoveSectorSelection sector ->
-            ( { model | selected = removeFromSelected sector model.selected }, Cmd.none )
-
-        OnClimbingRouteClicked maybeClimbingRoute ->
-            ( { model | selectedClimbingRoute = maybeClimbingRoute }, Cmd.none )
-
-        SetMediaLink link ->
-            ( { model | mediaLink = link }, Cmd.none )
-
-        SetMediaLabel label ->
-            ( { model | mediaLabel = label }, Cmd.none )
 
 
 updateSectorsPage : SectorsPageMsg -> SectorsPageModel -> ( SectorsPageModel, Cmd Msg )

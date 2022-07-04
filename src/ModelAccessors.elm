@@ -2,7 +2,7 @@ module ModelAccessors exposing (..)
 
 import Data exposing (Area, Ascent, ClimbingRoute, Sector, Trip)
 import Date exposing (Date)
-import Dict exposing (Dict)
+import Dict
 import Model exposing (Model)
 import Utilities
 
@@ -21,8 +21,8 @@ isSectorOf a s =
     a.id == s.areaId
 
 
-deleteArea : Model -> Int -> Model
-deleteArea m i =
+deleteArea : Int -> Model -> Model
+deleteArea i m =
     case Dict.get i m.areas of
         Nothing ->
             m
@@ -34,7 +34,7 @@ deleteArea m i =
                     Dict.foldr
                         (\_ value accModel ->
                             if isSectorOf a value then
-                                deleteSector accModel value.id
+                                deleteSector value.id accModel
 
                             else
                                 accModel
@@ -69,8 +69,8 @@ isClimbingRouteOf s c =
     s.id == c.sectorId
 
 
-deleteSector : Model -> Int -> Model
-deleteSector m i =
+deleteSector : Int -> Model -> Model
+deleteSector i m =
     case Dict.get i m.sectors of
         Nothing ->
             m
@@ -82,7 +82,7 @@ deleteSector m i =
                     Dict.foldr
                         (\_ value accModel ->
                             if isClimbingRouteOf s value then
-                                deleteRoute accModel value.id
+                                deleteRoute value.id accModel
 
                             else
                                 accModel
@@ -102,8 +102,8 @@ getClimbingRoute m i =
     Dict.get i m.climbingRoutes
 
 
-deleteRoute : Model -> Int -> Model
-deleteRoute model i =
+deleteRoute : Int -> Model -> Model
+deleteRoute i model =
     case Dict.get i model.climbingRoutes of
         Nothing ->
             model
@@ -115,7 +115,7 @@ deleteRoute model i =
                     Dict.foldr
                         (\_ value accModel ->
                             if isAscentOf c value then
-                                deleteAscent accModel value.id
+                                deleteAscent value.id accModel
 
                             else
                                 accModel
@@ -150,8 +150,8 @@ getClimbingRouteFromAscent m c =
     getClimbingRoute m c.routeId
 
 
-deleteAscent : Model -> Int -> Model
-deleteAscent m i =
+deleteAscent : Int -> Model -> Model
+deleteAscent i m =
     { m | ascents = Dict.remove i m.ascents }
 
 

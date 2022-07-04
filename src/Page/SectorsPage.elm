@@ -78,6 +78,8 @@ viewSectorRow { sector, selected } =
         [ A.css [ TW.flex ]
         ]
         [ H.div [ A.css [] ] [ H.text <| sector.name ]
+        , H.button [ E.onClick <| OpenSectorForm (Just sector) ] [ H.text "edit" ]
+        , H.button [ E.onClick <| DeleteSectorRequested sector ] [ H.text "delete" ]
         ]
 
 
