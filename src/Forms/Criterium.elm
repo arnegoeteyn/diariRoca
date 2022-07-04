@@ -1,4 +1,4 @@
-module Forms.Criterium exposing (dateCriterium, formSelectionCriterium, formTextCriterium, selectionCriterium, selectionWithSearchCriterium, textCriterium)
+module Forms.Criterium exposing (dateCriterium, formSelectionCriterium, formSelectionWithSearchCriterium, formTextCriterium, selectionCriterium, selectionWithSearchCriterium, textCriterium)
 
 import Date
 import DatePicker
@@ -57,17 +57,25 @@ formSelectionCriterium placeholder extractor wrapper toMsg selectedExtractor for
         form
 
 
-selectionWithSearchCriterium : String -> Select.Config Msg item -> (e -> SelectionCriterium item) -> List item -> Form e r -> H.Html Msg
-selectionWithSearchCriterium label init extractor options form =
+selectionWithSearchCriterium : String -> Select.Config Msg item -> (a -> SelectionCriterium item) -> List item -> a -> H.Html Msg
+selectionWithSearchCriterium label init extractor options value =
+    let
+        extracted =
+            extractor value
+    in
     H.div []
-        [ H.text label
-        , H.fromUnstyled <|
+        [ H.fromUnstyled <|
             Select.view
                 init
-                (extract (extractor >> Tuple.second) form)
+                (Tuple.second extracted)
                 options
-                (extract (extractor >> Tuple.first) form)
+                (Tuple.first extracted)
         ]
+
+
+formSelectionWithSearchCriterium : String -> Select.Config Msg item -> (e -> SelectionCriterium item) -> List item -> Form e r -> H.Html Msg
+formSelectionWithSearchCriterium label init extractor options form =
+    selectionWithSearchCriterium label init (extract extractor) options form
 
 
 dateCriterium : String -> DatePicker.Settings -> (a -> DateCriterium) -> (DatePicker.Msg -> FormMsg) -> Form a r -> H.Html Msg

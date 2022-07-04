@@ -82,7 +82,7 @@ update msg model =
         ClimbingRoutesPageMessage crpMsg ->
             let
                 ( newCrpModel, newCrpMsg ) =
-                    ClimbingRoutesPageUpdate.update crpMsg model.climbingRoutesPageModel
+                    ClimbingRoutesPageUpdate.update crpMsg model
             in
             ( { model | climbingRoutesPageModel = newCrpModel }, newCrpMsg )
 
@@ -322,7 +322,7 @@ update msg model =
                 ClimbingRouteFormSelectSectorMsg subMsg ->
                     let
                         ( updatedForm, cmd ) =
-                            updateSelectCriteriumMsg .sectorId (\x v -> { v | sectorId = x }) Init.climbingRouteFormSectorSelectConfig subMsg (Tuple.first model.climbingRouteForm)
+                            updateSelectCriteriumMsg .sectorId (\x v -> { v | sectorId = x }) (Init.climbingRouteFormSectorSelectConfig model) subMsg (Tuple.first model.climbingRouteForm)
                     in
                     ( { model
                         | climbingRouteForm =

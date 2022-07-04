@@ -4,7 +4,7 @@ import Data exposing (ClimbingRoute, ascentKindToString, climbingRouteKindEnum, 
 import DataUtilities
 import Date
 import Dict
-import Forms.Criterium exposing (selectionCriterium, textCriterium)
+import Forms.Criterium exposing (selectionCriterium, selectionWithSearchCriterium, textCriterium)
 import Html.Styled as H exposing (Html)
 import Html.Styled.Attributes as A
 import Html.Styled.Events as E
@@ -12,7 +12,6 @@ import Init
 import Message exposing (ClimbingRoutesPageMsg(..), Msg(..))
 import Model exposing (Model)
 import ModelAccessors as MA
-import Select
 import Tailwind.Utilities as Tw
 import Utilities
 import View.ClimbingRoute as ClimbingRoute
@@ -54,12 +53,11 @@ viewFilters model =
                 m
 
         onSectorFilter =
-            H.fromUnstyled <|
-                Select.view
-                    Init.sectorSelectConfig
-                    m.selectState
-                    (Dict.toList model.sectors |> List.map Tuple.second)
-                    m.selected
+            selectionWithSearchCriterium "Sector"
+                (Init.sectorSelectConfig model)
+                (\aModel -> ( aModel.selected, aModel.selectState ))
+                (Dict.toList model.sectors |> List.map Tuple.second)
+                m
 
         onKindFilter =
             selectionCriterium "Kind"
@@ -191,7 +189,7 @@ viewRouteRow : Model -> ClimbingRoute -> Html Msg
 viewRouteRow model route =
     ClimbingRoute.viewRouteRow
         { route = route
-        , sectorName = MA.getSectorNameF model route.sectorId
+        , sectorName = MA.getSectorNameSafe model route.sectorId
         , ascents = MA.getAscents model route
         }
 
