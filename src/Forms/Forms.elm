@@ -189,7 +189,7 @@ climbingRouteForm model =
         , formTextCriterium "Grade" .grade updateGrade UpdateClimbingRouteForm form
         , selectionWithSearchCriterium "Sector" Init.climbingRouteFormSectorSelectConfig .sectorId (Dict.values model.sectors) form
         , formTextCriterium "Comment" .comment updateComment UpdateClimbingRouteForm form
-        , formSelectionCriterium "Kind" (\_ -> List.map climbingRouteKindToString climbingRouteKindEnum) updateKind UpdateClimbingRouteForm form
+        , formSelectionCriterium "Kind" (\_ -> List.map climbingRouteKindToString climbingRouteKindEnum) updateKind UpdateClimbingRouteForm .kind form
         , H.button [ A.type_ "button", E.onClick (FormMessage SaveClimbingRouteForm) ] [ H.text "Save" ]
         , viewErrors form
         ]
@@ -262,6 +262,7 @@ ascentForm model =
             (\_ -> List.map ascentKindToString ascentKindEnum)
             updateKind
             UpdateAscentForm
+            .kind
             form
         , dateCriterium "Date" ascentFormDatePickerSettings .date AscentFormToDatePicker form
         , H.button [ A.type_ "button", E.onClick (FormMessage SaveAscentForm) ] [ H.text "Save" ]

@@ -66,6 +66,7 @@ viewFilters model =
                 (\_ -> "" :: List.map climbingRouteKindToString climbingRouteKindEnum)
                 climbingRouteKindFromString
                 (w SetClimbingRouteKindFilter)
+                ""
                 Nothing
     in
     H.div []
