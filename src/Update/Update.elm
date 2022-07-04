@@ -93,6 +93,15 @@ update msg model =
             in
             ( { model | sectorsPageModel = newSpModel }, newSpMsg )
 
+        -- Data - Trip
+        OpenTripOverview maybeTrip ->
+            case maybeTrip of
+                Just trip ->
+                    ( { model | modal = Model.TripOverviewModal trip }, Cmd.none )
+
+                Nothing ->
+                    ( model, Cmd.none )
+
         -- Data - Area
         OpenAreaForm maybeArea ->
             ( { model

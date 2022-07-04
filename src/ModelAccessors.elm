@@ -2,8 +2,9 @@ module ModelAccessors exposing (..)
 
 import Data exposing (Area, Ascent, ClimbingRoute, Sector, Trip)
 import Date exposing (Date)
-import Dict
+import Dict exposing (Dict)
 import Model exposing (Model)
+import Set
 import Utilities
 
 
@@ -162,3 +163,14 @@ deleteAscent i m =
 getTripFromDate : Model -> Date -> Maybe Trip
 getTripFromDate m date =
     Dict.filter (\_ t -> Date.isBetween t.from t.to date) m.trips |> Dict.values |> List.head
+
+
+getRoutesFromTrip : Model -> Trip -> Dict String Int
+getRoutesFromTrip model trip =
+    Utilities.filterDictValue (.date >> Date.isBetween trip.from trip.to) model.ascents
+        |> Dict.map (\_ v -> v.routeId)
+        |> Dict.values
+        |> Set.fromList
+        |> Set.toList
+        |> List.filterMap (\v -> Dict.get v model.climbingRoutes)
+        |> List.foldl (\route dict -> Dict.update route.grade (\x -> Just <| Maybe.withDefault 0 x + 1) dict) Dict.empty

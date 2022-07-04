@@ -62,6 +62,7 @@ type AppState
 
 type ModalContent
     = Empty
+    | TripOverviewModal Trip
     | AreaFormModal
     | SectorFormModal
     | ClimbingRouteFormModal

@@ -1,6 +1,6 @@
 module Message exposing (..)
 
-import Data exposing (Area, Ascent, ClimbingRoute, ClimbingRouteKind, Media, Sector)
+import Data exposing (Area, Ascent, ClimbingRoute, ClimbingRouteKind, Media, Sector, Trip)
 import DatePicker
 import File exposing (File)
 import Model exposing (AreaForm, AscentForm, ClimbingRouteForm, SectorForm)
@@ -23,6 +23,8 @@ type Msg
     | SetPage Model.Page
     | ClimbingRoutesPageMessage ClimbingRoutesPageMsg
     | SectorsPageMessage SectorsPageMsg
+      -- Data - Trip
+    | OpenTripOverview (Maybe Trip)
       -- Data - Area
     | OpenAreaForm (Maybe Area)
     | DeleteAreaRequested Area

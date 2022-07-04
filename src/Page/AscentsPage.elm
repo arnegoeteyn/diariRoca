@@ -23,8 +23,12 @@ view model =
             List.map
                 (\ascent ->
                     H.div [ A.css [ Tw.flex, Tw.flex_row ], E.onClick Dummy ]
-                        [ viewAscentTripIndicator (MA.getTripFromDate model ascent.date |> Maybe.map .id) (tripColorDict model.trips)
-                        , H.div [ A.css [ Tw.flex_grow, Tw.border, Tw.border_solid, Tw.py_4 ] ] [ viewAscentRow model ascent ]
+                        [ viewAscentTripIndicator (MA.getTripFromDate model ascent.date) (tripColorDict model.trips)
+                        , H.div
+                            [ A.css [ Tw.flex_grow, Tw.border, Tw.border_solid, Tw.py_4 ]
+                            ]
+                            [ viewAscentRow model ascent
+                            ]
                         ]
                 )
                 (sortedAndFilteredAscents model)

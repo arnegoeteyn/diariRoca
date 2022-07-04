@@ -1,6 +1,8 @@
 module Modal exposing (viewModal)
 
-import Data exposing (Area, Ascent, Sector)
+import Data exposing (Area, Ascent, Sector, Trip)
+import Date
+import Dict
 import Forms.Forms
 import Html exposing (Html)
 import Html.Styled as H exposing (Html)
@@ -9,6 +11,7 @@ import Html.Styled.Events as E
 import Json.Decode as Decode
 import Message exposing (ClimbingRoutesPageMsg(..), FormMsg(..), Msg(..))
 import Model exposing (ModalContent(..), Model)
+import ModelAccessors as Ma
 import Tailwind.Utilities as Tw
 import Utilities
 
@@ -51,6 +54,9 @@ viewModal model =
                     Empty ->
                         H.text ""
 
+                    TripOverviewModal trip ->
+                        tripOverviewModal model trip
+
                     AreaFormModal ->
                         areaFormModal model
 
@@ -76,6 +82,36 @@ viewModal model =
                         deleteAscentConfirmation model ascent
                 ]
             ]
+
+
+
+--| Trip
+
+
+tripOverviewModal : Model -> Trip -> Html Msg
+tripOverviewModal model trip =
+    let
+        grades =
+            Ma.getRoutesFromTrip model trip
+                |> Dict.toList
+                |> Utilities.sortByDescending Tuple.first
+    in
+    H.div
+        []
+        [ H.text <| Utilities.stringFromListWith " " [ Date.toIsoString trip.from, "-", Date.toIsoString trip.to ]
+        , H.div []
+            (List.map
+                (\( grade, count ) ->
+                    H.div []
+                        [ H.text <|
+                            Utilities.stringFromListWith
+                                " "
+                                [ grade, "-", String.fromInt count ]
+                        ]
+                )
+                grades
+            )
+        ]
 
 
 

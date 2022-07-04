@@ -41,6 +41,15 @@ stringFromListWith seperator list =
 
 
 
+--| Dict
+
+
+filterDictValue : (v -> Bool) -> Dict.Dict comparable v -> Dict.Dict comparable v
+filterDictValue f =
+    Dict.filter (\_ -> f)
+
+
+
 --| List
 
 

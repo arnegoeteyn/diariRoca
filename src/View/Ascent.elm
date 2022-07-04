@@ -1,11 +1,12 @@
 module View.Ascent exposing (viewAscentRow, viewAscentTripIndicator)
 
 import Css
-import Data exposing (Ascent)
+import Data exposing (Ascent, Trip)
 import Date
 import Dict exposing (Dict)
 import Html.Styled as H exposing (Html)
 import Html.Styled.Attributes as A
+import Html.Styled.Events as E
 import Message exposing (Msg)
 import Tailwind.Utilities as Tw
 import Utilities
@@ -24,10 +25,10 @@ viewAscentRow { ascent, routeName, routeGrade } =
         ]
 
 
-viewAscentTripIndicator : Maybe Int -> Dict Int Css.Style -> Html Msg
-viewAscentTripIndicator maybeTripId tripDict =
+viewAscentTripIndicator : Maybe Trip -> Dict Int Css.Style -> Html Msg
+viewAscentTripIndicator maybeTrip tripDict =
     let
         color =
-            Maybe.andThen (\id -> Dict.get id tripDict) maybeTripId |> Maybe.withDefault Tw.bg_white
+            Maybe.andThen (\trip -> Dict.get trip.id tripDict) maybeTrip |> Maybe.withDefault Tw.bg_white
     in
-    H.div [ A.css [ color, Tw.pl_10 ] ] []
+    H.div [ A.css [ color, Tw.pl_10 ], E.onClick (Message.OpenTripOverview maybeTrip) ] []
