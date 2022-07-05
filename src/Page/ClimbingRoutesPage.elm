@@ -15,7 +15,7 @@ import ModelAccessors as MA
 import Tailwind.Utilities as Tw
 import Utilities
 import View.Button as Button
-import View.ClimbingRoute as ClimbingRoute
+import View.Link as Link
 
 
 view : Model -> Html Msg
@@ -189,11 +189,27 @@ isSelected model route =
 
 viewRouteRow : Model -> ClimbingRoute -> Html Msg
 viewRouteRow model route =
-    ClimbingRoute.viewRouteRow
-        { route = route
-        , sectorName = MA.getSectorNameSafe model route.sectorId
-        , ascents = MA.getAscents model route
-        }
+    let
+        sector =
+            MA.getSector model route.sectorId
+
+        sectorLink =
+            Link.buttonLink (MA.getSectorAndAreaNameSafe model route.sectorId) (ClimbingRoutesPageMessage <| SelectSector sector)
+
+        ascents =
+            MA.getAscents model route
+    in
+    H.div
+        [ A.css [ Tw.flex ]
+        ]
+        [ H.div [ A.css [ Tw.w_1over6 ] ] [ H.text route.grade ]
+        , H.div [ A.css [ Tw.w_2over6 ] ]
+            [ H.div [ A.css [ Tw.font_bold ] ] [ H.text route.name ]
+            , sectorLink
+            ]
+        , H.div [ A.css [ Tw.w_2over6 ] ] [ H.text (Data.climbingRouteKindToString route.kind) ]
+        , H.div [ A.css [ Tw.w_1over6 ] ] [ (H.text << String.fromInt << List.length) ascents ]
+        ]
 
 
 

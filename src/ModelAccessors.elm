@@ -70,6 +70,16 @@ getSectorName m i =
     getSector m i |> Maybe.map .name
 
 
+getSectorAndAreaNameSafe : Model -> Int -> String
+getSectorAndAreaNameSafe m i =
+    case getSector m i of
+        Nothing ->
+            "N/A"
+
+        Just sector ->
+            Utilities.stringFromList [ sector.name, " [", getAreaNameSafe m sector.areaId, "]" ]
+
+
 getSectorNameSafe : Model -> Int -> String
 getSectorNameSafe m i =
     getSector m i |> Maybe.map .name |> Maybe.withDefault "N/A"
