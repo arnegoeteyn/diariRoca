@@ -14,6 +14,7 @@ import Model exposing (Model)
 import ModelAccessors as MA
 import Tailwind.Utilities as Tw
 import Utilities
+import View.Button as Button
 import View.ClimbingRoute as ClimbingRoute
 
 
@@ -70,7 +71,7 @@ viewFilters model =
     H.div []
         [ H.h2 []
             [ H.text <| Utilities.stringFromList [ (String.fromInt << List.length) routes, " routes " ]
-            , viewAddButton model (OpenClimbingRouteForm Nothing)
+            , Button.addButton (Button.defaultOptions |> Button.withMsg (OpenClimbingRouteForm Nothing))
             ]
         , H.div []
             [ onRouteFilter
@@ -93,8 +94,8 @@ viewRouteDetail model route =
                 , viewRouteMedia model route
                 ]
             , H.div []
-                [ H.button [ E.onClick Message.DeleteClimbingRouteRequested ] [ H.text "Delete" ]
-                , H.button [ E.onClick <| Message.OpenClimbingRouteForm (Just route) ] [ H.text "Edit route" ]
+                [ Button.deleteButton (Button.defaultOptions |> Button.withMsg Message.DeleteClimbingRouteRequested |> Button.withKind Button.TextAndIcon)
+                , Button.editIconButton (Button.defaultOptions |> Button.withMsg (Message.OpenClimbingRouteForm (Just route)) |> Button.withKind Button.TextAndIcon)
                 ]
             ]
 
@@ -128,9 +129,7 @@ viewRouteMedia model route =
             H.div []
                 [ textCriterium "Link" .mediaLink identity (w SetMediaLink) m
                 , textCriterium "Link" .mediaLabel identity (w SetMediaLabel) m
-                , viewAddButton
-                    model
-                    (AddMediaToRoute route)
+                , Button.addButton (Button.defaultOptions |> Button.withMsg (AddMediaToRoute route))
                 ]
     in
     H.div []
@@ -161,19 +160,22 @@ viewAscentsList model route =
     H.div [ A.css [] ]
         [ H.h3 [ A.css [] ]
             [ H.text (Utilities.stringFromList [ String.fromInt <| List.length ascents, " ascents:" ])
-            , viewAddButton model (OpenAscentForm Nothing route)
+            , Button.addButton (Button.defaultOptions |> Button.withMsg (OpenAscentForm Nothing route))
             ]
-        , H.div [ A.css [ Tw.grid, Tw.grid_cols_1, Tw.divide_solid, Tw.divide_y_2, Tw.divide_x_0 ] ] <|
+        , H.div [ A.css [ Tw.divide_solid, Tw.divide_y_2, Tw.divide_x_0 ] ] <|
             List.map
                 (\ascent ->
-                    H.div [ A.css [ Tw.p_2 ] ]
-                        [ H.div [ A.css [ Tw.flex, Tw.justify_around, Tw.flex_row ] ]
+                    H.div [ A.css [ Tw.p_1_dot_5 ] ]
+                        [ H.div [ A.css [ Tw.grid, Tw.grid_cols_3 ] ]
                             [ H.div [ A.css [] ] [ H.text <| Date.toIsoString ascent.date ]
                             , H.div [ A.css [] ] [ H.text (ascentKindToString ascent.kind) ]
+                            , H.div
+                                []
+                                [ Button.deleteButton (Button.defaultOptions |> Button.withMsg (Message.DeleteAscentRequested ascent))
+                                , Button.editIconButton (Button.defaultOptions |> Button.withMsg (Message.OpenAscentForm (Just ascent) route))
+                                ]
                             ]
                         , H.div [ A.css [] ] [ H.text <| Maybe.withDefault "" ascent.comment ]
-                        , H.div [] [ H.button [ E.onClick <| Message.DeleteAscentRequested ascent ] [ H.text "Delete ascent" ] ]
-                        , H.div [] [ H.button [ E.onClick <| Message.OpenAscentForm (Just ascent) route ] [ H.text "Edit ascent" ] ]
                         ]
                 )
                 ascents
@@ -192,15 +194,6 @@ viewRouteRow model route =
         , sectorName = MA.getSectorNameSafe model route.sectorId
         , ascents = MA.getAscents model route
         }
-
-
-
---| Generic views
-
-
-viewAddButton : Model -> Msg -> Html Msg
-viewAddButton _ msg =
-    H.button [ E.onClick msg ] [ H.text "+" ]
 
 
 

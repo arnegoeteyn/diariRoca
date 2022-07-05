@@ -2,6 +2,7 @@ module Main exposing (main)
 
 import Browser
 import Command
+import FontAwesome.Styles as Icon
 import Html
 import Html.Styled as H
 import Html.Styled.Events as E
@@ -19,31 +20,34 @@ import View.Navbar as Navbar
 
 mainView : Model -> Html.Html Msg
 mainView model =
-    Html.div [] <|
-        List.map H.toUnstyled <|
-            (Navbar.view model
-                :: (case model.appState of
-                        Model.Ready ->
-                            [ case model.page of
-                                ClimbingRoutesPage ->
-                                    Page.ClimbingRoutesPage.view model
+    Html.div []
+        [ Icon.css
+        , Html.div [] <|
+            List.map H.toUnstyled <|
+                (Navbar.view model
+                    :: (case model.appState of
+                            Model.Ready ->
+                                [ case model.page of
+                                    ClimbingRoutesPage ->
+                                        Page.ClimbingRoutesPage.view model
 
-                                AscentsPage ->
-                                    Page.AscentsPage.view model
+                                    AscentsPage ->
+                                        Page.AscentsPage.view model
 
-                                StatsPage ->
-                                    Page.StatsPage.view model
+                                    StatsPage ->
+                                        Page.StatsPage.view model
 
-                                SectorsPage ->
-                                    Page.SectorsPage.view model
-                            , Modal.viewModal model
-                            ]
+                                    SectorsPage ->
+                                        Page.SectorsPage.view model
+                                , Modal.viewModal model
+                                ]
 
-                        Model.NotReady ->
-                            [ H.button [ E.onClick Message.JsonRequested ] [ H.text "Load JSON" ]
-                            ]
-                   )
-            )
+                            Model.NotReady ->
+                                [ H.button [ E.onClick Message.JsonRequested ] [ H.text "Load JSON" ]
+                                ]
+                       )
+                )
+        ]
 
 
 subscriptions : Model -> Sub Msg
