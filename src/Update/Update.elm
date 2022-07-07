@@ -500,9 +500,12 @@ showRouteTask climbingRoute =
     let
         tag =
             "route-" ++ String.fromInt climbingRoute.id
+
+        navbar =
+            Browser.Dom.getElement "navbar"
     in
-    Browser.Dom.getElement tag
-        |> Task.andThen (\info -> Browser.Dom.setViewport 0 info.element.y)
+    Task.map2 (\info navBarInfo -> Browser.Dom.setViewport 0 (info.element.y - navBarInfo.element.height)) (Browser.Dom.getElement tag) navbar
+        |> Task.andThen identity
         |> Task.attempt (\_ -> Dummy)
 
 
