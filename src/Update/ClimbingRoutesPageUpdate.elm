@@ -1,5 +1,6 @@
-module Update.ClimbingRoutesPageUpdate exposing (update)
+module Update.ClimbingRoutesPageUpdate exposing (selectClimbingRoute, update)
 
+import Data exposing (ClimbingRoute)
 import Init
 import Message exposing (ClimbingRoutesPageMsg(..), Msg)
 import Model exposing (ClimbingRoutesPageModel, Model)
@@ -45,10 +46,19 @@ update msg model =
             ( { crpModel | selected = removeFromSelected sector crpModel.selected }, Cmd.none )
 
         OnClimbingRouteClicked maybeClimbingRoute ->
-            ( { crpModel | selectedClimbingRoute = maybeClimbingRoute }, Cmd.none )
+            selectClimbingRoute crpModel maybeClimbingRoute
 
         SetMediaLink link ->
             ( { crpModel | mediaLink = link }, Cmd.none )
 
         SetMediaLabel label ->
             ( { crpModel | mediaLabel = label }, Cmd.none )
+
+
+
+--| Public modifiers
+
+
+selectClimbingRoute : ClimbingRoutesPageModel -> Maybe ClimbingRoute -> ( ClimbingRoutesPageModel, Cmd msg )
+selectClimbingRoute model maybeClimbingRoute =
+    ( { model | selectedClimbingRoute = maybeClimbingRoute }, Cmd.none )

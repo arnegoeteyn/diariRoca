@@ -95,7 +95,7 @@ viewRouteDetail model route =
                 ]
             , H.div []
                 [ Button.deleteButton (Button.defaultOptions |> Button.withMsg Message.DeleteClimbingRouteRequested |> Button.withKind Button.TextAndIcon)
-                , Button.editIconButton (Button.defaultOptions |> Button.withMsg (Message.OpenClimbingRouteForm (Just route)) |> Button.withKind Button.TextAndIcon)
+                , Button.editButton (Button.defaultOptions |> Button.withMsg (Message.OpenClimbingRouteForm (Just route)) |> Button.withKind Button.TextAndIcon)
                 ]
             ]
 
@@ -172,7 +172,7 @@ viewAscentsList model route =
                             , H.div
                                 []
                                 [ Button.deleteButton (Button.defaultOptions |> Button.withMsg (Message.DeleteAscentRequested ascent))
-                                , Button.editIconButton (Button.defaultOptions |> Button.withMsg (Message.OpenAscentForm (Just ascent) route))
+                                , Button.editButton (Button.defaultOptions |> Button.withMsg (Message.OpenAscentForm (Just ascent) route))
                                 ]
                             ]
                         , H.div [ A.css [] ] [ H.text <| Maybe.withDefault "" ascent.comment ]

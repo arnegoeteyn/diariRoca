@@ -1,4 +1,4 @@
-module View.Button exposing (ButtonKind(..), addButton, defaultOptions, deleteButton, editIconButton, withKind, withMsg)
+module View.Button exposing (ButtonKind(..), addButton, defaultOptions, deleteButton, editButton, gotoButton, withKind, withMsg)
 
 import Css
 import FontAwesome as Icon
@@ -106,6 +106,11 @@ deleteButton options =
     iconButton options Icon.trash "Delete"
 
 
-editIconButton : ButtonOptions -> Html Msg
-editIconButton options =
+editButton : ButtonOptions -> Html Msg
+editButton options =
     iconButton options Icon.pencil "Edit"
+
+
+gotoButton : ButtonOptions -> Html Msg
+gotoButton options =
+    iconButton options Icon.arrowRight "Goto"
