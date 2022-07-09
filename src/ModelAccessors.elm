@@ -17,6 +17,16 @@ getArea m i =
     Dict.get i m.areas
 
 
+getAreaName : Model -> Int -> Maybe String
+getAreaName m i =
+    getArea m i |> Maybe.map .name
+
+
+getAreaNameSafe : Model -> Int -> String
+getAreaNameSafe m i =
+    getArea m i |> Maybe.map .name |> Maybe.withDefault "N/A"
+
+
 isSectorOf : Area -> Sector -> Bool
 isSectorOf a s =
     a.id == s.areaId
@@ -60,8 +70,18 @@ getSectorName m i =
     getSector m i |> Maybe.map .name
 
 
-getSectorNameF : Model -> Int -> String
-getSectorNameF m i =
+getSectorAndAreaNameSafe : Model -> Int -> String
+getSectorAndAreaNameSafe m i =
+    case getSector m i of
+        Nothing ->
+            "N/A"
+
+        Just sector ->
+            Utilities.stringFromList [ sector.name, " [", getAreaNameSafe m sector.areaId, "]" ]
+
+
+getSectorNameSafe : Model -> Int -> String
+getSectorNameSafe m i =
     getSector m i |> Maybe.map .name |> Maybe.withDefault "N/A"
 
 

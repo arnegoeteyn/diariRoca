@@ -1,4 +1,4 @@
-module View.Stats.PerGradeStat exposing (countPerGrade, viewChart, viewHeader, viewTable)
+module View.PerGradeStat exposing (countPerGrade, viewChart, viewHeader, viewTable)
 
 import Axis
 import Data exposing (ClimbingRouteKind(..))

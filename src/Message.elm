@@ -19,6 +19,8 @@ type Msg
     | GoogleDriveExportRequested
     | CloseModal
     | ToggleSettings
+      -- Global
+    | ShowClimbingRoute ClimbingRoute
       -- Pages
     | SetPage Model.Page
     | ClimbingRoutesPageMessage ClimbingRoutesPageMsg

@@ -15,7 +15,7 @@ import Init exposing (initAreaForm, initAscentForm, initClimbingRouteForm, initS
 import Json.Decode exposing (decodeString)
 import Json.Encode exposing (encode)
 import Message exposing (ClimbingRoutesPageMsg(..), FormMsg(..), Msg(..), SectorsPageMsg(..))
-import Model exposing (ClimbingRoutesPageModel, DateCriterium, ModalContent(..), Model, SectorsPageModel, SelectionCriterium)
+import Model exposing (ClimbingRoutesPageModel, DateCriterium, ModalContent(..), Model, Page(..), SectorsPageModel, SelectionCriterium)
 import ModelAccessors as MA
 import Select
 import Task
@@ -78,11 +78,24 @@ update msg model =
         ToggleSettings ->
             ( { model | settingsOpen = not model.settingsOpen }, Cmd.none )
 
+        --| Global
+        ShowClimbingRoute route ->
+            let
+                task =
+                    showRouteTask route
+            in
+            ( { model
+                | climbingRoutesPageModel = Tuple.first <| ClimbingRoutesPageUpdate.selectClimbingRoute model.climbingRoutesPageModel (Just route)
+                , page = ClimbingRoutesPage
+              }
+            , task
+            )
+
         -- Pages
         ClimbingRoutesPageMessage crpMsg ->
             let
                 ( newCrpModel, newCrpMsg ) =
-                    ClimbingRoutesPageUpdate.update crpMsg model.climbingRoutesPageModel
+                    ClimbingRoutesPageUpdate.update crpMsg model
             in
             ( { model | climbingRoutesPageModel = newCrpModel }, newCrpMsg )
 
@@ -322,7 +335,7 @@ update msg model =
                 ClimbingRouteFormSelectSectorMsg subMsg ->
                     let
                         ( updatedForm, cmd ) =
-                            updateSelectCriteriumMsg .sectorId (\x v -> { v | sectorId = x }) Init.climbingRouteFormSectorSelectConfig subMsg (Tuple.first model.climbingRouteForm)
+                            updateSelectCriteriumMsg .sectorId (\x v -> { v | sectorId = x }) (Init.climbingRouteFormSectorSelectConfig model) subMsg (Tuple.first model.climbingRouteForm)
                     in
                     ( { model
                         | climbingRouteForm =
@@ -342,13 +355,8 @@ update msg model =
                     case maybeClimbingRoute of
                         Just climbingRoute ->
                             let
-                                tag =
-                                    "route-" ++ String.fromInt climbingRoute.id
-
                                 task =
-                                    Browser.Dom.getElement tag
-                                        |> Task.andThen (\info -> Browser.Dom.setViewport 0 info.element.y)
-                                        |> Task.attempt (\_ -> Dummy)
+                                    showRouteTask climbingRoute
                             in
                             ( { model | climbingRouteForm = climbingRouteForm, modal = Empty, climbingRoutes = Dict.insert climbingRoute.id climbingRoute model.climbingRoutes }, task )
 
@@ -486,6 +494,19 @@ loadContent model content =
 
         Err _ ->
             ( { model | appState = Model.Ready }, Cmd.none )
+
+
+showRouteTask climbingRoute =
+    let
+        tag =
+            "route-" ++ String.fromInt climbingRoute.id
+
+        navbar =
+            Browser.Dom.getElement "navbar"
+    in
+    Task.map2 (\info navBarInfo -> Browser.Dom.setViewport 0 (info.element.y - navBarInfo.element.height)) (Browser.Dom.getElement tag) navbar
+        |> Task.andThen identity
+        |> Task.attempt (\_ -> Dummy)
 
 
 closeModal : Model -> Model

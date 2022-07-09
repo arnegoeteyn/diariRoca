@@ -9,7 +9,7 @@ import Message exposing (Msg(..), SectorsPageMsg(..))
 import Model exposing (Model)
 import Tailwind.Utilities as TW
 import Utilities
-import View.Button exposing (addButton)
+import View.Button as Button
 
 
 view : Model -> H.Html Msg
@@ -25,7 +25,7 @@ viewAreas options areas =
     H.div
         []
         [ H.text "Areas"
-        , addButton (OpenAreaForm Nothing)
+        , Button.addButton (Button.defaultOptions |> Button.withMsg (OpenAreaForm Nothing))
         , H.div []
             (List.map
                 (\area ->
@@ -56,7 +56,7 @@ viewSectors : { selectedSector : Maybe Sector } -> List Sector -> H.Html Msg
 viewSectors options sectors =
     H.div []
         [ H.text "Sectors"
-        , addButton (OpenSectorForm Nothing)
+        , Button.addButton (Button.defaultOptions |> Button.withMsg (OpenSectorForm Nothing))
         , H.div []
             (List.map
                 (\sector ->

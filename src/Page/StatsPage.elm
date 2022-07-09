@@ -7,7 +7,7 @@ import Message exposing (Msg)
 import Model exposing (Model)
 import Tailwind.Breakpoints as B
 import Tailwind.Utilities as Tw
-import View.Stats.PerGradeStat as PGS
+import View.PerGradeStat as PGS
 
 
 view : Model -> H.Html Msg

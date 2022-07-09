@@ -3,7 +3,7 @@ module Forms.Forms exposing (..)
 import Data exposing (Area, Ascent, AscentKind(..), ClimbingRoute, ClimbingRouteKind(..), Media, Sector, Trip, ascentKindEnum, ascentKindFromString, ascentKindToString, climbingRouteKindEnum, climbingRouteKindFromString, climbingRouteKindToString)
 import Date
 import Dict exposing (Dict)
-import Forms.Criterium exposing (dateCriterium, formSelectionCriterium, formTextCriterium, selectionWithSearchCriterium)
+import Forms.Criterium exposing (dateCriterium, formSelectionCriterium, formSelectionWithSearchCriterium, formTextCriterium)
 import Forms.Form as Form exposing (Form(..))
 import Html.Styled as H
 import Html.Styled.Attributes as A
@@ -139,7 +139,7 @@ sectorForm model =
     in
     H.form []
         [ formTextCriterium "Name" .name updateName UpdateSectorForm form
-        , selectionWithSearchCriterium "Area" Init.sectorFormAreaSelectConfig .areaId (Dict.values model.areas) form
+        , formSelectionWithSearchCriterium "Area" Init.sectorFormAreaSelectConfig .areaId (Dict.values model.areas) form
         , H.button [ A.type_ "button", E.onClick (FormMessage SaveSectorForm) ] [ H.text "Save" ]
         , viewErrors form
         ]
@@ -187,7 +187,7 @@ climbingRouteForm model =
     H.form []
         [ formTextCriterium "Name" .name updateName UpdateClimbingRouteForm form
         , formTextCriterium "Grade" .grade updateGrade UpdateClimbingRouteForm form
-        , selectionWithSearchCriterium "Sector" Init.climbingRouteFormSectorSelectConfig .sectorId (Dict.values model.sectors) form
+        , formSelectionWithSearchCriterium "Sector" (Init.climbingRouteFormSectorSelectConfig model) .sectorId (Dict.values model.sectors) form
         , formTextCriterium "Comment" .comment updateComment UpdateClimbingRouteForm form
         , formSelectionCriterium "Kind" (\_ -> List.map climbingRouteKindToString climbingRouteKindEnum) updateKind UpdateClimbingRouteForm .kind form
         , H.button [ A.type_ "button", E.onClick (FormMessage SaveClimbingRouteForm) ] [ H.text "Save" ]

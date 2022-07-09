@@ -13,7 +13,8 @@ import Model exposing (Model)
 import ModelAccessors as MA
 import Tailwind.Utilities as Tw
 import Utilities
-import View.Ascent as Ascent exposing (viewAscentTripIndicator)
+import View.Ascent exposing (viewAscentTripIndicator)
+import View.Button as Button
 
 
 view : Model -> H.Html Msg
@@ -45,7 +46,20 @@ viewAscentRow model ascent =
             Maybe.map (\route -> ( route.name, route.grade )) maybeRoute
                 |> Maybe.withDefault ( "N/A", "N/A" )
     in
-    Ascent.viewAscentRow { ascent = ascent, routeName = routeName, routeGrade = routeGrade }
+    H.div [ A.css [ Tw.flex ] ]
+        [ H.div [ A.css [ Tw.w_2over6 ] ] [ H.text <| Date.toIsoString ascent.date ]
+        , H.div [ A.css [ Tw.w_2over6 ] ]
+            [ H.text <| Utilities.stringFromList [ routeName, " ", "(", routeGrade, ")" ]
+            ]
+        , H.div [ A.css [ Tw.w_2over6 ] ] [ H.text (Data.ascentKindToString ascent.kind) ]
+        , H.div [ A.css [ Tw.w_2over6 ] ] [ H.text (Data.ascentKindToString ascent.kind) ]
+        , case maybeRoute of
+            Just route ->
+                Button.gotoButton (Button.defaultOptions |> Button.withMsg (Message.ShowClimbingRoute route))
+
+            Nothing ->
+                H.text ""
+        ]
 
 
 

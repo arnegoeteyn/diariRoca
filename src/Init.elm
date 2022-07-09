@@ -187,27 +187,29 @@ sectorFormAreaSelectConfig =
     Select.newConfig r
 
 
-climbingRouteFormSectorSelectConfig : Select.Config Msg Sector
-climbingRouteFormSectorSelectConfig =
+climbingRouteFormSectorSelectConfig : Model -> Select.Config Msg Sector
+climbingRouteFormSectorSelectConfig model =
     let
-        r : Select.RequiredConfig Message.Msg Sector
+        r : Select.RequiredConfig Msg Sector
         r =
             { filter = \x y -> DataUtilities.filterSectorsByName x y |> Utilities.listToMaybe
-            , toLabel = .name
+            , toLabel = \sector -> sector.name ++ " [" ++ MA.getAreaNameSafe model sector.areaId ++ "]"
             , onSelect = FormMessage << ClimbingRouteFormSelectSector
             , toMsg = FormMessage << ClimbingRouteFormSelectSectorMsg
             }
     in
     Select.newConfig r
+        |> Select.withOnRemoveItem (wrapCrpMessage OnRemoveSectorSelection)
+        |> Select.withPrompt "Sector"
 
 
-sectorSelectConfig : Select.Config Msg Sector
-sectorSelectConfig =
+sectorSelectConfig : Model -> Select.Config Msg Sector
+sectorSelectConfig model =
     let
         r : Select.RequiredConfig Msg Sector
         r =
             { filter = \x y -> DataUtilities.filterSectorsByName x y |> Utilities.listToMaybe
-            , toLabel = .name
+            , toLabel = \sector -> sector.name ++ " [" ++ MA.getAreaNameSafe model sector.areaId ++ "]"
             , onSelect = ClimbingRoutesPageMessage << SelectSector
             , toMsg = wrapCrpMessage SelectMsg
             }
@@ -215,6 +217,7 @@ sectorSelectConfig =
     Select.newConfig r
         |> Select.withMultiSelection True
         |> Select.withOnRemoveItem (wrapCrpMessage OnRemoveSectorSelection)
+        |> Select.withPrompt "Filter by sector"
 
 
 wrapCrpMessage : (a -> ClimbingRoutesPageMsg) -> a -> Msg

@@ -4,7 +4,7 @@ import Data exposing (ClimbingRoute, ascentKindToString, climbingRouteKindEnum, 
 import DataUtilities
 import Date
 import Dict
-import Forms.Criterium exposing (selectionCriterium, textCriterium)
+import Forms.Criterium exposing (selectionCriterium, selectionWithSearchCriterium, textCriterium)
 import Html.Styled as H exposing (Html)
 import Html.Styled.Attributes as A
 import Html.Styled.Events as E
@@ -12,10 +12,10 @@ import Init
 import Message exposing (ClimbingRoutesPageMsg(..), Msg(..))
 import Model exposing (Model)
 import ModelAccessors as MA
-import Select
 import Tailwind.Utilities as Tw
 import Utilities
-import View.ClimbingRoute as ClimbingRoute
+import View.Button as Button
+import View.Link as Link
 
 
 view : Model -> Html Msg
@@ -54,12 +54,11 @@ viewFilters model =
                 m
 
         onSectorFilter =
-            H.fromUnstyled <|
-                Select.view
-                    Init.sectorSelectConfig
-                    m.selectState
-                    (Dict.toList model.sectors |> List.map Tuple.second)
-                    m.selected
+            selectionWithSearchCriterium "Sector"
+                (Init.sectorSelectConfig model)
+                (\aModel -> ( aModel.selected, aModel.selectState ))
+                (Dict.toList model.sectors |> List.map Tuple.second)
+                m
 
         onKindFilter =
             selectionCriterium "Kind"
@@ -72,7 +71,7 @@ viewFilters model =
     H.div []
         [ H.h2 []
             [ H.text <| Utilities.stringFromList [ (String.fromInt << List.length) routes, " routes " ]
-            , viewAddButton model (OpenClimbingRouteForm Nothing)
+            , Button.addButton (Button.defaultOptions |> Button.withMsg (OpenClimbingRouteForm Nothing))
             ]
         , H.div []
             [ onRouteFilter
@@ -95,8 +94,8 @@ viewRouteDetail model route =
                 , viewRouteMedia model route
                 ]
             , H.div []
-                [ H.button [ E.onClick Message.DeleteClimbingRouteRequested ] [ H.text "Delete" ]
-                , H.button [ E.onClick <| Message.OpenClimbingRouteForm (Just route) ] [ H.text "Edit route" ]
+                [ Button.deleteButton (Button.defaultOptions |> Button.withMsg Message.DeleteClimbingRouteRequested |> Button.withKind Button.TextAndIcon)
+                , Button.editButton (Button.defaultOptions |> Button.withMsg (Message.OpenClimbingRouteForm (Just route)) |> Button.withKind Button.TextAndIcon)
                 ]
             ]
 
@@ -130,9 +129,7 @@ viewRouteMedia model route =
             H.div []
                 [ textCriterium "Link" .mediaLink identity (w SetMediaLink) m
                 , textCriterium "Link" .mediaLabel identity (w SetMediaLabel) m
-                , viewAddButton
-                    model
-                    (AddMediaToRoute route)
+                , Button.addButton (Button.defaultOptions |> Button.withMsg (AddMediaToRoute route))
                 ]
     in
     H.div []
@@ -163,19 +160,22 @@ viewAscentsList model route =
     H.div [ A.css [] ]
         [ H.h3 [ A.css [] ]
             [ H.text (Utilities.stringFromList [ String.fromInt <| List.length ascents, " ascents:" ])
-            , viewAddButton model (OpenAscentForm Nothing route)
+            , Button.addButton (Button.defaultOptions |> Button.withMsg (OpenAscentForm Nothing route))
             ]
-        , H.div [ A.css [ Tw.grid, Tw.grid_cols_1, Tw.divide_solid, Tw.divide_y_2, Tw.divide_x_0 ] ] <|
+        , H.div [ A.css [ Tw.divide_solid, Tw.divide_y_2, Tw.divide_x_0 ] ] <|
             List.map
                 (\ascent ->
-                    H.div [ A.css [ Tw.p_2 ] ]
-                        [ H.div [ A.css [ Tw.flex, Tw.justify_around, Tw.flex_row ] ]
+                    H.div [ A.css [ Tw.p_1_dot_5 ] ]
+                        [ H.div [ A.css [ Tw.grid, Tw.grid_cols_3 ] ]
                             [ H.div [ A.css [] ] [ H.text <| Date.toIsoString ascent.date ]
                             , H.div [ A.css [] ] [ H.text (ascentKindToString ascent.kind) ]
+                            , H.div
+                                []
+                                [ Button.deleteButton (Button.defaultOptions |> Button.withMsg (Message.DeleteAscentRequested ascent))
+                                , Button.editButton (Button.defaultOptions |> Button.withMsg (Message.OpenAscentForm (Just ascent) route))
+                                ]
                             ]
                         , H.div [ A.css [] ] [ H.text <| Maybe.withDefault "" ascent.comment ]
-                        , H.div [] [ H.button [ E.onClick <| Message.DeleteAscentRequested ascent ] [ H.text "Delete ascent" ] ]
-                        , H.div [] [ H.button [ E.onClick <| Message.OpenAscentForm (Just ascent) route ] [ H.text "Edit ascent" ] ]
                         ]
                 )
                 ascents
@@ -189,20 +189,27 @@ isSelected model route =
 
 viewRouteRow : Model -> ClimbingRoute -> Html Msg
 viewRouteRow model route =
-    ClimbingRoute.viewRouteRow
-        { route = route
-        , sectorName = MA.getSectorNameF model route.sectorId
-        , ascents = MA.getAscents model route
-        }
+    let
+        sector =
+            MA.getSector model route.sectorId
 
+        sectorLink =
+            Link.buttonLink (MA.getSectorAndAreaNameSafe model route.sectorId) (ClimbingRoutesPageMessage <| SelectSector sector)
 
-
---| Generic views
-
-
-viewAddButton : Model -> Msg -> Html Msg
-viewAddButton _ msg =
-    H.button [ E.onClick msg ] [ H.text "+" ]
+        ascents =
+            MA.getAscents model route
+    in
+    H.div
+        [ A.css [ Tw.flex ]
+        ]
+        [ H.div [ A.css [ Tw.w_1over6 ] ] [ H.text route.grade ]
+        , H.div [ A.css [ Tw.w_2over6 ] ]
+            [ H.div [ A.css [ Tw.font_bold ] ] [ H.text route.name ]
+            , sectorLink
+            ]
+        , H.div [ A.css [ Tw.w_2over6 ] ] [ H.text (Data.climbingRouteKindToString route.kind) ]
+        , H.div [ A.css [ Tw.w_1over6 ] ] [ (H.text << String.fromInt << List.length) ascents ]
+        ]
 
 
 
