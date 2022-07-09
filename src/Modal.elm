@@ -37,6 +37,7 @@ viewModal model =
                 , Tw.bg_opacity_75
                 , Tw.overflow_y_auto
                 , Tw.fixed
+                , Tw.z_50
                 ]
             ]
             [ H.div
