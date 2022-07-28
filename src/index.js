@@ -2,6 +2,7 @@ import './main.css';
 import { Elm } from './Main.elm';
 import * as serviceWorker from './serviceWorker';
 import * as drive from './drive';
+import { version } from '../package.json'
 
 const storageKey = "store";
 var savedDB = localStorage.getItem(storageKey);
@@ -20,7 +21,7 @@ document.head.appendChild(gsiScript);
 
 var app = Elm.Main.init({
   node: document.getElementById('root'),
-  flags: { storageCache: savedDB, posixTime: Date.parse(new Date()) }
+  flags: { storageCache: savedDB, posixTime: Date.parse(new Date()), version: version }
 });
 
 

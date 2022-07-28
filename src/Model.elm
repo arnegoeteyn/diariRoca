@@ -11,6 +11,7 @@ import Select
 type alias Model =
     { appState : AppState
     , startUpDate : Date
+    , version : String
     , page : Page
     , modal : ModalContent
     , settingsOpen : Bool

@@ -54,6 +54,24 @@ view model =
 
 dropDown : Model -> Html Msg
 dropDown model =
+    let
+        versionLink =
+            H.a
+                [ A.css
+                    [ Tw.block
+                    , Tw.py_2
+                    , Tw.px_4
+                    , Tw.bg_gray_100
+                    , Tw.text_gray_700
+                    , Tw.text_xs
+                    , Css.hover
+                        [ Tw.bg_gray_600, Tw.text_white ]
+                    ]
+                , A.href ("https://github.com/arnegoeteyn/diariRoca/releases/tag/v" ++ model.version)
+                , A.target "_blank"
+                ]
+                [ H.text ("v" ++ model.version) ]
+    in
     H.li [ A.css [ Tw.block ] ]
         [ iconButton IconsRound.settings Message.ToggleSettings
         , H.div [ A.css [ Tw.bg_white, Tw.absolute ], A.css <| Utilities.filterList [ ( Tw.hidden, not model.settingsOpen ) ] ]
@@ -85,5 +103,6 @@ dropDown model =
                             [ ( Message.AuthorizeGoogleDrive, "Authorize Google Drive" ) ]
                        )
                 )
+                ++ [ versionLink ]
             )
         ]

@@ -66,7 +66,7 @@ subscriptions _ =
     Sub.batch [ Command.loadCache JsonLoaded, Command.googleDriveSubscriptionPort GoogleDriveResponse ]
 
 
-main : Program { storageCache : String, posixTime : Int } Model Msg
+main : Program { storageCache : String, posixTime : Int, version : String } Model Msg
 main =
     Browser.element
         { view = mainView

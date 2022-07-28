@@ -15,8 +15,8 @@ import Time
 import Utilities
 
 
-init : { storageCache : String, posixTime : Int } -> ( Model, Cmd Msg )
-init { storageCache, posixTime } =
+init : { storageCache : String, posixTime : Int, version : String } -> ( Model, Cmd Msg )
+init { storageCache, posixTime, version } =
     let
         date =
             Date.fromPosix Time.utc (Time.millisToPosix posixTime)
@@ -35,7 +35,8 @@ init { storageCache, posixTime } =
     in
     ( { appState =
             Model.Ready
-      , startUpDate = Date.fromPosix Time.utc (Time.millisToPosix posixTime)
+      , startUpDate = date
+      , version = version
       , page = ClimbingRoutesPage
       , modal = Model.Empty
       , settingsOpen = False
