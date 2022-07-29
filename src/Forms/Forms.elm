@@ -189,6 +189,7 @@ climbingRouteForm model =
         , formTextCriterium "Grade" .grade updateGrade UpdateClimbingRouteForm form
         , formSelectionWithSearchCriterium "Sector" (Init.climbingRouteFormSectorSelectConfig model) .sectorId (Dict.values model.sectors) form
         , formTextCriterium "Comment" .comment updateComment UpdateClimbingRouteForm form
+        , formTextCriterium "Beta" .beta updateBeta UpdateClimbingRouteForm form
         , formSelectionCriterium "Kind" (\_ -> List.map climbingRouteKindToString climbingRouteKindEnum) updateKind UpdateClimbingRouteForm .kind form
         , H.button [ A.type_ "button", E.onClick (FormMessage SaveClimbingRouteForm) ] [ H.text "Save" ]
         , viewErrors form
@@ -209,13 +210,8 @@ validateClimbingRouteForm model =
         |> Form.append
             (validateNonEmpty .grade "Route can't have no grade")
         |> Form.append
-            (\values ->
-                if String.isEmpty values.comment then
-                    Ok Nothing
-
-                else
-                    Just values.comment |> Ok
-            )
+            (validateOptional .comment)
+        |> Form.append (validateOptional .beta)
         |> Form.append
             (.kind >> climbingRouteKindFromString >> Result.fromMaybe "A valid routeKind must be selected")
         |> Form.append
@@ -235,6 +231,7 @@ climbingRouteFromForm form =
                     climbingRouteValues.name
                     climbingRouteValues.grade
                     climbingRouteValues.comment
+                    climbingRouteValues.beta
                     climbingRouteValues.kind
                     []
             )
@@ -357,6 +354,15 @@ validateNonEmpty accessor error =
             Err error
 
 
+validateOptional : (a -> String) -> a -> Result String (Maybe String)
+validateOptional accessor values =
+    if String.isEmpty (accessor values) then
+        Ok Nothing
+
+    else
+        Just (accessor values) |> Ok
+
+
 
 --| UpdateUtilities
 
@@ -364,6 +370,11 @@ validateNonEmpty accessor error =
 updateAreaId : a -> { b | areaId : a } -> { b | areaId : a }
 updateAreaId value form =
     { form | areaId = value }
+
+
+updateBeta : a -> { b | beta : a } -> { b | beta : a }
+updateBeta value form =
+    { form | beta = value }
 
 
 updateComment : a -> { b | comment : a } -> { b | comment : a }

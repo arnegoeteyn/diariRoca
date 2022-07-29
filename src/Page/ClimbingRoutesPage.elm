@@ -87,6 +87,15 @@ viewRouteDetail model route =
         H.div [ A.css [ Tw.grid, Tw.gap_4, Tw.grid_cols_3 ] ]
             [ H.div [ A.css [ Tw.flex, Tw.flex_col, Tw.justify_around, Tw.col_span_2 ] ]
                 [ viewRouteInfo model route
+                , case route.beta of
+                    Just beta ->
+                        H.details []
+                            [ H.summary [] [ H.text "Beta" ]
+                            , H.text beta
+                            ]
+
+                    Nothing ->
+                        H.text ""
                 , viewAscentsList model route
                 ]
             , H.div [ A.css [] ]

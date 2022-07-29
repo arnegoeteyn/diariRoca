@@ -154,6 +154,7 @@ type alias ClimbingRouteFormValues =
     { name : String
     , grade : String
     , comment : String
+    , beta : String
     , sectorId : SelectionCriterium Sector
     , kind : String
     }
@@ -164,6 +165,7 @@ type alias ValidatedClimbingRouteFormValues =
     , name : String
     , grade : String
     , comment : Maybe String
+    , beta : Maybe String
     , kind : ClimbingRouteKind
     , sectorId : Int
     }

@@ -115,6 +115,7 @@ initClimbingRouteForm maybeModel climbingRoute =
         { name = Maybe.map .name climbingRoute |> Maybe.withDefault ""
         , grade = Maybe.map .grade climbingRoute |> Maybe.withDefault ""
         , comment = Maybe.andThen .comment climbingRoute |> Maybe.withDefault ""
+        , beta = Maybe.andThen .beta climbingRoute |> Maybe.withDefault ""
         , kind = climbingRouteKindToString <| (Maybe.withDefault Sport <| Maybe.map .kind climbingRoute)
         , sectorId =
             ( Maybe.andThen (\model -> Maybe.andThen (.sectorId >> MA.getSector model) climbingRoute |> Maybe.map List.singleton) maybeModel |> Maybe.withDefault []
