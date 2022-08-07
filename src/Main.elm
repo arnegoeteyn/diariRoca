@@ -46,8 +46,8 @@ mainView model =
                                 ClimbingRoutesRoute ->
                                     Page.ClimbingRoutesPage.view model
 
-                                ClimbingRouteRoute _ ->
-                                    Page.ClimbingRoutePage.view model
+                                ClimbingRouteRoute id ->
+                                    Page.ClimbingRoutePage.view model id
 
                                 AscentsRoute ->
                                     Page.AscentsPage.view model
