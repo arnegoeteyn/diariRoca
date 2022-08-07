@@ -324,11 +324,11 @@ ascentFromForm form =
 
 mediaFromForm : Model -> Maybe Media
 mediaFromForm model =
-    if List.any (\f -> (String.isEmpty << f) model.climbingRoutesPageModel) [ .mediaLink, .mediaLabel ] then
+    if List.any (\f -> (String.isEmpty << f) model.climbingRoutePageModel) [ .mediaLink, .mediaLabel ] then
         Nothing
 
     else
-        Just <| Media model.climbingRoutesPageModel.mediaLink model.climbingRoutesPageModel.mediaLabel
+        Just <| Media model.climbingRoutePageModel.mediaLink model.climbingRoutePageModel.mediaLabel
 
 
 

@@ -9,7 +9,7 @@ import Dict
 import Forms.Form exposing (Form(..))
 import Json.Decode exposing (decodeString)
 import Message exposing (ClimbingRoutesPageMsg(..), FormMsg(..), Msg(..))
-import Model exposing (AreaForm, AscentForm, ClimbingRouteForm, ClimbingRoutesPageModel, Model, Route(..), SectorForm, SectorsPageModel, TripForm)
+import Model exposing (AreaForm, AscentForm, ClimbingRouteForm, ClimbingRoutePageModel, ClimbingRoutesPageModel, Model, Route(..), SectorForm, SectorsPageModel, TripForm)
 import ModelAccessors as MA
 import Select
 import Time
@@ -64,6 +64,7 @@ init { storageCache, posixTime, version } url key =
 
       -- Routes
       , climbingRoutesPageModel = initClimbingRoutesPage
+      , climbingRoutePageModel = initClimbingRoutePage
       , sectorsPageModel = initSectorsPage
       }
     , Cmd.batch [ tripFormCmd, ascentFormCmd ]
@@ -152,7 +153,12 @@ initClimbingRoutesPage =
     , selected = []
     , selectState = Select.init "sectors"
     , selectedClimbingRoute = Nothing
-    , mediaLink = ""
+    }
+
+
+initClimbingRoutePage : ClimbingRoutePageModel
+initClimbingRoutePage =
+    { mediaLink = ""
     , mediaLabel = ""
     }
 

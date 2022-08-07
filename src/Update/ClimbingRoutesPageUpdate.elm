@@ -45,15 +45,6 @@ update msg model =
         OnRemoveSectorSelection sector ->
             ( { crpModel | selected = removeFromSelected sector crpModel.selected }, Cmd.none )
 
-        OnClimbingRouteClicked maybeClimbingRoute ->
-            selectClimbingRoute crpModel maybeClimbingRoute
-
-        SetMediaLink link ->
-            ( { crpModel | mediaLink = link }, Cmd.none )
-
-        SetMediaLabel label ->
-            ( { crpModel | mediaLabel = label }, Cmd.none )
-
 
 
 --| Public modifiers

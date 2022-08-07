@@ -1,18 +1,17 @@
 module Page.ClimbingRoutePage exposing (..)
 
-import Data exposing (ClimbingRoute, ascentKindToString, climbingRouteKindEnum, climbingRouteKindFromString, climbingRouteKindToString)
+import Data exposing (ClimbingRoute, ascentKindToString)
 import Date
-import Forms.Criterium exposing (selectionCriterium, selectionWithSearchCriterium, textCriterium)
+import Forms.Criterium exposing (textCriterium)
 import Html.Styled as H exposing (Html)
 import Html.Styled.Attributes as A
 import Html.Styled.Events as E
-import Message exposing (ClimbingRoutesPageMsg(..), Msg(..))
+import Message exposing (ClimbingRoutePageMsg(..), Msg(..))
 import Model exposing (Model)
 import ModelAccessors as Ma
 import Tailwind.Utilities as Tw
 import Utilities
 import View.Button as Button
-import View.Link as Link
 
 
 view : Model -> Int -> Html Msg
@@ -53,7 +52,7 @@ viewRouteDetail model route =
             , viewRouteMedia model route
             ]
         , H.div []
-            [ Button.deleteButton (Button.defaultOptions |> Button.withMsg Message.DeleteClimbingRouteRequested |> Button.withKind Button.TextAndIcon)
+            [ Button.deleteButton (Button.defaultOptions |> Button.withMsg (Message.DeleteClimbingRouteRequested route) |> Button.withKind Button.TextAndIcon)
             , Button.editButton (Button.defaultOptions |> Button.withMsg (Message.OpenClimbingRouteForm (Just route)) |> Button.withKind Button.TextAndIcon)
             ]
         ]
@@ -76,17 +75,16 @@ viewRouteMedia : Model -> ClimbingRoute -> Html Msg
 viewRouteMedia model route =
     let
         m =
-            model.climbingRoutesPageModel
+            model.climbingRoutePageModel
 
         hasMedia =
             (not << List.isEmpty) route.media
 
         addMediaInput =
             H.div []
-                [ --     textCriterium "Link" .mediaLink identity (w SetMediaLink) m
-                  -- , textCriterium "Link" .mediaLabel identity (w SetMediaLabel) m
-                  -- ,
-                  Button.addButton (Button.defaultOptions |> Button.withMsg (AddMediaToRoute route))
+                [ textCriterium "Link" .mediaLink identity (w SetMediaLink) m
+                , textCriterium "Link" .mediaLabel identity (w SetMediaLabel) m
+                , Button.addButton (Button.defaultOptions |> Button.withMsg (AddMediaToRoute route))
                 ]
     in
     H.div []
@@ -137,3 +135,8 @@ viewAscentsList model route =
                 )
                 ascents
         ]
+
+
+w : (a -> Message.ClimbingRoutePageMsg) -> a -> Msg
+w msg =
+    ClimbingRoutePageMessage << msg

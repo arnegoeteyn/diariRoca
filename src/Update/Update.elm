@@ -12,15 +12,16 @@ import File
 import File.Download
 import File.Select
 import Forms.Form as Form exposing (Form)
-import Forms.Forms exposing (newId)
+import Forms.Forms
 import Init exposing (initAreaForm, initAscentForm, initClimbingRouteForm, initSectorForm, initTripForm)
 import Json.Decode exposing (decodeString)
 import Json.Encode exposing (encode)
 import Message exposing (ClimbingRoutesPageMsg(..), FormMsg(..), Msg(..), SectorsPageMsg(..))
-import Model exposing (ClimbingRoutesPageModel, DateCriterium, ModalContent(..), Model, SectorsPageModel, SelectionCriterium)
+import Model exposing (DateCriterium, ModalContent(..), Model, SectorsPageModel, SelectionCriterium)
 import ModelAccessors as MA
 import Select
 import Task
+import Update.ClimbingRoutePageUpdate as ClimbingRoutePageUpdate
 import Update.ClimbingRoutesPageUpdate as ClimbingRoutesPageUpdate
 import Url
 import Utilities exposing (flip, replaceFirst)
@@ -99,6 +100,13 @@ update msg model =
             in
             ( { model | climbingRoutesPageModel = newCrpModel }, newCrpMsg )
 
+        ClimbingRoutePageMessage crpMsg ->
+            let
+                ( newCrpModel, newCrpMsg ) =
+                    ClimbingRoutePageUpdate.update crpMsg model
+            in
+            ( { model | climbingRoutePageModel = newCrpModel }, newCrpMsg )
+
         SectorsPageMessage spMsg ->
             let
                 ( newSpModel, newSpMsg ) =
@@ -168,11 +176,11 @@ update msg model =
             in
             ( { model | climbingRoutes = Dict.insert route.id newRoute model.climbingRoutes }, Cmd.none )
 
-        DeleteClimbingRouteRequested ->
-            ( { model | modal = Model.DeleteClimbingRouteRequestModal }, Cmd.none )
+        DeleteClimbingRouteRequested route ->
+            ( { model | modal = Model.DeleteClimbingRouteRequestModal route }, Cmd.none )
 
         DeleteClimbingRouteConfirmation route ->
-            ( MA.deleteRoute route.id (closeModal model), Cmd.none )
+            ( MA.deleteRoute route.id (closeModal model), Nav.load "/" )
 
         --| Data - Ascent
         OpenAscentForm maybeAscent climbingRoute ->

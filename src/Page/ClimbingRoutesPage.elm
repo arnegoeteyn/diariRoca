@@ -156,7 +156,6 @@ viewRouteRow model route =
         [ A.css [ Tw.bg_white, Tw.border_b ]
         , A.scope "row"
         , A.id <| "route-" ++ String.fromInt route.id
-        , E.onClick <| w OnClimbingRouteClicked (Just route)
         ]
         [ H.td [ cellCss ] [ H.text route.grade ]
         , H.td [ cellCss, A.css [ Tw.text_left ] ]
@@ -168,7 +167,7 @@ viewRouteRow model route =
         , H.td []
             [ Button.deleteButton
                 (Button.defaultOptions
-                    |> Button.withMsg Message.DeleteClimbingRouteRequested
+                    |> Button.withMsg (Message.DeleteClimbingRouteRequested route)
                     |> Button.withKind Button.Icon
                 )
             , Button.editButton

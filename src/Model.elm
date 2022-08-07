@@ -37,6 +37,7 @@ type alias Model =
 
     -- Pages
     , climbingRoutesPageModel : ClimbingRoutesPageModel
+    , climbingRoutePageModel : ClimbingRoutePageModel
     , sectorsPageModel : SectorsPageModel
     }
 
@@ -49,9 +50,11 @@ type alias ClimbingRoutesPageModel =
     , routeKindFilter : Maybe ClimbingRouteKind
     , selected : List Sector
     , selectState : Select.State
+    }
 
-    -- Forms
-    , mediaLink : String
+
+type alias ClimbingRoutePageModel =
+    { mediaLink : String
     , mediaLabel : String
     }
 
@@ -76,7 +79,7 @@ type ModalContent
     | AscentFormModal
     | DeleteAreaRequestModal Area
     | DeleteSectorRequestModal Sector
-    | DeleteClimbingRouteRequestModal
+    | DeleteClimbingRouteRequestModal ClimbingRoute
     | DeleteAscentRequestModal Ascent
 
 
