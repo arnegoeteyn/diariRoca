@@ -12,7 +12,7 @@ buttonLink : String -> Msg -> Html Msg
 buttonLink s msg =
     H.button
         [ A.css <|
-            [ Tw.text_gray_500, Tw.outline_none, Tw.bg_transparent, Tw.border_none, Tw.cursor_pointer ]
+            [ Tw.text_gray_500, Tw.outline_none, Tw.bg_transparent, Tw.border_none, Tw.cursor_pointer, Tw.mx_0, Tw.px_0 ]
         , E.stopPropagationOn "click" <| Decode.succeed ( msg, True )
         ]
         [ H.text s ]
