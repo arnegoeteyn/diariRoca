@@ -63,14 +63,12 @@ viewTableHeader model =
                 [ H.text <| Utilities.stringFromList [ (String.fromInt << List.length) routes, " routes " ]
                 , Button.addButton (Button.defaultOptions |> Button.withMsg (OpenClimbingRouteForm Nothing))
                 ]
-            , H.div [ A.css [] ] [ onRouteFilter ]
+            , H.div [ A.css [] ]
+                [ onRouteFilter
+                , onSectorFilter
+                , onKindFilter
+                ]
             ]
-
-        -- , H.div []
-        --     [ onRouteFilter
-        --     , onSectorFilter
-        --     , onKindFilter
-        --     ]
         ]
 
 
@@ -186,11 +184,6 @@ viewRouteRow model route =
 
 
 --| Utilities
-
-
-isSelected : Model -> ClimbingRoute -> Bool
-isSelected model route =
-    Maybe.map .id model.climbingRoutesPageModel.selectedClimbingRoute == Just route.id
 
 
 sortedAndFilteredRoutes : Model -> List ClimbingRoute

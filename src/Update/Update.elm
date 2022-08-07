@@ -180,7 +180,15 @@ update msg model =
             ( { model | modal = Model.DeleteClimbingRouteRequestModal route }, Cmd.none )
 
         DeleteClimbingRouteConfirmation route ->
-            ( MA.deleteRoute route.id (closeModal model), Nav.load "/" )
+            let
+                task =
+                    if model.route == Model.ClimbingRoutesRoute then
+                        Cmd.none
+
+                    else
+                        Nav.load "/"
+            in
+            ( MA.deleteRoute route.id (closeModal model), task )
 
         --| Data - Ascent
         OpenAscentForm maybeAscent climbingRoute ->
