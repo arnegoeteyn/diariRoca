@@ -55,7 +55,7 @@ viewAscentRow model ascent =
         , H.div [ A.css [ Tw.w_2over6 ] ] [ H.text (Data.ascentKindToString ascent.kind) ]
         , case maybeRoute of
             Just route ->
-                Button.gotoButton (Button.defaultOptions |> Button.withMsg (Message.ShowClimbingRoute route))
+                Button.gotoButton (Button.defaultOptions |> Button.withHref ("/route/" ++ String.fromInt route.id))
 
             Nothing ->
                 H.text ""

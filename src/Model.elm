@@ -1,18 +1,22 @@
 module Model exposing (..)
 
+import Browser.Navigation as Nav
 import Data exposing (Area, Ascent, AscentKind, ClimbingRoute, ClimbingRouteKind, Sector, Trip)
 import Date exposing (Date)
 import DatePicker exposing (DatePicker)
 import Dict exposing (Dict)
 import Forms.Form exposing (Form)
 import Select
+import Url
 
 
 type alias Model =
-    { appState : AppState
+    { key : Nav.Key
+    , url : Url.Url
+    , route : Route
+    , appState : AppState
     , startUpDate : Date
     , version : String
-    , page : Page
     , modal : ModalContent
     , settingsOpen : Bool
     , googleDriveAuthorized : Bool
@@ -74,13 +78,6 @@ type ModalContent
     | DeleteSectorRequestModal Sector
     | DeleteClimbingRouteRequestModal
     | DeleteAscentRequestModal Ascent
-
-
-type Page
-    = ClimbingRoutesPage
-    | AscentsPage
-    | StatsPage
-    | SectorsPage
 
 
 
@@ -201,3 +198,16 @@ type alias ValidatedAscentFormValues =
 
 type alias AscentForm =
     Form AscentFormValues ValidatedAscentFormValues
+
+
+
+-- Routing
+
+
+type Route
+    = NotFoundRoute
+    | SectorsRoute
+    | ClimbingRoutesRoute
+    | ClimbingRouteRoute Int
+    | AscentsRoute
+    | StatsRoute

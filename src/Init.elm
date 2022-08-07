@@ -1,5 +1,6 @@
 module Init exposing (..)
 
+import Browser.Navigation as Nav
 import Data exposing (Area, Ascent, AscentKind(..), ClimbingRoute, ClimbingRouteKind(..), Sector, Trip, ascentKindToString, climbingRouteKindToString, jsonFileDecoder)
 import DataUtilities
 import Date exposing (Date)
@@ -8,15 +9,18 @@ import Dict
 import Forms.Form exposing (Form(..))
 import Json.Decode exposing (decodeString)
 import Message exposing (ClimbingRoutesPageMsg(..), FormMsg(..), Msg(..))
-import Model exposing (AreaForm, AscentForm, ClimbingRouteForm, ClimbingRoutesPageModel, Model, Page(..), SectorForm, SectorsPageModel, TripForm)
+import Model exposing (AreaForm, AscentForm, ClimbingRouteForm, ClimbingRoutesPageModel, Model, Route(..), SectorForm, SectorsPageModel, TripForm)
 import ModelAccessors as MA
 import Select
 import Time
+import Url
+import Url.Parser as Parser exposing ((</>), (<?>), Parser)
+import Url.Parser.Query as Query
 import Utilities
 
 
-init : { storageCache : String, posixTime : Int, version : String } -> ( Model, Cmd Msg )
-init { storageCache, posixTime, version } =
+init : { storageCache : String, posixTime : Int, version : String } -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
+init { storageCache, posixTime, version } url key =
     let
         date =
             Date.fromPosix Time.utc (Time.millisToPosix posixTime)
@@ -33,11 +37,13 @@ init { storageCache, posixTime, version } =
         ( tripForm, tripFormCmd ) =
             initTripForm Nothing date
     in
-    ( { appState =
+    ( { key = key
+      , url = url
+      , route = parseUrl url
+      , appState =
             Model.Ready
       , startUpDate = date
       , version = version
-      , page = ClimbingRoutesPage
       , modal = Model.Empty
       , settingsOpen = False
       , googleDriveAuthorized = False
@@ -56,7 +62,7 @@ init { storageCache, posixTime, version } =
       , climbingRouteForm = ( initClimbingRouteForm Nothing Nothing, Nothing )
       , ascentForm = ( ascentForm, Nothing )
 
-      -- Pages
+      -- Routes
       , climbingRoutesPageModel = initClimbingRoutesPage
       , sectorsPageModel = initSectorsPage
       }
@@ -225,3 +231,25 @@ sectorSelectConfig model =
 wrapCrpMessage : (a -> ClimbingRoutesPageMsg) -> a -> Msg
 wrapCrpMessage msg =
     ClimbingRoutesPageMessage << msg
+
+
+
+-- Routing
+
+
+routeParser : Parser (Route -> a) a
+routeParser =
+    Parser.oneOf
+        [ Parser.map ClimbingRoutesRoute Parser.top
+        , Parser.map ClimbingRouteRoute (Parser.s "routes" </> Parser.int)
+        , Parser.map AscentsRoute (Parser.s "ascents")
+        , Parser.map SectorsRoute (Parser.s "sectors")
+        , Parser.map StatsRoute (Parser.s "stats")
+        ]
+
+
+parseUrl : Url.Url -> Route
+parseUrl url =
+    url
+        |> Parser.parse routeParser
+        |> Maybe.withDefault NotFoundRoute

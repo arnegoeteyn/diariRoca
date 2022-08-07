@@ -90,14 +90,7 @@ viewRoutesTable model =
         , A.id "route-container"
         ]
         [ H.table
-            [ A.css
-                [ Tw.w_full
-                , Tw.text_sm
-
-                -- , Tw.text_left
-                -- , Tw.text_gray_500
-                ]
-            ]
+            [ A.css [ Tw.w_full, Tw.text_sm ] ]
             [ viewRoutesTableHeader model
             , viewRoutesTableBody model
             ]
@@ -126,7 +119,7 @@ viewRoutesTableHeader model =
                         ]
                         [ H.text header ]
                 )
-                [ "Grade", "Name", "Kind", "Ascents" ]
+                [ "Grade", "Name", "Kind", "Ascents", "Actions" ]
             )
         ]
 
@@ -174,6 +167,23 @@ viewRouteRow model route =
             ]
         , H.td [ cellCss ] [ H.text (Data.climbingRouteKindToString route.kind) ]
         , H.td [ cellCss ] [ (H.text << String.fromInt << List.length) ascents ]
+        , H.td []
+            [ Button.deleteButton
+                (Button.defaultOptions
+                    |> Button.withMsg Message.DeleteClimbingRouteRequested
+                    |> Button.withKind Button.Icon
+                )
+            , Button.editButton
+                (Button.defaultOptions
+                    |> Button.withMsg (Message.OpenClimbingRouteForm (Just route))
+                    |> Button.withKind Button.Icon
+                )
+            , Button.gotoButton
+                (Button.defaultOptions
+                    |> Button.withMsg (w Message.OnClimbingRouteClicked (Just route))
+                    |> Button.withKind Button.Icon
+                )
+            ]
         ]
 
 

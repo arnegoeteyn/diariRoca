@@ -8,48 +8,98 @@ import Html.Styled.Events as E
 import Material.Icons.Round as IconsRound
 import Material.Icons.Types exposing (Coloring(..))
 import Message exposing (Msg(..))
-import Model exposing (Model)
+import Model exposing (Model, Route(..))
 import Tailwind.Breakpoints as B
 import Tailwind.Utilities as Tw
 import Utilities
 import View.Icon exposing (iconButton)
 
 
+
+-- view : Model -> Html Msg
+-- view model =
+--     let
+--         navAttributes =
+--             [ A.css
+--                 [ Tw.flex
+--                 , Tw.bg_purple_400
+--                 ]
+--             ]
+--         isActive page =
+--             model.page == page
+--         navLink link caption =
+--             H.li [ A.css [ Tw.block ] ]
+--                 [ H.a
+--                     [ A.css <|
+--                         [ Tw.block, Tw.mt_4, Tw.mr_4, Tw.text_purple_200, Tw.outline_none, Tw.bg_transparent, Tw.border_none, Tw.cursor_pointer, B.lg [ Tw.inline_block, Tw.mt_0 ] ]
+--                     -- ++ Utilities.filterAndReplaceList [ ( Tw.underline, isActive page, Just Tw.no_underline ) ]
+--                     , A.href link
+--                     ]
+--                     [ H.text caption ]
+--                 ]
+--         links =
+--             H.ul [ A.css [ Tw.flex, Tw.flex_row, Tw.items_center ] ]
+--                 [ navLink "/" "Routes"
+--                 , navLink "/ascents" "Ascents"
+--                 , navLink "/sectors" "Sectors"
+--                 , navLink "/stats" "Stats"
+--                 , dropDown model
+--                 ]
+--     in
+--     H.nav navAttributes
+--         [ H.div [ A.css [ Tw.container, Tw.flex, Tw.flex_wrap ] ] [ links ] ]
+
+
 view : Model -> Html Msg
 view model =
     let
+        logo =
+            H.div [ A.css [ Tw.flex, Tw.items_center, Tw.flex_shrink_0, Tw.text_white, Tw.mr_6 ] ] [ H.text "Diari roca" ]
+
+        links =
+            H.div [ A.css [ Tw.w_full, Tw.block, Tw.flex_grow, B.lg [ Tw.flex, Tw.items_center, Tw.w_auto ] ] ]
+                [ navLink ClimbingRoutesRoute { url = "/", caption = "Routes" }
+                , navLink AscentsRoute { url = "/ascents", caption = "Ascents" }
+                , navLink SectorsRoute { url = "/sectors", caption = "Sectors" }
+                , navLink StatsRoute { url = "/stats", caption = "Stats" }
+                ]
+
         navAttributes =
             [ A.css
                 [ Tw.flex
+                , Tw.items_center
+                , Tw.justify_between
+                , Tw.flex_wrap
                 , Tw.bg_purple_400
+                , Tw.p_6
                 ]
             ]
 
-        isActive page =
-            model.page == page
+        isActive route =
+            case ( route, model.route ) of
+                ( ClimbingRoutesRoute, ClimbingRouteRoute _ ) ->
+                    True
 
-        navLink page caption =
-            H.li [ A.css [ Tw.block ] ]
-                [ H.button
-                    [ E.onClick (SetPage page)
-                    , A.css <|
-                        [ Tw.block, Tw.mt_4, Tw.mr_4, Tw.text_purple_200, Tw.outline_none, Tw.bg_transparent, Tw.border_none, Tw.cursor_pointer, B.lg [ Tw.inline_block, Tw.mt_0 ] ]
-                            ++ Utilities.filterAndReplaceList [ ( Tw.underline, isActive page, Just Tw.no_underline ) ]
-                    ]
-                    [ H.text caption ]
-                ]
+                _ ->
+                    model.route == route
 
-        links =
-            H.ul [ A.css [ Tw.flex, Tw.flex_row, Tw.items_center ] ]
-                [ navLink Model.ClimbingRoutesPage "Routes"
-                , navLink Model.AscentsPage "Ascents"
-                , navLink Model.SectorsPage "Sectors"
-                , navLink Model.StatsPage "Stats"
-                , dropDown model
+        navLink : Route -> { url : String, caption : String } -> Html msg
+        navLink route { url, caption } =
+            H.a
+                [ A.href url
+                , A.css <|
+                    [ Tw.block, Tw.mt_4, Tw.mr_4, Tw.text_purple_200, B.lg [ Tw.inline_block, Tw.mt_0 ] ]
+                        ++ Utilities.filterAndReplaceList [ ( Tw.underline, isActive route, Just Tw.no_underline ) ]
                 ]
+                [ H.text caption ]
     in
     H.nav navAttributes
-        [ H.div [ A.css [ Tw.container, Tw.flex, Tw.flex_wrap ] ] [ links ] ]
+        [ logo
+        , links
+
+        -- , button [ onClick JsonRequested ] [ text "Load JSON" ]
+        -- , button [ onClick ExportRequested ] [ text "Save JSON" ]
+        ]
 
 
 dropDown : Model -> Html Msg

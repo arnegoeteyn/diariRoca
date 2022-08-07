@@ -1,6 +1,8 @@
 module Update.Update exposing (updateWithStorage)
 
+import Browser
 import Browser.Dom
+import Browser.Navigation as Nav
 import Command
 import Data exposing (encodedJsonFile, jsonFileDecoder)
 import Date
@@ -15,11 +17,12 @@ import Init exposing (initAreaForm, initAscentForm, initClimbingRouteForm, initS
 import Json.Decode exposing (decodeString)
 import Json.Encode exposing (encode)
 import Message exposing (ClimbingRoutesPageMsg(..), FormMsg(..), Msg(..), SectorsPageMsg(..))
-import Model exposing (ClimbingRoutesPageModel, DateCriterium, ModalContent(..), Model, Page(..), SectorsPageModel, SelectionCriterium)
+import Model exposing (ClimbingRoutesPageModel, DateCriterium, ModalContent(..), Model, SectorsPageModel, SelectionCriterium)
 import ModelAccessors as MA
 import Select
 import Task
 import Update.ClimbingRoutesPageUpdate as ClimbingRoutesPageUpdate
+import Url
 import Utilities exposing (flip, replaceFirst)
 
 
@@ -29,8 +32,18 @@ update msg model =
         Dummy ->
             ( model, Cmd.none )
 
-        SetPage page ->
-            ( { model | page = page }, Cmd.none )
+        LinkClicked urlRequest ->
+            case urlRequest of
+                Browser.Internal url ->
+                    ( model, Nav.pushUrl model.key (Url.toString url) )
+
+                Browser.External href ->
+                    ( model, Nav.load href )
+
+        UrlChanged url ->
+            ( { model | url = url, route = Init.parseUrl url }
+            , Cmd.none
+            )
 
         JsonRequested ->
             ( model, File.Select.file [ "application/json" ] JsonSelected )
@@ -77,19 +90,6 @@ update msg model =
 
         ToggleSettings ->
             ( { model | settingsOpen = not model.settingsOpen }, Cmd.none )
-
-        --| Global
-        ShowClimbingRoute route ->
-            let
-                task =
-                    showRouteTask route
-            in
-            ( { model
-                | climbingRoutesPageModel = Tuple.first <| ClimbingRoutesPageUpdate.selectClimbingRoute model.climbingRoutesPageModel (Just route)
-                , page = ClimbingRoutesPage
-              }
-            , task
-            )
 
         -- Pages
         ClimbingRoutesPageMessage crpMsg ->
