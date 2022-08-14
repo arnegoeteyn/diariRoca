@@ -15,41 +15,6 @@ import Utilities
 import View.Icon exposing (iconButton)
 
 
-
--- view : Model -> Html Msg
--- view model =
---     let
---         navAttributes =
---             [ A.css
---                 [ Tw.flex
---                 , Tw.bg_purple_400
---                 ]
---             ]
---         isActive page =
---             model.page == page
---         navLink link caption =
---             H.li [ A.css [ Tw.block ] ]
---                 [ H.a
---                     [ A.css <|
---                         [ Tw.block, Tw.mt_4, Tw.mr_4, Tw.text_purple_200, Tw.outline_none, Tw.bg_transparent, Tw.border_none, Tw.cursor_pointer, B.lg [ Tw.inline_block, Tw.mt_0 ] ]
---                     -- ++ Utilities.filterAndReplaceList [ ( Tw.underline, isActive page, Just Tw.no_underline ) ]
---                     , A.href link
---                     ]
---                     [ H.text caption ]
---                 ]
---         links =
---             H.ul [ A.css [ Tw.flex, Tw.flex_row, Tw.items_center ] ]
---                 [ navLink "/" "Routes"
---                 , navLink "/ascents" "Ascents"
---                 , navLink "/sectors" "Sectors"
---                 , navLink "/stats" "Stats"
---                 , dropDown model
---                 ]
---     in
---     H.nav navAttributes
---         [ H.div [ A.css [ Tw.container, Tw.flex, Tw.flex_wrap ] ] [ links ] ]
-
-
 view : Model -> Html Msg
 view model =
     let
@@ -57,7 +22,7 @@ view model =
             H.div [ A.css [ Tw.flex, Tw.items_center, Tw.flex_shrink_0, Tw.text_white, Tw.mr_6 ] ] [ H.text "Diari roca" ]
 
         links =
-            H.div [ A.css [ Tw.w_full, Tw.block, Tw.flex_grow, B.lg [ Tw.flex, Tw.items_center, Tw.w_auto ] ] ]
+            H.div [ A.css [ Tw.flex, Tw.items_center, Tw.w_auto ] ]
                 [ navLink ClimbingRoutesRoute { url = "/", caption = "Routes" }
                 , navLink AscentsRoute { url = "/ascents", caption = "Ascents" }
                 , navLink SectorsRoute { url = "/sectors", caption = "Sectors" }
@@ -67,11 +32,10 @@ view model =
         navAttributes =
             [ A.css
                 [ Tw.flex
-                , Tw.items_center
-                , Tw.justify_between
-                , Tw.flex_wrap
+                , Tw.flex_col
                 , Tw.bg_purple_400
                 , Tw.p_6
+                , B.lg [ Tw.flex_row ]
                 ]
             ]
 
@@ -96,9 +60,7 @@ view model =
     H.nav navAttributes
         [ logo
         , links
-
-        -- , button [ onClick JsonRequested ] [ text "Load JSON" ]
-        -- , button [ onClick ExportRequested ] [ text "Save JSON" ]
+        , dropDown model
         ]
 
 
