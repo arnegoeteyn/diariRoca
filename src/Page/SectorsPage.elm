@@ -44,11 +44,13 @@ viewAreas options areas =
 viewArea : { area : Area, selected : Bool } -> Html Msg
 viewArea { area, selected } =
     H.div
-        [ A.css [ TW.flex ]
+        [ A.css [ TW.flex, TW.place_content_between, TW.mx_8 ]
         ]
         [ H.text <| area.name
-        , H.button [ E.onClick <| OpenAreaForm (Just area) ] [ H.text "edit" ]
-        , H.button [ E.onClick <| DeleteAreaRequested area ] [ H.text "delete" ]
+        , H.div []
+            [ Button.editButton (Button.defaultOptions |> Button.withMsg (OpenAreaForm (Just area)) |> Button.withKind Button.Icon)
+            , Button.deleteButton (Button.defaultOptions |> Button.withMsg (DeleteAreaRequested area) |> Button.withKind Button.Icon)
+            ]
         ]
 
 
@@ -75,11 +77,13 @@ viewSectors options sectors =
 viewSectorRow : { sector : Sector, selected : Bool } -> Html Msg
 viewSectorRow { sector, selected } =
     H.div
-        [ A.css [ TW.flex ]
+        [ A.css [ TW.flex, TW.place_content_between, TW.mx_8 ]
         ]
         [ H.div [ A.css [] ] [ H.text <| sector.name ]
-        , H.button [ E.onClick <| OpenSectorForm (Just sector) ] [ H.text "edit" ]
-        , H.button [ E.onClick <| DeleteSectorRequested sector ] [ H.text "delete" ]
+        , H.div []
+            [ Button.editButton (Button.defaultOptions |> Button.withMsg (OpenSectorForm (Just sector)) |> Button.withKind Button.Icon)
+            , Button.deleteButton (Button.defaultOptions |> Button.withMsg (DeleteSectorRequested sector) |> Button.withKind Button.Icon)
+            ]
         ]
 
 
