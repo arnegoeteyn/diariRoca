@@ -10,7 +10,7 @@ import Html.Styled.Attributes as A
 import Html.Styled.Events as E
 import Init exposing (ascentFormDatePickerSettings, tripFormDatePickerSettings)
 import Message exposing (FormMsg(..), Msg(..))
-import Model exposing (AreaForm, AscentForm, ClimbingRouteForm, Model, SectorForm, TripForm, ValidatedAreaFormValues, ValidatedAscentFormValues, ValidatedClimbingRouteFormValues, ValidatedSectorFormValues, ValidatedTripFormValues)
+import Model exposing (AreaForm, AscentForm, ClimbingRouteForm, Model, SectorForm, TripForm, TripFormValues, ValidatedAreaFormValues, ValidatedAscentFormValues, ValidatedClimbingRouteFormValues, ValidatedSectorFormValues, ValidatedTripFormValues)
 import Tailwind.Utilities as Tw
 
 
@@ -51,12 +51,20 @@ validateTripForm model =
     let
         form =
             Tuple.first model.tripForm
+
+        verifyFromIsBeforeTo formValues =
+            if Tuple.first formValues.from > Tuple.first formValues.to then
+                Err "start date can't be after end date"
+
+            else
+                Ok never
     in
     Form.succeed ValidatedTripFormValues form
         |> Form.append
             (\values -> Ok <| Date.fromRataDie <| Tuple.first values.from)
         |> Form.append
             (\values -> Ok <| Date.fromRataDie <| Tuple.first values.to)
+        |> Form.check verifyFromIsBeforeTo
         |> Form.append
             (\_ -> Ok <| idForForm model.trips (Tuple.second model.tripForm))
         |> tripFromForm

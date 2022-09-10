@@ -1,4 +1,4 @@
-module Forms.Form exposing (Form(..), append, extract, map, mapAndReturn, mapErrors, succeed)
+module Forms.Form exposing (Form(..), append, check, extract, map, mapAndReturn, mapErrors, succeed)
 
 import Result.Extra as RExtra
 
@@ -77,6 +77,20 @@ append f form =
     case result of
         Ok v ->
             mapResult (\x -> x v) form
+
+        Err x ->
+            Invalid (x :: errors form) (get form)
+
+
+check : (a -> Result String any) -> Form a b -> Form a b
+check f form =
+    let
+        result =
+            f <| get form
+    in
+    case result of
+        Ok _ ->
+            form
 
         Err x ->
             Invalid (x :: errors form) (get form)
