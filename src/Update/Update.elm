@@ -301,7 +301,7 @@ update msg model =
                                             f.areaId
                                 }
                     in
-                    ( { model | sectorForm = Tuple.mapFirst (Form.map newForm) model.sectorForm }, Cmd.none )
+                    ( { model | sectorForm = Tuple.mapFirst (Form.mapValues newForm) model.sectorForm }, Cmd.none )
 
                 SectorFormSelectAreaMsg subMsg ->
                     let
@@ -346,7 +346,7 @@ update msg model =
                                             f.sectorId
                                 }
                     in
-                    ( { model | climbingRouteForm = Tuple.mapFirst (Form.map newForm) model.climbingRouteForm }, Cmd.none )
+                    ( { model | climbingRouteForm = Tuple.mapFirst (Form.mapValues newForm) model.climbingRouteForm }, Cmd.none )
 
                 ClimbingRouteFormSelectSectorMsg subMsg ->
                     let
@@ -461,7 +461,7 @@ updateDateCriterium extractor wrapper settings msg form =
                 form
 
         newDateForm =
-            Form.map
+            Form.mapValues
                 (\values ->
                     case cmd of
                         Picked newDate ->

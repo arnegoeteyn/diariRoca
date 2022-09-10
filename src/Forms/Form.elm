@@ -1,12 +1,4 @@
-module Forms.Form exposing (Form(..), append, check, extract, map, mapAndReturn, mapErrors, succeed)
-
-import Result.Extra as RExtra
-
-
-type alias Test =
-    { a : String
-    , b : Int
-    }
+module Forms.Form exposing (Form(..), append, check, extract, mapAndReturn, mapErrors, mapValues, succeed)
 
 
 type Form values result
@@ -15,8 +7,23 @@ type Form values result
     | Invalid (List String) values
 
 
-map : (values -> values) -> Form values result -> Form values result
-map f form =
+
+-- Take a form `f` and a result `r`.
+-- Returns a `Valid r f'` where `f'` are the values of the `f`
+-- Mostly used to change the result of an existing form.
+--
+-- If an `Idle values result` (with result of type Result) form `form` exists `Form.succeed Result form`
+-- will create a Valid form with as result the Type constructor of Result.
+-- Very handy to loop over all the fields of a form
+
+
+succeed : r -> Form a x -> Form a r
+succeed r f =
+    Valid r (get f)
+
+
+mapValues : (values -> values) -> Form values result -> Form values result
+mapValues f form =
     case form of
         Idle values ->
             Idle (f values)
@@ -53,7 +60,7 @@ mapAndReturn f form =
             f <| get form
 
         newForm =
-            map (\_ -> newValues) form
+            mapValues (\_ -> newValues) form
     in
     ( newForm, newX )
 
@@ -61,11 +68,6 @@ mapAndReturn f form =
 extract : (a -> b) -> Form a r -> b
 extract extractor =
     extractor << get
-
-
-succeed : r -> Form a x -> Form a r
-succeed r f =
-    Valid r (get f)
 
 
 append : (a -> Result String b) -> Form a (b -> c) -> Form a c
