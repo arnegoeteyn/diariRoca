@@ -1,6 +1,6 @@
 module Modal exposing (viewModal)
 
-import Data exposing (Area, Ascent, Sector, Trip)
+import Data exposing (Area, Ascent, ClimbingRoute, Sector, Trip)
 import Date
 import Dict
 import Forms.Forms
@@ -79,8 +79,8 @@ viewModal model =
                     DeleteSectorRequestModal sector ->
                         deleteSectorConfirmation model sector
 
-                    DeleteClimbingRouteRequestModal ->
-                        deleteClimbingRouteConfirmation model
+                    DeleteClimbingRouteRequestModal route ->
+                        deleteClimbingRouteConfirmation model route
 
                     DeleteAscentRequestModal ascent ->
                         deleteAscentConfirmation model ascent
@@ -171,22 +171,13 @@ ascentFormModal model =
         [ H.h2 [] [ H.text "New ascent" ], Forms.Forms.ascentForm model ]
 
 
-deleteClimbingRouteConfirmation : Model -> Html Msg
-deleteClimbingRouteConfirmation model =
-    let
-        m =
-            model.climbingRoutesPageModel
-    in
-    case m.selectedClimbingRoute of
-        Nothing ->
-            H.text "Trying to delete something that doesn't exist!"
-
-        Just route ->
-            H.div []
-                [ H.h2 []
-                    [ H.text <| Utilities.stringFromList [ "Delete \"", route.name, "\" " ] ]
-                , H.button [ E.onClick <| Message.DeleteClimbingRouteConfirmation route ] [ H.text "confirm" ]
-                ]
+deleteClimbingRouteConfirmation : Model -> ClimbingRoute -> Html Msg
+deleteClimbingRouteConfirmation _ route =
+    H.div []
+        [ H.h2 []
+            [ H.text <| Utilities.stringFromList [ "Delete \"", route.name, "\" " ] ]
+        , H.button [ E.onClick <| Message.DeleteClimbingRouteConfirmation route ] [ H.text "confirm" ]
+        ]
 
 
 deleteAscentConfirmation : Model -> Ascent -> Html Msg

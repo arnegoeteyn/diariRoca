@@ -1,6 +1,8 @@
 module Update.Update exposing (updateWithStorage)
 
+import Browser
 import Browser.Dom
+import Browser.Navigation as Nav
 import Command
 import Data exposing (encodedJsonFile, jsonFileDecoder)
 import Date
@@ -10,16 +12,18 @@ import File
 import File.Download
 import File.Select
 import Forms.Form as Form exposing (Form)
-import Forms.Forms exposing (newId)
+import Forms.Forms
 import Init exposing (initAreaForm, initAscentForm, initClimbingRouteForm, initSectorForm, initTripForm)
 import Json.Decode exposing (decodeString)
 import Json.Encode exposing (encode)
 import Message exposing (ClimbingRoutesPageMsg(..), FormMsg(..), Msg(..), SectorsPageMsg(..))
-import Model exposing (ClimbingRoutesPageModel, DateCriterium, ModalContent(..), Model, Page(..), SectorsPageModel, SelectionCriterium)
+import Model exposing (DateCriterium, ModalContent(..), Model, SectorsPageModel, SelectionCriterium)
 import ModelAccessors as MA
 import Select
 import Task
+import Update.ClimbingRoutePageUpdate as ClimbingRoutePageUpdate
 import Update.ClimbingRoutesPageUpdate as ClimbingRoutesPageUpdate
+import Url
 import Utilities exposing (flip, replaceFirst)
 
 
@@ -29,8 +33,18 @@ update msg model =
         Dummy ->
             ( model, Cmd.none )
 
-        SetPage page ->
-            ( { model | page = page }, Cmd.none )
+        LinkClicked urlRequest ->
+            case urlRequest of
+                Browser.Internal url ->
+                    ( model, Nav.pushUrl model.key (Url.toString url) )
+
+                Browser.External href ->
+                    ( model, Nav.load href )
+
+        UrlChanged url ->
+            ( { model | url = url, route = Init.parseUrl url }
+            , Cmd.none
+            )
 
         JsonRequested ->
             ( model, File.Select.file [ "application/json" ] JsonSelected )
@@ -78,19 +92,6 @@ update msg model =
         ToggleSettings ->
             ( { model | settingsOpen = not model.settingsOpen }, Cmd.none )
 
-        --| Global
-        ShowClimbingRoute route ->
-            let
-                task =
-                    showRouteTask route
-            in
-            ( { model
-                | climbingRoutesPageModel = Tuple.first <| ClimbingRoutesPageUpdate.selectClimbingRoute model.climbingRoutesPageModel (Just route)
-                , page = ClimbingRoutesPage
-              }
-            , task
-            )
-
         -- Pages
         ClimbingRoutesPageMessage crpMsg ->
             let
@@ -98,6 +99,13 @@ update msg model =
                     ClimbingRoutesPageUpdate.update crpMsg model
             in
             ( { model | climbingRoutesPageModel = newCrpModel }, newCrpMsg )
+
+        ClimbingRoutePageMessage crpMsg ->
+            let
+                ( newCrpModel, newCrpMsg ) =
+                    ClimbingRoutePageUpdate.update crpMsg model
+            in
+            ( { model | climbingRoutePageModel = newCrpModel }, newCrpMsg )
 
         SectorsPageMessage spMsg ->
             let
@@ -168,11 +176,19 @@ update msg model =
             in
             ( { model | climbingRoutes = Dict.insert route.id newRoute model.climbingRoutes }, Cmd.none )
 
-        DeleteClimbingRouteRequested ->
-            ( { model | modal = Model.DeleteClimbingRouteRequestModal }, Cmd.none )
+        DeleteClimbingRouteRequested route ->
+            ( { model | modal = Model.DeleteClimbingRouteRequestModal route }, Cmd.none )
 
         DeleteClimbingRouteConfirmation route ->
-            ( MA.deleteRoute route.id (closeModal model), Cmd.none )
+            let
+                task =
+                    if model.route == Model.ClimbingRoutesRoute then
+                        Cmd.none
+
+                    else
+                        Nav.load "/"
+            in
+            ( MA.deleteRoute route.id (closeModal model), task )
 
         --| Data - Ascent
         OpenAscentForm maybeAscent climbingRoute ->
@@ -285,7 +301,7 @@ update msg model =
                                             f.areaId
                                 }
                     in
-                    ( { model | sectorForm = Tuple.mapFirst (Form.map newForm) model.sectorForm }, Cmd.none )
+                    ( { model | sectorForm = Tuple.mapFirst (Form.mapValues newForm) model.sectorForm }, Cmd.none )
 
                 SectorFormSelectAreaMsg subMsg ->
                     let
@@ -330,7 +346,7 @@ update msg model =
                                             f.sectorId
                                 }
                     in
-                    ( { model | climbingRouteForm = Tuple.mapFirst (Form.map newForm) model.climbingRouteForm }, Cmd.none )
+                    ( { model | climbingRouteForm = Tuple.mapFirst (Form.mapValues newForm) model.climbingRouteForm }, Cmd.none )
 
                 ClimbingRouteFormSelectSectorMsg subMsg ->
                     let
@@ -445,7 +461,7 @@ updateDateCriterium extractor wrapper settings msg form =
                 form
 
         newDateForm =
-            Form.map
+            Form.mapValues
                 (\values ->
                     case cmd of
                         Picked newDate ->

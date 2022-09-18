@@ -1,14 +1,18 @@
 module Message exposing (..)
 
+import Browser
 import Data exposing (Area, Ascent, ClimbingRoute, ClimbingRouteKind, Media, Sector, Trip)
 import DatePicker
 import File exposing (File)
 import Model exposing (AreaForm, AscentForm, ClimbingRouteForm, SectorForm, TripForm)
 import Select
+import Url
 
 
 type Msg
     = Dummy
+    | LinkClicked Browser.UrlRequest
+    | UrlChanged Url.Url
     | JsonRequested
     | JsonSelected File
     | JsonLoaded String
@@ -19,11 +23,9 @@ type Msg
     | GoogleDriveExportRequested
     | CloseModal
     | ToggleSettings
-      -- Global
-    | ShowClimbingRoute ClimbingRoute
       -- Pages
-    | SetPage Model.Page
     | ClimbingRoutesPageMessage ClimbingRoutesPageMsg
+    | ClimbingRoutePageMessage ClimbingRoutePageMsg
     | SectorsPageMessage SectorsPageMsg
       -- Data - Trip
     | OpenTripForm (Maybe Trip)
@@ -41,7 +43,7 @@ type Msg
     | AddMediaToRoute ClimbingRoute
     | RemoveMedia ClimbingRoute Media
     | DeleteClimbingRouteConfirmation ClimbingRoute
-    | DeleteClimbingRouteRequested
+    | DeleteClimbingRouteRequested ClimbingRoute
       -- Data - Ascent
     | OpenAscentForm (Maybe Ascent) ClimbingRoute
     | DeleteAscentConfirmation Ascent
@@ -57,10 +59,10 @@ type ClimbingRoutesPageMsg
     | SelectSector (Maybe Sector)
     | OnRemoveSectorSelection Sector
     | SetClimbingRouteKindFilter (Maybe ClimbingRouteKind)
-      -- Route list
-    | OnClimbingRouteClicked (Maybe ClimbingRoute)
-      -- Route Detail
-    | SetMediaLink String
+
+
+type ClimbingRoutePageMsg
+    = SetMediaLink String
     | SetMediaLabel String
 
 

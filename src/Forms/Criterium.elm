@@ -1,4 +1,4 @@
-module Forms.Criterium exposing (dateCriterium, formSelectionCriterium, formSelectionWithSearchCriterium, formTextCriterium, selectionCriterium, selectionWithSearchCriterium, textCriterium)
+module Forms.Criterium exposing (dateCriterium, formSelectionCriterium, formSelectionWithSearchCriterium, formTextAreaCriterium, formTextCriterium, selectionCriterium, selectionWithSearchCriterium, textCriterium)
 
 import Date
 import DatePicker
@@ -27,7 +27,24 @@ textCriterium placeholder extractor wrapper toMsg value =
 
 formTextCriterium : String -> (a -> String) -> (String -> a -> a) -> (Form a r -> FormMsg) -> Form a r -> H.Html Msg
 formTextCriterium placeholder extractor wrapper toMsg form =
-    textCriterium placeholder (Form.extract extractor) (\x -> Form.map (wrapper x) form) (FormMessage << toMsg) form
+    textCriterium placeholder (Form.extract extractor) (\x -> Form.mapValues (wrapper x) form) (FormMessage << toMsg) form
+
+
+textAreaCriterium : String -> (a -> String) -> (String -> b) -> (b -> msg) -> a -> H.Html msg
+textAreaCriterium placeholder extractor wrapper toMsg value =
+    H.div []
+        [ H.textarea
+            [ A.placeholder placeholder
+            , A.value (extractor value)
+            , E.onInput (toMsg << wrapper)
+            ]
+            []
+        ]
+
+
+formTextAreaCriterium : String -> (a -> String) -> (String -> a -> a) -> (Form a r -> FormMsg) -> Form a r -> H.Html Msg
+formTextAreaCriterium placeholder extractor wrapper toMsg form =
+    textAreaCriterium placeholder (Form.extract extractor) (\x -> Form.mapValues (wrapper x) form) (FormMessage << toMsg) form
 
 
 selectionCriterium : String -> (a -> List String) -> (String -> b) -> (b -> msg) -> String -> a -> H.Html msg
@@ -51,7 +68,7 @@ formSelectionCriterium : String -> (a -> List String) -> (String -> a -> a) -> (
 formSelectionCriterium placeholder extractor wrapper toMsg selectedExtractor form =
     selectionCriterium placeholder
         (Form.extract extractor)
-        (\x -> Form.map (wrapper x) form)
+        (\x -> Form.mapValues (wrapper x) form)
         (FormMessage << toMsg)
         (Form.extract selectedExtractor form)
         form

@@ -1,4 +1,4 @@
-module View.Button exposing (ButtonKind(..), addButton, defaultOptions, deleteButton, editButton, gotoButton, withKind, withMsg)
+module View.Button exposing (ButtonKind(..), addButton, defaultOptions, deleteButton, editButton, gotoButton, withHref, withKind, withMsg)
 
 import Css
 import FontAwesome as Icon
@@ -13,6 +13,7 @@ import Tailwind.Utilities as Tw
 type alias ButtonOptions =
     { kind : ButtonKind
     , msg : Msg
+    , href : Maybe String
     }
 
 
@@ -25,11 +26,16 @@ type ButtonKind
 defaultOptions =
     { kind = Icon
     , msg = Message.Dummy
+    , href = Nothing
     }
 
 
 withKind kind options =
     { options | kind = kind }
+
+
+withHref href options =
+    { options | href = Just href }
 
 
 withMsg : Msg -> ButtonOptions -> ButtonOptions
@@ -44,7 +50,9 @@ withMsg msg options =
 iconButtonCss =
     A.css
         [ Tw.text_purple_700
+        , Tw.bg_gray_200
         , Tw.border
+        , Tw.border_solid
         , Tw.border_purple_700
         , Tw.font_medium
         , Tw.rounded_lg
@@ -75,11 +83,19 @@ iconButton options defaultIcon defaultText =
 
         text =
             H.text defaultText
+
+        element =
+            case options.href of
+                Just href ->
+                    H.a [ A.href href, iconButtonCss ]
+
+                Nothing ->
+                    H.button
+                        [ E.onClick options.msg
+                        , iconButtonCss
+                        ]
     in
-    H.button
-        [ E.onClick options.msg
-        , iconButtonCss
-        ]
+    element
         (case options.kind of
             Text ->
                 [ text ]

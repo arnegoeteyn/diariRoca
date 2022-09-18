@@ -123,6 +123,7 @@ type alias ClimbingRoute =
     , name : String
     , grade : String
     , comment : Maybe String
+    , beta : Maybe String
     , kind : ClimbingRouteKind
     , media : List Media
     }
@@ -141,6 +142,7 @@ climbingRouteDecoder =
         |> required "name" string
         |> required "grade" string
         |> optional "comment" (Json.Decode.map Just string) Nothing
+        |> optional "beta" (Json.Decode.map Just string) Nothing
         |> required "kind" climbingRouteKindDecoder
         |> optional "media" (Json.Decode.list mediaDecoder) []
 
@@ -160,6 +162,7 @@ encodeClimbingRoute route =
         , ( "name", Json.Encode.string route.name )
         , ( "grade", Json.Encode.string route.grade )
         , ( "comment", encodeNullable Json.Encode.string route.comment )
+        , ( "beta", encodeNullable Json.Encode.string route.beta )
         , ( "kind", encodeClimbingRouteKind route.kind )
         , ( "media", Json.Encode.list mediaEncoder route.media )
         ]

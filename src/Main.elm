@@ -10,8 +10,9 @@ import Html.Styled.Events as E
 import Init exposing (init)
 import Message exposing (Msg(..))
 import Modal
-import Model exposing (Model, Page(..))
+import Model exposing (Model, Route(..))
 import Page.AscentsPage
+import Page.ClimbingRoutePage
 import Page.ClimbingRoutesPage
 import Page.SectorsPage
 import Page.StatsPage
@@ -20,9 +21,10 @@ import Update.Update exposing (updateWithStorage)
 import View.Navbar as Navbar
 
 
-mainView : Model -> Html.Html Msg
+mainView : Model -> Browser.Document Msg
 mainView model =
-    Html.div []
+    { title = "Diari-roca"
+    , body =
         [ Icon.css
         , Html.div []
             (List.map
@@ -40,18 +42,24 @@ mainView model =
                 , H.div [ A.css [ Tw.relative ] ]
                     [ case model.appState of
                         Model.Ready ->
-                            case model.page of
-                                ClimbingRoutesPage ->
+                            case model.route of
+                                ClimbingRoutesRoute ->
                                     Page.ClimbingRoutesPage.view model
 
-                                AscentsPage ->
+                                ClimbingRouteRoute id ->
+                                    Page.ClimbingRoutePage.view model id
+
+                                AscentsRoute ->
                                     Page.AscentsPage.view model
 
-                                StatsPage ->
+                                StatsRoute ->
                                     Page.StatsPage.view model
 
-                                SectorsPage ->
+                                SectorsRoute ->
                                     Page.SectorsPage.view model
+
+                                NotFoundRoute ->
+                                    H.text "not found"
 
                         Model.NotReady ->
                             H.button [ E.onClick Message.JsonRequested ] [ H.text "Load JSON" ]
@@ -59,6 +67,7 @@ mainView model =
                 ]
             )
         ]
+    }
 
 
 subscriptions : Model -> Sub Msg
@@ -66,11 +75,13 @@ subscriptions _ =
     Sub.batch [ Command.loadCache JsonLoaded, Command.googleDriveSubscriptionPort GoogleDriveResponse ]
 
 
-main : Program { storageCache : String, posixTime : Int } Model Msg
+main : Program { storageCache : String, posixTime : Int, version : String } Model Msg
 main =
-    Browser.element
+    Browser.application
         { view = mainView
         , init = init
         , update = updateWithStorage
         , subscriptions = subscriptions
+        , onUrlChange = UrlChanged
+        , onUrlRequest = LinkClicked
         }

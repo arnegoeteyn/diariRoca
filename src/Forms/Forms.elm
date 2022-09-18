@@ -3,14 +3,14 @@ module Forms.Forms exposing (..)
 import Data exposing (Area, Ascent, AscentKind(..), ClimbingRoute, ClimbingRouteKind(..), Media, Sector, Trip, ascentKindEnum, ascentKindFromString, ascentKindToString, climbingRouteKindEnum, climbingRouteKindFromString, climbingRouteKindToString)
 import Date
 import Dict exposing (Dict)
-import Forms.Criterium exposing (dateCriterium, formSelectionCriterium, formSelectionWithSearchCriterium, formTextCriterium)
+import Forms.Criterium exposing (dateCriterium, formSelectionCriterium, formSelectionWithSearchCriterium, formTextAreaCriterium, formTextCriterium)
 import Forms.Form as Form exposing (Form(..))
 import Html.Styled as H
 import Html.Styled.Attributes as A
 import Html.Styled.Events as E
 import Init exposing (ascentFormDatePickerSettings, tripFormDatePickerSettings)
 import Message exposing (FormMsg(..), Msg(..))
-import Model exposing (AreaForm, AscentForm, ClimbingRouteForm, Model, SectorForm, TripForm, ValidatedAreaFormValues, ValidatedAscentFormValues, ValidatedClimbingRouteFormValues, ValidatedSectorFormValues, ValidatedTripFormValues)
+import Model exposing (AreaForm, AscentForm, ClimbingRouteForm, Model, SectorForm, TripForm, TripFormValues, ValidatedAreaFormValues, ValidatedAscentFormValues, ValidatedClimbingRouteFormValues, ValidatedSectorFormValues, ValidatedTripFormValues)
 import Tailwind.Utilities as Tw
 
 
@@ -51,12 +51,20 @@ validateTripForm model =
     let
         form =
             Tuple.first model.tripForm
+
+        verifyFromIsBeforeTo formValues =
+            if Tuple.first formValues.from > Tuple.first formValues.to then
+                Err "start date can't be after end date"
+
+            else
+                Ok never
     in
     Form.succeed ValidatedTripFormValues form
         |> Form.append
             (\values -> Ok <| Date.fromRataDie <| Tuple.first values.from)
         |> Form.append
             (\values -> Ok <| Date.fromRataDie <| Tuple.first values.to)
+        |> Form.check verifyFromIsBeforeTo
         |> Form.append
             (\_ -> Ok <| idForForm model.trips (Tuple.second model.tripForm))
         |> tripFromForm
@@ -184,11 +192,12 @@ climbingRouteForm model =
         form =
             Tuple.first model.climbingRouteForm
     in
-    H.form []
+    H.form [ A.css [ Tw.space_y_1 ] ]
         [ formTextCriterium "Name" .name updateName UpdateClimbingRouteForm form
         , formTextCriterium "Grade" .grade updateGrade UpdateClimbingRouteForm form
         , formSelectionWithSearchCriterium "Sector" (Init.climbingRouteFormSectorSelectConfig model) .sectorId (Dict.values model.sectors) form
-        , formTextCriterium "Comment" .comment updateComment UpdateClimbingRouteForm form
+        , formTextAreaCriterium "Comment" .comment updateComment UpdateClimbingRouteForm form
+        , formTextAreaCriterium "Beta" .beta updateBeta UpdateClimbingRouteForm form
         , formSelectionCriterium "Kind" (\_ -> List.map climbingRouteKindToString climbingRouteKindEnum) updateKind UpdateClimbingRouteForm .kind form
         , H.button [ A.type_ "button", E.onClick (FormMessage SaveClimbingRouteForm) ] [ H.text "Save" ]
         , viewErrors form
@@ -209,13 +218,8 @@ validateClimbingRouteForm model =
         |> Form.append
             (validateNonEmpty .grade "Route can't have no grade")
         |> Form.append
-            (\values ->
-                if String.isEmpty values.comment then
-                    Ok Nothing
-
-                else
-                    Just values.comment |> Ok
-            )
+            (validateOptional .comment)
+        |> Form.append (validateOptional .beta)
         |> Form.append
             (.kind >> climbingRouteKindFromString >> Result.fromMaybe "A valid routeKind must be selected")
         |> Form.append
@@ -235,6 +239,7 @@ climbingRouteFromForm form =
                     climbingRouteValues.name
                     climbingRouteValues.grade
                     climbingRouteValues.comment
+                    climbingRouteValues.beta
                     climbingRouteValues.kind
                     []
             )
@@ -327,11 +332,11 @@ ascentFromForm form =
 
 mediaFromForm : Model -> Maybe Media
 mediaFromForm model =
-    if List.any (\f -> (String.isEmpty << f) model.climbingRoutesPageModel) [ .mediaLink, .mediaLabel ] then
+    if List.any (\f -> (String.isEmpty << f) model.climbingRoutePageModel) [ .mediaLink, .mediaLabel ] then
         Nothing
 
     else
-        Just <| Media model.climbingRoutesPageModel.mediaLink model.climbingRoutesPageModel.mediaLabel
+        Just <| Media model.climbingRoutePageModel.mediaLink model.climbingRoutePageModel.mediaLabel
 
 
 
@@ -357,6 +362,15 @@ validateNonEmpty accessor error =
             Err error
 
 
+validateOptional : (a -> String) -> a -> Result String (Maybe String)
+validateOptional accessor values =
+    if String.isEmpty (accessor values) then
+        Ok Nothing
+
+    else
+        Just (accessor values) |> Ok
+
+
 
 --| UpdateUtilities
 
@@ -364,6 +378,11 @@ validateNonEmpty accessor error =
 updateAreaId : a -> { b | areaId : a } -> { b | areaId : a }
 updateAreaId value form =
     { form | areaId = value }
+
+
+updateBeta : a -> { b | beta : a } -> { b | beta : a }
+updateBeta value form =
+    { form | beta = value }
 
 
 updateComment : a -> { b | comment : a } -> { b | comment : a }

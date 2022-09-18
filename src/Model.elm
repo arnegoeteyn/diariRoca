@@ -1,17 +1,22 @@
 module Model exposing (..)
 
+import Browser.Navigation as Nav
 import Data exposing (Area, Ascent, AscentKind, ClimbingRoute, ClimbingRouteKind, Sector, Trip)
 import Date exposing (Date)
 import DatePicker exposing (DatePicker)
 import Dict exposing (Dict)
 import Forms.Form exposing (Form)
 import Select
+import Url
 
 
 type alias Model =
-    { appState : AppState
+    { key : Nav.Key
+    , url : Url.Url
+    , route : Route
+    , appState : AppState
     , startUpDate : Date
-    , page : Page
+    , version : String
     , modal : ModalContent
     , settingsOpen : Bool
     , googleDriveAuthorized : Bool
@@ -32,6 +37,7 @@ type alias Model =
 
     -- Pages
     , climbingRoutesPageModel : ClimbingRoutesPageModel
+    , climbingRoutePageModel : ClimbingRoutePageModel
     , sectorsPageModel : SectorsPageModel
     }
 
@@ -44,9 +50,11 @@ type alias ClimbingRoutesPageModel =
     , routeKindFilter : Maybe ClimbingRouteKind
     , selected : List Sector
     , selectState : Select.State
+    }
 
-    -- Forms
-    , mediaLink : String
+
+type alias ClimbingRoutePageModel =
+    { mediaLink : String
     , mediaLabel : String
     }
 
@@ -71,15 +79,8 @@ type ModalContent
     | AscentFormModal
     | DeleteAreaRequestModal Area
     | DeleteSectorRequestModal Sector
-    | DeleteClimbingRouteRequestModal
+    | DeleteClimbingRouteRequestModal ClimbingRoute
     | DeleteAscentRequestModal Ascent
-
-
-type Page
-    = ClimbingRoutesPage
-    | AscentsPage
-    | StatsPage
-    | SectorsPage
 
 
 
@@ -153,6 +154,7 @@ type alias ClimbingRouteFormValues =
     { name : String
     , grade : String
     , comment : String
+    , beta : String
     , sectorId : SelectionCriterium Sector
     , kind : String
     }
@@ -163,6 +165,7 @@ type alias ValidatedClimbingRouteFormValues =
     , name : String
     , grade : String
     , comment : Maybe String
+    , beta : Maybe String
     , kind : ClimbingRouteKind
     , sectorId : Int
     }
@@ -198,3 +201,16 @@ type alias ValidatedAscentFormValues =
 
 type alias AscentForm =
     Form AscentFormValues ValidatedAscentFormValues
+
+
+
+-- Routing
+
+
+type Route
+    = NotFoundRoute
+    | SectorsRoute
+    | ClimbingRoutesRoute
+    | ClimbingRouteRoute Int
+    | AscentsRoute
+    | StatsRoute
