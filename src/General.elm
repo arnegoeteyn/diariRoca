@@ -1,6 +1,7 @@
 module General exposing (..)
 
 import Data exposing (ClimbingRoute, Data)
+import DataAccessors as DA
 import DataParser exposing (jsonFileDecoder)
 import Date exposing (Date)
 import Dict exposing (Dict)
@@ -14,21 +15,7 @@ import Json.Decode exposing (decodeString)
 
 type alias Model =
     { data : Data
-    , modal : ModalContent
     }
-
-
-type ModalContent
-    = Empty
-      -- | TripFormModal
-      -- | TripOverviewModal Trip
-      -- | AreaFormModal
-      -- | SectorFormModal
-    | ClimbingRouteFormModal
-      -- | AscentFormModal
-      -- | DeleteAreaRequestModal Area
-      -- | DeleteSectorRequestModal Sector
-    | DeleteClimbingRouteRequestModal ClimbingRoute
 
 
 
@@ -43,10 +30,17 @@ init { storageCache } =
             decodeString jsonFileDecoder storageCache
 
         jsonFile =
-            Result.withDefault { climbingRoutes = Dict.empty, ascents = Dict.empty, sectors = Dict.empty, areas = Dict.empty, trips = Dict.empty } <| decodedStorage
+            Result.withDefault
+                { climbingRoutes = Dict.empty
+                , ascents = Dict.empty
+                , sectors = Dict.empty
+                , areas = Dict.empty
+                , trips = Dict.empty
+                }
+            <|
+                decodedStorage
     in
     { data = jsonFile
-    , modal = Empty
     }
 
 
@@ -58,7 +52,6 @@ type Msg
     = None
       -- Climbing Route
     | DeleteClimbingRouteConfirmation ClimbingRoute
-    | DeleteClimbingRouteRequested ClimbingRoute
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -67,22 +60,19 @@ update msg model =
         None ->
             ( model, Cmd.none )
 
-        DeleteClimbingRouteRequested route ->
-            ( { model | modal = DeleteClimbingRouteRequestModal route }, Cmd.none )
-
         DeleteClimbingRouteConfirmation route ->
             -- let
-            -- task =
-            --     if model.route == Model.ClimbingRoutesRoute then
-            --         Cmd.none
-            --     else
-            --         Nav.load "/"
+            --     task =
+            --         if model.route == Model.ClimbingRoutesRoute then
+            --             Cmd.none
+            --         else
+            --             Nav.load "/"
             -- in
-            -- ( MA.deleteRoute route.id (closeModal model), task )
-            ( model, Cmd.none )
+            ( { model | data = DA.deleteRoute route.id model.data }, Cmd.none )
 
 
 
+-- ( model, Cmd.none )
 -- Utilities
 
 

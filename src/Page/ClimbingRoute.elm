@@ -1,6 +1,6 @@
 module Page.ClimbingRoute exposing (Model, Msg(..), init, update, view)
 
-import Data exposing (ClimbingRoute, ClimbingRouteKind, Data, Sector)
+import Data exposing (ClimbingRoute, ClimbingRouteKind, Sector)
 import DataAccessors as DA
 import DataUtilities
 import Date
@@ -12,6 +12,7 @@ import General
 import Html.Styled as H exposing (Html)
 import Html.Styled.Attributes as A
 import Html.Styled.Events as E
+import Modal
 import Select
 import Skeleton
 import Tailwind.Utilities as Tw
@@ -77,15 +78,18 @@ initClimbingRouteForm maybeModel climbingRoute =
 
 
 type Msg
-    = SetMediaLink String
+    = NoOp
+    | SetMediaLink String
     | SetMediaLabel String
     | UpdateClimbingRouteForm ClimbingRouteForm
     | OpenClimbingRouteForm (Maybe ClimbingRoute)
     | ClimbingRouteFormSelectSector (Maybe Sector)
     | ClimbingRouteFormSelectSectorMsg (Select.Msg Sector)
     | SaveClimbingRouteForm
-      -- General
     | DeleteClimbingRouteRequested ClimbingRoute
+    | CloseModal
+      -- General
+    | DeleteClimbingRouteConfirmation ClimbingRoute
 
 
 update : Msg -> Model -> General.Model -> ( Model, Cmd Msg, General.Msg )
@@ -148,7 +152,19 @@ update msg model general =
             ( model, Cmd.none, General.None )
 
         DeleteClimbingRouteRequested climbingRoute ->
-            ( model, Cmd.none, General.DeleteClimbingRouteRequested climbingRoute )
+            ( { model | modal = DeleteClimbingRouteRequestModal climbingRoute }
+            , Cmd.none
+            , General.None
+            )
+
+        DeleteClimbingRouteConfirmation climbingRoute ->
+            ( model, Cmd.none, General.DeleteClimbingRouteConfirmation climbingRoute )
+
+        NoOp ->
+            General.withNothing ( model, Cmd.none )
+
+        CloseModal ->
+            ( { model | modal = Empty }, Cmd.none, General.None )
 
 
 
@@ -165,11 +181,24 @@ view model general =
     , header = []
     , warning = Skeleton.NoProblems
     , kids =
+        let
+            modal =
+                Modal.view CloseModal NoOp
+        in
         [ case maybeRoute of
             Just route ->
                 H.div []
                     [ H.h1 [] [ H.text route.name ]
                     , viewRouteDetail model general route
+                    , case model.modal of
+                        Empty ->
+                            H.text ""
+
+                        ClimbingRouteFormModal ->
+                            modal [ viewClimbingRouteFormModal model general ]
+
+                        DeleteClimbingRouteRequestModal climbingRoute ->
+                            modal [ viewDeleteClimbingRouteConfirmation climbingRoute ]
                     ]
 
             Nothing ->
@@ -250,6 +279,21 @@ viewRouteMedia model route =
             H.text ""
         , addMediaInput
         ]
+
+
+viewDeleteClimbingRouteConfirmation : ClimbingRoute -> Html Msg
+viewDeleteClimbingRouteConfirmation route =
+    H.div []
+        [ H.h2 []
+            [ H.text <| Utilities.stringFromList [ "Delete \"", route.name, "\" " ] ]
+        , H.button [ E.onClick <| DeleteClimbingRouteConfirmation route ] [ H.text "confirm" ]
+        ]
+
+
+viewClimbingRouteFormModal : Model -> General.Model -> Html Msg
+viewClimbingRouteFormModal model general =
+    H.div []
+        [ H.h2 [] [ H.text "New climbingroute" ], climbingRouteForm model general ]
 
 
 viewAscentsList : Model -> General.Model -> ClimbingRoute -> Html Msg

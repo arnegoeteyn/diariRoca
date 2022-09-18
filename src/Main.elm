@@ -109,8 +109,6 @@ init ({ storageCache, posixTime, version } as flags) url key =
             , appState = Ready
             , startUpDate = date
             , version = version
-
-            -- , modal = Model.Empty
             , settingsOpen = False
             , googleDriveAuthorized = False
             , general = General.init flags

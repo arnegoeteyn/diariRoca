@@ -32,7 +32,7 @@ isSectorOf a s =
     a.id == s.areaId
 
 
-deleteArea : Int -> Model -> Model
+deleteArea : Int -> Data -> Data
 deleteArea i m =
     case Dict.get i m.areas of
         Nothing ->
@@ -40,7 +40,7 @@ deleteArea i m =
 
         Just a ->
             let
-                sectorsModel : Model
+                sectorsModel : Data
                 sectorsModel =
                     Dict.foldr
                         (\_ value accModel ->
@@ -90,7 +90,7 @@ isClimbingRouteOf s c =
     s.id == c.sectorId
 
 
-deleteSector : Int -> Model -> Model
+deleteSector : Int -> Data -> Data
 deleteSector i m =
     case Dict.get i m.sectors of
         Nothing ->
@@ -98,7 +98,7 @@ deleteSector i m =
 
         Just s ->
             let
-                climbingRoutesModel : Model
+                climbingRoutesModel : Data
                 climbingRoutesModel =
                     Dict.foldr
                         (\_ value accModel ->
@@ -123,7 +123,7 @@ getClimbingRoute m i =
     Dict.get i m.climbingRoutes
 
 
-deleteRoute : Int -> Model -> Model
+deleteRoute : Int -> Data -> Data
 deleteRoute i model =
     case Dict.get i model.climbingRoutes of
         Nothing ->
@@ -131,7 +131,7 @@ deleteRoute i model =
 
         Just c ->
             let
-                ascentsModel : Model
+                ascentsModel : Data
                 ascentsModel =
                     Dict.foldr
                         (\_ value accModel ->
@@ -171,7 +171,7 @@ getClimbingRouteFromAscent data c =
     getClimbingRoute data c.routeId
 
 
-deleteAscent : Int -> Model -> Model
+deleteAscent : Int -> Data -> Data
 deleteAscent i m =
     { m | ascents = Dict.remove i m.ascents }
 
