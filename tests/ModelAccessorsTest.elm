@@ -1,12 +1,12 @@
 module ModelAccessorsTest exposing (testRemoval)
 
+import DataAccessors as MA
 import DataParser exposing (Area, Ascent, AscentKind(..), ClimbingRoute, Sector)
 import Date exposing (Date)
 import Dict exposing (Dict)
 import Expect
 import Init
 import Model exposing (Model)
-import ModelAccessors as MA
 import Test exposing (Test, describe, test)
 import Utilities
 

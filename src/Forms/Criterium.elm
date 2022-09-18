@@ -25,9 +25,9 @@ textCriterium placeholder extractor wrapper toMsg value =
         ]
 
 
-formTextCriterium : String -> (a -> String) -> (String -> a -> a) -> (Form a r -> FormMsg) -> Form a r -> H.Html Msg
+formTextCriterium : String -> (a -> String) -> (String -> a -> a) -> (Form a r -> msg) -> Form a r -> H.Html msg
 formTextCriterium placeholder extractor wrapper toMsg form =
-    textCriterium placeholder (Form.extract extractor) (\x -> Form.mapValues (wrapper x) form) (FormMessage << toMsg) form
+    textCriterium placeholder (Form.extract extractor) (\x -> Form.mapValues (wrapper x) form) toMsg form
 
 
 textAreaCriterium : String -> (a -> String) -> (String -> b) -> (b -> msg) -> a -> H.Html msg
@@ -42,9 +42,9 @@ textAreaCriterium placeholder extractor wrapper toMsg value =
         ]
 
 
-formTextAreaCriterium : String -> (a -> String) -> (String -> a -> a) -> (Form a r -> FormMsg) -> Form a r -> H.Html Msg
+formTextAreaCriterium : String -> (a -> String) -> (String -> a -> a) -> (Form a r -> msg) -> Form a r -> H.Html msg
 formTextAreaCriterium placeholder extractor wrapper toMsg form =
-    textAreaCriterium placeholder (Form.extract extractor) (\x -> Form.mapValues (wrapper x) form) (FormMessage << toMsg) form
+    textAreaCriterium placeholder (Form.extract extractor) (\x -> Form.mapValues (wrapper x) form) toMsg form
 
 
 selectionCriterium : String -> (a -> List String) -> (String -> b) -> (b -> msg) -> String -> a -> H.Html msg
@@ -64,17 +64,17 @@ selectionCriterium placeholder extractor wrapper toMsg selected value =
         )
 
 
-formSelectionCriterium : String -> (a -> List String) -> (String -> a -> a) -> (Form a r -> FormMsg) -> (a -> String) -> Form a r -> H.Html Msg
+formSelectionCriterium : String -> (a -> List String) -> (String -> a -> a) -> (Form a r -> msg) -> (a -> String) -> Form a r -> H.Html msg
 formSelectionCriterium placeholder extractor wrapper toMsg selectedExtractor form =
     selectionCriterium placeholder
         (Form.extract extractor)
         (\x -> Form.mapValues (wrapper x) form)
-        (FormMessage << toMsg)
+        toMsg
         (Form.extract selectedExtractor form)
         form
 
 
-selectionWithSearchCriterium : String -> Select.Config Msg item -> (a -> SelectionCriterium item) -> List item -> a -> H.Html Msg
+selectionWithSearchCriterium : String -> Select.Config msg item -> (a -> SelectionCriterium item) -> List item -> a -> H.Html msg
 selectionWithSearchCriterium label init extractor options value =
     let
         extracted =
@@ -90,7 +90,7 @@ selectionWithSearchCriterium label init extractor options value =
         ]
 
 
-formSelectionWithSearchCriterium : String -> Select.Config Msg item -> (e -> SelectionCriterium item) -> List item -> Form e r -> H.Html Msg
+formSelectionWithSearchCriterium : String -> Select.Config msg item -> (e -> SelectionCriterium item) -> List item -> Form e r -> H.Html msg
 formSelectionWithSearchCriterium label init extractor options form =
     selectionWithSearchCriterium label init (extract extractor) options form
 

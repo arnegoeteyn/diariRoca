@@ -58,7 +58,7 @@ climbingRouteKindDecoder =
     Json.Decode.string
         |> Json.Decode.andThen
             (\str ->
-                case climbingRouteKindFromString str of
+                case Data.climbingRouteKindFromString str of
                     Just value ->
                         Json.Decode.succeed value
 
@@ -67,37 +67,9 @@ climbingRouteKindDecoder =
             )
 
 
-climbingRouteKindFromString : String -> Maybe ClimbingRouteKind
-climbingRouteKindFromString s =
-    case String.toLower s of
-        "sport" ->
-            Just Sport
-
-        "boulder" ->
-            Just Boulder
-
-        _ ->
-            Nothing
-
-
-climbingRouteKindToString : ClimbingRouteKind -> String
-climbingRouteKindToString kind =
-    case kind of
-        Sport ->
-            "sport"
-
-        Boulder ->
-            "boulder"
-
-
-climbingRouteKindEnum : List ClimbingRouteKind
-climbingRouteKindEnum =
-    [ Sport, Boulder ]
-
-
 encodeClimbingRouteKind : ClimbingRouteKind -> Json.Encode.Value
 encodeClimbingRouteKind =
-    Json.Encode.string << climbingRouteKindToString
+    Json.Encode.string << Data.climbingRouteKindToString
 
 
 climbingRouteDecoder : Json.Decode.Decoder ClimbingRoute
@@ -143,17 +115,12 @@ encodeClimbingRoute route =
 --| Ascent
 
 
-ascentKindEnum : List AscentKind
-ascentKindEnum =
-    [ Onsight, Flash, SecondGo, Redpoint, Repeat ]
-
-
 ascentKindDecoder : Json.Decode.Decoder AscentKind
 ascentKindDecoder =
     Json.Decode.string
         |> Json.Decode.andThen
             (\str ->
-                case ascentKindFromString str of
+                case Data.ascentKindFromString str of
                     Just value ->
                         Json.Decode.succeed value
 
@@ -164,48 +131,7 @@ ascentKindDecoder =
 
 encodeAscentKind : AscentKind -> Json.Encode.Value
 encodeAscentKind =
-    Json.Encode.string << ascentKindToString
-
-
-ascentKindFromString : String -> Maybe AscentKind
-ascentKindFromString s =
-    case String.toLower s of
-        "onsight" ->
-            Just Onsight
-
-        "redpoint" ->
-            Just Redpoint
-
-        "flash" ->
-            Just Flash
-
-        "repeat" ->
-            Just Repeat
-
-        "secondgo" ->
-            Just SecondGo
-
-        _ ->
-            Nothing
-
-
-ascentKindToString : AscentKind -> String
-ascentKindToString kind =
-    case kind of
-        Redpoint ->
-            "redpoint"
-
-        Flash ->
-            "flash"
-
-        Onsight ->
-            "onsight"
-
-        SecondGo ->
-            "secondgo"
-
-        Repeat ->
-            "repeat"
+    Json.Encode.string << Data.ascentKindToString
 
 
 ascentsDecoder : Json.Decode.Decoder Ascent

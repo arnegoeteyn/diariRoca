@@ -4,6 +4,7 @@ import Browser
 import Browser.Dom
 import Browser.Navigation as Nav
 import Command
+import DataAccessors as MA
 import DataParser exposing (encodedJsonFile, jsonFileDecoder)
 import Date
 import DatePicker exposing (DateEvent(..))
@@ -18,7 +19,6 @@ import Json.Decode exposing (decodeString)
 import Json.Encode exposing (encode)
 import Message exposing (ClimbingRoutesPageMsg(..), FormMsg(..), Msg(..), SectorsPageMsg(..))
 import Model exposing (DateCriterium, ModalContent(..), Model, SectorsPageModel, SelectionCriterium)
-import ModelAccessors as MA
 import Page.ClimbingRoutePage.Update as ClimbingRoutePageUpdate
 import Select
 import Task
@@ -162,7 +162,8 @@ update msg model =
         AddMediaToRoute route ->
             let
                 media =
-                    Forms.Forms.mediaFromForm model
+                    -- Forms.Forms.mediaFromForm model
+                    Nothing
 
                 newRoute =
                     { route | media = Maybe.map (flip (::) route.media) media |> Maybe.withDefault route.media }

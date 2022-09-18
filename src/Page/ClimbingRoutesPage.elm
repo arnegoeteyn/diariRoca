@@ -1,5 +1,6 @@
 module Page.ClimbingRoutesPage exposing (view)
 
+import DataAccessors as MA
 import DataParser exposing (ClimbingRoute, ascentKindToString, climbingRouteKindEnum, climbingRouteKindFromString, climbingRouteKindToString)
 import DataUtilities
 import Dict
@@ -10,7 +11,6 @@ import Html.Styled.Events as E
 import Init
 import Message exposing (ClimbingRoutesPageMsg(..), Msg(..))
 import Model exposing (Model)
-import ModelAccessors as MA
 import Tailwind.Utilities as Tw
 import Utilities
 import View.Button as Button

@@ -1,7 +1,9 @@
 module Init exposing (..)
 
 import Browser.Navigation as Nav
-import DataParser exposing (Area, Ascent, AscentKind(..), ClimbingRoute, ClimbingRouteKind(..), Sector, Trip, ascentKindToString, climbingRouteKindToString, jsonFileDecoder)
+import Data exposing (Area, Ascent, AscentKind(..), ClimbingRoute, ClimbingRouteKind(..), Sector, Trip, ascentKindToString, climbingRouteKindToString)
+import DataAccessors as MA
+import DataParser exposing (jsonFileDecoder)
 import DataUtilities
 import Date exposing (Date)
 import DatePicker exposing (defaultSettings)
@@ -9,8 +11,7 @@ import Dict
 import Forms.Form exposing (Form(..))
 import Json.Decode exposing (decodeString)
 import Message exposing (ClimbingRoutesPageMsg(..), FormMsg(..), Msg(..))
-import Model exposing (AreaForm, AscentForm, ClimbingRouteForm, ClimbingRoutePageModel, ClimbingRoutesPageModel, Model, Route(..), SectorForm, SectorsPageModel, TripForm)
-import ModelAccessors as MA
+import Model exposing (AreaForm, AscentForm, ClimbingRouteForm, ClimbingRoutesPageModel, Model, SectorForm, SectorsPageModel, TripForm)
 import Select
 import Time
 import Url
@@ -167,20 +168,6 @@ initSectorsPage : SectorsPageModel
 initSectorsPage =
     { selectedArea = Nothing
     }
-
-
-
---| Dates
-
-
-tripFormDatePickerSettings : DatePicker.Settings
-tripFormDatePickerSettings =
-    defaultSettings
-
-
-ascentFormDatePickerSettings : DatePicker.Settings
-ascentFormDatePickerSettings =
-    defaultSettings
 
 
 

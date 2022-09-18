@@ -1,6 +1,6 @@
 module DataUtilities exposing (..)
 
-import DataParser exposing (Area, ClimbingRoute, ClimbingRouteKind, Sector)
+import Data exposing (Area, ClimbingRoute, ClimbingRouteKind, Sector)
 import Utilities
 
 

@@ -1,11 +1,18 @@
 module Page.ClimbingRoute exposing (Model, Msg(..), init, update, view)
 
-import Data exposing (ClimbingRoute, Data)
-import Forms.Criterium exposing (textCriterium)
+import Data exposing (ClimbingRoute, ClimbingRouteKind, Data, Sector)
+import DataAccessors as DA
+import DataUtilities
+import Date
+import Dict
+import Forms.Criterium exposing (formSelectionCriterium, formSelectionWithSearchCriterium, formTextAreaCriterium, formTextCriterium, textCriterium)
+import Forms.Form as Form exposing (Form(..))
+import Forms.Forms exposing (SelectionCriterium, idForForm, validateNonEmpty, validateOptional)
 import General
 import Html.Styled as H exposing (Html)
 import Html.Styled.Attributes as A
-import ModelAccessors as MA
+import Html.Styled.Events as E
+import Select
 import Skeleton
 import Tailwind.Utilities as Tw
 import Utilities
@@ -20,7 +27,19 @@ type alias Model =
     { mediaLink : String
     , mediaLabel : String
     , routeId : Int
+    , climbingRouteForm : ( ClimbingRouteForm, Maybe ClimbingRoute )
+    , modal : ModalContent
     }
+
+
+type ModalContent
+    = Empty
+    | ClimbingRouteFormModal
+    | DeleteClimbingRouteRequestModal ClimbingRoute
+
+
+
+-- Init
 
 
 init : Int -> ( Model, Cmd Msg )
@@ -28,9 +47,29 @@ init id =
     ( { mediaLink = ""
       , mediaLabel = ""
       , routeId = id
+      , climbingRouteForm = ( initClimbingRouteForm Nothing Nothing, Nothing )
+      , modal = Empty
       }
     , Cmd.none
     )
+
+
+initClimbingRouteForm : Maybe General.Model -> Maybe ClimbingRoute -> ClimbingRouteForm
+initClimbingRouteForm maybeModel climbingRoute =
+    Idle
+        { name = Maybe.map .name climbingRoute |> Maybe.withDefault ""
+        , grade = Maybe.map .grade climbingRoute |> Maybe.withDefault ""
+        , comment = Maybe.andThen .comment climbingRoute |> Maybe.withDefault ""
+        , beta = Maybe.andThen .beta climbingRoute |> Maybe.withDefault ""
+        , kind = Data.climbingRouteKindToString <| (Maybe.withDefault Data.Sport <| Maybe.map .kind climbingRoute)
+        , sectorId =
+            ( Maybe.andThen
+                (\model -> Maybe.andThen (.sectorId >> DA.getSector model.data) climbingRoute |> Maybe.map List.singleton)
+                maybeModel
+                |> Maybe.withDefault []
+            , Select.init "climbingRouteFormSectorId"
+            )
+        }
 
 
 
@@ -40,18 +79,73 @@ init id =
 type Msg
     = SetMediaLink String
     | SetMediaLabel String
+    | UpdateClimbingRouteForm ClimbingRouteForm
+    | OpenClimbingRouteForm (Maybe ClimbingRoute)
+    | ClimbingRouteFormSelectSector (Maybe Sector)
+    | ClimbingRouteFormSelectSectorMsg (Select.Msg Sector)
+    | SaveClimbingRouteForm
       -- General
     | DeleteClimbingRouteRequested ClimbingRoute
 
 
-update : Msg -> Model -> ( Model, Cmd Msg, General.Msg )
-update msg model =
+update : Msg -> Model -> General.Model -> ( Model, Cmd Msg, General.Msg )
+update msg model general =
+    let
+        removeFromSelected item =
+            List.filter (\c -> c /= item)
+    in
     case msg of
         SetMediaLink link ->
             ( { model | mediaLink = link }, Cmd.none, General.None )
 
         SetMediaLabel label ->
             ( { model | mediaLabel = label }, Cmd.none, General.None )
+
+        OpenClimbingRouteForm maybeClimbingRoute ->
+            ( { model
+                | modal = ClimbingRouteFormModal
+                , climbingRouteForm = ( initClimbingRouteForm (Just general) maybeClimbingRoute, maybeClimbingRoute )
+              }
+            , Cmd.none
+            , General.None
+            )
+
+        UpdateClimbingRouteForm values ->
+            ( { model | climbingRouteForm = Utilities.replaceFirst values model.climbingRouteForm }, Cmd.none, General.None )
+
+        ClimbingRouteFormSelectSector maybeSector ->
+            let
+                newForm =
+                    \f ->
+                        { f
+                            | sectorId =
+                                Tuple.mapFirst
+                                    (\_ -> Maybe.withDefault [] <| Maybe.map List.singleton maybeSector)
+                                    f.sectorId
+                        }
+            in
+            ( { model | climbingRouteForm = Tuple.mapFirst (Form.mapValues newForm) model.climbingRouteForm }, Cmd.none, General.None )
+
+        ClimbingRouteFormSelectSectorMsg subMsg ->
+            let
+                ( updatedForm, cmd ) =
+                    updateSelectCriteriumMsg .sectorId
+                        (\x v -> { v | sectorId = x })
+                        (climbingRouteFormSectorSelectConfig general)
+                        subMsg
+                        (Tuple.first model.climbingRouteForm)
+            in
+            ( { model
+                | climbingRouteForm =
+                    Utilities.replaceFirst updatedForm model.climbingRouteForm
+              }
+            , cmd
+            , General.None
+            )
+
+        SaveClimbingRouteForm ->
+            -- Todo
+            ( model, Cmd.none, General.None )
 
         DeleteClimbingRouteRequested climbingRoute ->
             ( model, Cmd.none, General.DeleteClimbingRouteRequested climbingRoute )
@@ -61,11 +155,11 @@ update msg model =
 -- View
 
 
-view : Model -> Data -> Skeleton.Details Msg
-view model data =
+view : Model -> General.Model -> Skeleton.Details Msg
+view model general =
     let
         maybeRoute =
-            MA.getClimbingRoute data model.routeId
+            DA.getClimbingRoute general.data model.routeId
     in
     { title = "Climbing Route"
     , header = []
@@ -75,7 +169,7 @@ view model data =
             Just route ->
                 H.div []
                     [ H.h1 [] [ H.text route.name ]
-                    , viewRouteDetail model route
+                    , viewRouteDetail model general route
                     ]
 
             Nothing ->
@@ -84,8 +178,8 @@ view model data =
     }
 
 
-viewRouteDetail : Model -> ClimbingRoute -> Html Msg
-viewRouteDetail model route =
+viewRouteDetail : Model -> General.Model -> ClimbingRoute -> Html Msg
+viewRouteDetail model general route =
     H.div [ A.css [ Tw.grid, Tw.gap_4, Tw.grid_cols_3 ] ]
         [ H.div [ A.css [ Tw.flex, Tw.flex_col, Tw.justify_around, Tw.col_span_2 ] ]
             [ viewRouteInfo model route
@@ -98,8 +192,7 @@ viewRouteDetail model route =
 
                 Nothing ->
                     H.text ""
-
-            -- , viewAscentsList model route
+            , viewAscentsList model general route
             ]
         , H.div [ A.css [] ]
             [ viewRouteImage route
@@ -107,8 +200,7 @@ viewRouteDetail model route =
             ]
         , H.div []
             [ Button.deleteButton (Button.defaultOptions |> Button.withMsg (DeleteClimbingRouteRequested route) |> Button.withKind Button.TextAndIcon)
-
-            -- , Button.editButton (Button.defaultOptions |> Button.withMsg (General.OpenClimbingRouteForm (Just route)) |> Button.withKind Button.TextAndIcon)
+            , Button.editButton (Button.defaultOptions |> Button.withMsg (OpenClimbingRouteForm (Just route)) |> Button.withKind Button.TextAndIcon)
             ]
         ]
 
@@ -160,33 +252,201 @@ viewRouteMedia model route =
         ]
 
 
+viewAscentsList : Model -> General.Model -> ClimbingRoute -> Html Msg
+viewAscentsList model general route =
+    let
+        ascents =
+            DA.getAscents general.data route
+    in
+    H.div [ A.css [] ]
+        [ H.h3 [ A.css [] ]
+            [ H.text (Utilities.stringFromList [ String.fromInt <| List.length ascents, " ascents:" ])
 
--- viewAscentsList : Model -> ClimbingRoute -> Html Msg
--- viewAscentsList model route =
---     let
---         ascents =
---             Ma.getAscents model route
---     in
---     H.div [ A.css [] ]
---         [ H.h3 [ A.css [] ]
---             [ H.text (Utilities.stringFromList [ String.fromInt <| List.length ascents, " ascents:" ])
---             , Button.addButton (Button.defaultOptions |> Button.withMsg (OpenAscentForm Nothing route))
---             ]
---         , H.div [ A.css [ Tw.divide_solid, Tw.divide_y_2, Tw.divide_x_0 ] ] <|
---             List.map
---                 (\ascent ->
---                     H.div [ A.css [ Tw.p_1_dot_5 ] ]
---                         [ H.div [ A.css [ Tw.grid, Tw.grid_cols_3 ] ]
---                             [ H.div [ A.css [] ] [ H.text <| Date.toIsoString ascent.date ]
---                             , H.div [ A.css [] ] [ H.text (ascentKindToString ascent.kind) ]
---                             , H.div
---                                 []
---                                 [ Button.deleteButton (Button.defaultOptions |> Button.withMsg (Message.DeleteAscentRequested ascent))
---                                 , Button.editButton (Button.defaultOptions |> Button.withMsg (Message.OpenAscentForm (Just ascent) route))
---                                 ]
---                             ]
---                         , H.div [ A.css [] ] [ H.text <| Maybe.withDefault "" ascent.comment ]
---                         ]
---                 )
---                 ascents
---         ]
+            -- , Button.addButton (Button.defaultOptions |> Button.withMsg (OpenAscentForm Nothing route))
+            ]
+        , H.div [ A.css [ Tw.divide_solid, Tw.divide_y_2, Tw.divide_x_0 ] ] <|
+            List.map
+                (\ascent ->
+                    H.div [ A.css [ Tw.p_1_dot_5 ] ]
+                        [ H.div [ A.css [ Tw.grid, Tw.grid_cols_3 ] ]
+                            [ H.div [ A.css [] ] [ H.text <| Date.toIsoString ascent.date ]
+                            , H.div [ A.css [] ] [ H.text (Data.ascentKindToString ascent.kind) ]
+                            , H.div
+                                []
+                                [--  Button.deleteButton (Button.defaultOptions |> Button.withMsg (Message.DeleteAscentRequested ascent))
+                                 -- , Button.editButton (Button.defaultOptions |> Button.withMsg (Message.OpenAscentForm (Just ascent) route))
+                                ]
+                            ]
+                        , H.div [ A.css [] ] [ H.text <| Maybe.withDefault "" ascent.comment ]
+                        ]
+                )
+                ascents
+        ]
+
+
+
+-- | ClimbingRoute
+
+
+type alias ClimbingRouteForm =
+    Form ClimbingRouteFormValues ValidatedClimbingRouteFormValues
+
+
+type alias ClimbingRouteFormValues =
+    { name : String
+    , grade : String
+    , comment : String
+    , beta : String
+    , sectorId : SelectionCriterium Sector
+    , kind : String
+    }
+
+
+type alias ValidatedClimbingRouteFormValues =
+    { id : Int
+    , name : String
+    , grade : String
+    , comment : Maybe String
+    , beta : Maybe String
+    , kind : ClimbingRouteKind
+    , sectorId : Int
+    }
+
+
+climbingRouteForm : Model -> General.Model -> H.Html Msg
+climbingRouteForm model general =
+    let
+        form =
+            Tuple.first model.climbingRouteForm
+    in
+    H.form [ A.css [ Tw.space_y_1 ] ]
+        [ formTextCriterium "Name" .name updateName UpdateClimbingRouteForm form
+        , formTextCriterium "Grade" .grade updateGrade UpdateClimbingRouteForm form
+        , formSelectionWithSearchCriterium "Sector" (climbingRouteFormSectorSelectConfig general) .sectorId (Dict.values general.data.sectors) form
+        , formTextAreaCriterium "Comment" .comment updateComment UpdateClimbingRouteForm form
+        , formTextAreaCriterium "Beta" .beta updateBeta UpdateClimbingRouteForm form
+        , formSelectionCriterium "Kind"
+            (\_ -> List.map Data.climbingRouteKindToString Data.climbingRouteKindEnum)
+            updateKind
+            UpdateClimbingRouteForm
+            .kind
+            form
+        , H.button [ A.type_ "button", E.onClick SaveClimbingRouteForm ] [ H.text "Save" ]
+        , Forms.Forms.viewErrors form
+        ]
+
+
+climbingRouteFormSectorSelectConfig : General.Model -> Select.Config Msg Sector
+climbingRouteFormSectorSelectConfig general =
+    let
+        r : Select.RequiredConfig Msg Sector
+        r =
+            { filter = \x y -> DataUtilities.filterSectorsByName x y |> Utilities.listToMaybe
+            , toLabel = \sector -> sector.name ++ " [" ++ DA.getAreaNameSafe general.data sector.areaId ++ "]"
+            , onSelect = ClimbingRouteFormSelectSector
+            , toMsg = ClimbingRouteFormSelectSectorMsg
+            }
+    in
+    Select.newConfig r
+        -- |> Select.withOnRemoveItem OnRemoveSectorSelection
+        |> Select.withPrompt "Sector"
+
+
+validateClimbingRouteForm : Model -> General.Model -> ( ClimbingRouteForm, Maybe ClimbingRoute )
+validateClimbingRouteForm model general =
+    let
+        form =
+            Tuple.first model.climbingRouteForm
+    in
+    Form.succeed ValidatedClimbingRouteFormValues form
+        |> Form.append
+            (\_ -> Ok <| idForForm general.data.climbingRoutes (Tuple.second model.climbingRouteForm))
+        |> Form.append
+            (validateNonEmpty .name "Route can't have an empty name")
+        |> Form.append
+            (validateNonEmpty .grade "Route can't have no grade")
+        |> Form.append
+            (validateOptional .comment)
+        |> Form.append (validateOptional .beta)
+        |> Form.append
+            (.kind >> Data.climbingRouteKindFromString >> Result.fromMaybe "A valid routeKind must be selected")
+        |> Form.append
+            (.sectorId >> Tuple.first >> List.head >> Maybe.map .id >> Result.fromMaybe "A valid sector must be selected")
+        |> climbingRouteFromForm
+
+
+climbingRouteFromForm : ClimbingRouteForm -> ( ClimbingRouteForm, Maybe ClimbingRoute )
+climbingRouteFromForm form =
+    case form of
+        Valid climbingRouteValues values ->
+            ( Idle values
+            , Just <|
+                ClimbingRoute
+                    climbingRouteValues.id
+                    climbingRouteValues.sectorId
+                    climbingRouteValues.name
+                    climbingRouteValues.grade
+                    climbingRouteValues.comment
+                    climbingRouteValues.beta
+                    climbingRouteValues.kind
+                    []
+            )
+
+        Invalid errors values ->
+            ( Invalid errors values, Nothing )
+
+        _ ->
+            ( form, Nothing )
+
+
+
+--| UpdateUtilities
+
+
+updateAreaId : a -> { b | areaId : a } -> { b | areaId : a }
+updateAreaId value form =
+    { form | areaId = value }
+
+
+updateBeta : a -> { b | beta : a } -> { b | beta : a }
+updateBeta value form =
+    { form | beta = value }
+
+
+updateComment : a -> { b | comment : a } -> { b | comment : a }
+updateComment value form =
+    { form | comment = value }
+
+
+updateCountry : a -> { b | country : a } -> { b | country : a }
+updateCountry value form =
+    { form | country = value }
+
+
+updateGrade : a -> { b | grade : a } -> { b | grade : a }
+updateGrade value form =
+    { form | grade = value }
+
+
+updateKind : a -> { b | kind : a } -> { b | kind : a }
+updateKind value form =
+    { form | kind = value }
+
+
+updateName : a -> { b | name : a } -> { b | name : a }
+updateName value form =
+    { form | name = value }
+
+
+updateSelectCriteriumMsg : (a -> SelectionCriterium item) -> (SelectionCriterium item -> a -> a) -> Select.Config msg item -> Select.Msg item -> Form a r -> ( Form a r, Cmd msg )
+updateSelectCriteriumMsg extractor wrapper config msg =
+    Form.mapAndReturn
+        (\values ->
+            let
+                ( updated, selectCmd ) =
+                    Select.update config msg (Tuple.second (extractor values))
+            in
+            ( wrapper (Tuple.mapSecond (\_ -> updated) (extractor values)) values
+            , selectCmd
+            )
+        )

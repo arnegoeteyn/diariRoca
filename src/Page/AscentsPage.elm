@@ -1,6 +1,7 @@
 module Page.AscentsPage exposing (view)
 
 import Css
+import DataAccessors as MA
 import DataParser exposing (Ascent, Trip)
 import Date
 import Dict exposing (Dict)
@@ -10,7 +11,6 @@ import Html.Styled.Events as E
 import List exposing (sortBy)
 import Message exposing (Msg(..))
 import Model exposing (Model)
-import ModelAccessors as MA
 import Tailwind.Utilities as Tw
 import Utilities
 import View.Ascent exposing (viewAscentTripIndicator)

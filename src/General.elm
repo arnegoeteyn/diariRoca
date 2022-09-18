@@ -4,6 +4,7 @@ import Data exposing (ClimbingRoute, Data)
 import DataParser exposing (jsonFileDecoder)
 import Date exposing (Date)
 import Dict exposing (Dict)
+import Forms.Forms as Forms
 import Json.Decode exposing (decodeString)
 
 
@@ -23,7 +24,7 @@ type ModalContent
       -- | TripOverviewModal Trip
       -- | AreaFormModal
       -- | SectorFormModal
-      -- | ClimbingRouteFormModal
+    | ClimbingRouteFormModal
       -- | AscentFormModal
       -- | DeleteAreaRequestModal Area
       -- | DeleteSectorRequestModal Sector
@@ -55,6 +56,7 @@ init { storageCache } =
 
 type Msg
     = None
+      -- Climbing Route
     | DeleteClimbingRouteConfirmation ClimbingRoute
     | DeleteClimbingRouteRequested ClimbingRoute
 
@@ -66,9 +68,17 @@ update msg model =
             ( model, Cmd.none )
 
         DeleteClimbingRouteRequested route ->
-            ( { model | modal = Debug.log "hierzo" DeleteClimbingRouteRequestModal route }, Cmd.none )
+            ( { model | modal = DeleteClimbingRouteRequestModal route }, Cmd.none )
 
         DeleteClimbingRouteConfirmation route ->
+            -- let
+            -- task =
+            --     if model.route == Model.ClimbingRoutesRoute then
+            --         Cmd.none
+            --     else
+            --         Nav.load "/"
+            -- in
+            -- ( MA.deleteRoute route.id (closeModal model), task )
             ( model, Cmd.none )
 
 

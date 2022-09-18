@@ -1,5 +1,6 @@
 module Modal exposing (viewModal)
 
+import DataAccessors as Ma
 import DataParser exposing (Area, Ascent, ClimbingRoute, Sector, Trip)
 import Date
 import Dict
@@ -11,7 +12,6 @@ import Html.Styled.Events as E
 import Json.Decode as Decode
 import Message exposing (ClimbingRoutesPageMsg(..), FormMsg(..), Msg(..))
 import Model exposing (ModalContent(..), Model)
-import ModelAccessors as Ma
 import Tailwind.Utilities as Tw
 import Utilities
 

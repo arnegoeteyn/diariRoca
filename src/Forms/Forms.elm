@@ -1,21 +1,33 @@
 module Forms.Forms exposing (..)
 
-import DataParser exposing (Area, Ascent, AscentKind(..), ClimbingRoute, ClimbingRouteKind(..), Media, Sector, Trip, ascentKindEnum, ascentKindFromString, ascentKindToString, climbingRouteKindEnum, climbingRouteKindFromString, climbingRouteKindToString)
+import Data exposing (Area, Ascent, AscentKind(..), ClimbingRoute, ClimbingRouteKind(..), Media, Sector, Trip)
+import DataAccessors as DA
+import DataUtilities
 import Date
+import DatePicker exposing (DatePicker, defaultSettings)
 import Dict exposing (Dict)
 import Forms.Criterium exposing (dateCriterium, formSelectionCriterium, formSelectionWithSearchCriterium, formTextAreaCriterium, formTextCriterium)
 import Forms.Form as Form exposing (Form(..))
 import Html.Styled as H
 import Html.Styled.Attributes as A
 import Html.Styled.Events as E
-import Init exposing (ascentFormDatePickerSettings, tripFormDatePickerSettings)
 import Message exposing (FormMsg(..), Msg(..))
 import Model exposing (AreaForm, AscentForm, ClimbingRouteForm, Model, SectorForm, TripForm, TripFormValues, ValidatedAreaFormValues, ValidatedAscentFormValues, ValidatedClimbingRouteFormValues, ValidatedSectorFormValues, ValidatedTripFormValues)
+import Select
 import Tailwind.Utilities as Tw
+import Utilities
 
 
 
 --| Generic
+
+
+type alias SelectionCriterium item =
+    ( List item, Select.State )
+
+
+type alias DateCriterium =
+    ( Int, DatePicker )
 
 
 newId : Dict.Dict Int a -> Int
@@ -23,7 +35,7 @@ newId dict =
     (Maybe.withDefault 1 <| List.head <| List.sortBy (\x -> x * -1) (Dict.keys dict)) + 1
 
 
-viewErrors : Form a r -> H.Html Msg
+viewErrors : Form a r -> H.Html msg
 viewErrors form =
     H.ul [ A.css [ Tw.text_red_600 ] ] <| Form.mapErrors (\error -> H.li [] [ H.text error ]) form
 
@@ -98,12 +110,13 @@ areaForm model =
         form =
             Tuple.first model.areaForm
     in
-    H.form []
-        [ formTextCriterium "Name" .name updateName UpdateAreaForm form
-        , formTextCriterium "Country" .country updateCountry UpdateAreaForm form
-        , H.button [ A.type_ "button", E.onClick (FormMessage SaveAreaForm) ] [ H.text "Save" ]
-        , viewErrors form
-        ]
+    -- H.form []
+    --     [ formTextCriterium "Name" .name updateName UpdateAreaForm form
+    --     , formTextCriterium "Country" .country updateCountry UpdateAreaForm form
+    --     , H.button [ A.type_ "button", E.onClick (FormMessage SaveAreaForm) ] [ H.text "Save" ]
+    --     , viewErrors form
+    --     ]
+    H.text "todo"
 
 
 validateAreaForm : Model -> ( AreaForm, Maybe Area )
@@ -141,16 +154,17 @@ areaFromForm _ form =
 
 sectorForm : Model -> H.Html Msg
 sectorForm model =
-    let
-        form =
-            Tuple.first model.sectorForm
-    in
-    H.form []
-        [ formTextCriterium "Name" .name updateName UpdateSectorForm form
-        , formSelectionWithSearchCriterium "Area" Init.sectorFormAreaSelectConfig .areaId (Dict.values model.areas) form
-        , H.button [ A.type_ "button", E.onClick (FormMessage SaveSectorForm) ] [ H.text "Save" ]
-        , viewErrors form
-        ]
+    -- let
+    --     form =
+    --         Tuple.first model.sectorForm
+    -- in
+    -- H.form []
+    --     [ formTextCriterium "Name" .name updateName UpdateSectorForm form
+    --     , formSelectionWithSearchCriterium "Area" Init.sectorFormAreaSelectConfig .areaId (Dict.values model.areas) form
+    --     , H.button [ A.type_ "button", E.onClick (FormMessage SaveSectorForm) ] [ H.text "Save" ]
+    --     , viewErrors form
+    --     ]
+    H.text "todo"
 
 
 validateSectorForm : Model -> ( SectorForm, Maybe Sector )
@@ -183,75 +197,6 @@ sectorFromForm _ form =
 
 
 
---| ClimbingRoute
-
-
-climbingRouteForm : Model -> H.Html Msg
-climbingRouteForm model =
-    let
-        form =
-            Tuple.first model.climbingRouteForm
-    in
-    H.form [ A.css [ Tw.space_y_1 ] ]
-        [ formTextCriterium "Name" .name updateName UpdateClimbingRouteForm form
-        , formTextCriterium "Grade" .grade updateGrade UpdateClimbingRouteForm form
-        , formSelectionWithSearchCriterium "Sector" (Init.climbingRouteFormSectorSelectConfig model) .sectorId (Dict.values model.sectors) form
-        , formTextAreaCriterium "Comment" .comment updateComment UpdateClimbingRouteForm form
-        , formTextAreaCriterium "Beta" .beta updateBeta UpdateClimbingRouteForm form
-        , formSelectionCriterium "Kind" (\_ -> List.map climbingRouteKindToString climbingRouteKindEnum) updateKind UpdateClimbingRouteForm .kind form
-        , H.button [ A.type_ "button", E.onClick (FormMessage SaveClimbingRouteForm) ] [ H.text "Save" ]
-        , viewErrors form
-        ]
-
-
-validateClimbingRouteForm : Model -> ( ClimbingRouteForm, Maybe ClimbingRoute )
-validateClimbingRouteForm model =
-    let
-        form =
-            Tuple.first model.climbingRouteForm
-    in
-    Form.succeed ValidatedClimbingRouteFormValues form
-        |> Form.append
-            (\_ -> Ok <| idForForm model.climbingRoutes (Tuple.second model.climbingRouteForm))
-        |> Form.append
-            (validateNonEmpty .name "Route can't have an empty name")
-        |> Form.append
-            (validateNonEmpty .grade "Route can't have no grade")
-        |> Form.append
-            (validateOptional .comment)
-        |> Form.append (validateOptional .beta)
-        |> Form.append
-            (.kind >> climbingRouteKindFromString >> Result.fromMaybe "A valid routeKind must be selected")
-        |> Form.append
-            (.sectorId >> Tuple.first >> List.head >> Maybe.map .id >> Result.fromMaybe "A valid sector must be selected")
-        |> climbingRouteFromForm
-
-
-climbingRouteFromForm : Model.ValidatedClimbingRouteForm -> ( ClimbingRouteForm, Maybe ClimbingRoute )
-climbingRouteFromForm form =
-    case form of
-        Valid climbingRouteValues values ->
-            ( Idle values
-            , Just <|
-                ClimbingRoute
-                    climbingRouteValues.id
-                    climbingRouteValues.sectorId
-                    climbingRouteValues.name
-                    climbingRouteValues.grade
-                    climbingRouteValues.comment
-                    climbingRouteValues.beta
-                    climbingRouteValues.kind
-                    []
-            )
-
-        Invalid errors values ->
-            ( Invalid errors values, Nothing )
-
-        _ ->
-            ( form, Nothing )
-
-
-
 --| Ascent
 
 
@@ -261,18 +206,19 @@ ascentForm model =
         form =
             Tuple.first model.ascentForm
     in
-    H.form []
-        [ formTextCriterium "Comment" .comment updateComment UpdateAscentForm form
-        , formSelectionCriterium "Kind"
-            (\_ -> List.map ascentKindToString ascentKindEnum)
-            updateKind
-            UpdateAscentForm
-            .kind
-            form
-        , dateCriterium "Date" ascentFormDatePickerSettings .date AscentFormToDatePicker form
-        , H.button [ A.type_ "button", E.onClick (FormMessage SaveAscentForm) ] [ H.text "Save" ]
-        , viewErrors form
-        ]
+    -- H.form []
+    --     [ formTextCriterium "Comment" .comment updateComment UpdateAscentForm form
+    --     , formSelectionCriterium "Kind"
+    --         (\_ -> List.map Data.ascentKindToString Data.ascentKindEnum)
+    --         updateKind
+    --         UpdateAscentForm
+    --         .kind
+    --         form
+    --     , dateCriterium "Date" ascentFormDatePickerSettings .date AscentFormToDatePicker form
+    --     , H.button [ A.type_ "button", E.onClick (FormMessage SaveAscentForm) ] [ H.text "Save" ]
+    --     , viewErrors form
+    --     ]
+    H.text "todo"
 
 
 validateAscentForm : Model -> ( AscentForm, Maybe Ascent )
@@ -294,7 +240,7 @@ validateAscentForm model =
                 |> Form.append
                     (\values -> Ok <| Date.fromRataDie <| Tuple.first values.date)
                 |> Form.append
-                    (.kind >> ascentKindFromString >> Result.fromMaybe "A valid ascentKind must be selected")
+                    (.kind >> Data.ascentKindFromString >> Result.fromMaybe "A valid ascentKind must be selected")
                 |> Form.append
                     (\values ->
                         if String.isEmpty values.comment then
@@ -324,19 +270,6 @@ ascentFromForm form =
 
         _ ->
             ( form, Nothing )
-
-
-
---| Old
-
-
-mediaFromForm : Model -> Maybe Media
-mediaFromForm model =
-    if List.any (\f -> (String.isEmpty << f) model.climbingRoutePageModel) [ .mediaLink, .mediaLabel ] then
-        Nothing
-
-    else
-        Just <| Media model.climbingRoutePageModel.mediaLink model.climbingRoutePageModel.mediaLabel
 
 
 
@@ -408,3 +341,17 @@ updateKind value form =
 updateName : a -> { b | name : a } -> { b | name : a }
 updateName value form =
     { form | name = value }
+
+
+
+--| Dates
+
+
+tripFormDatePickerSettings : DatePicker.Settings
+tripFormDatePickerSettings =
+    defaultSettings
+
+
+ascentFormDatePickerSettings : DatePicker.Settings
+ascentFormDatePickerSettings =
+    defaultSettings

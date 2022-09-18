@@ -1,4 +1,4 @@
-module ModelAccessors exposing (..)
+module DataAccessors exposing (..)
 
 import Data exposing (Area, Ascent, ClimbingRoute, Data, Sector, Trip)
 import Date exposing (Date)
@@ -12,19 +12,19 @@ import Utilities
 --| Area
 
 
-getArea : Model -> Int -> Maybe Area
-getArea m i =
-    Dict.get i m.areas
+getArea : Data -> Int -> Maybe Area
+getArea d i =
+    Dict.get i d.areas
 
 
-getAreaName : Model -> Int -> Maybe String
-getAreaName m i =
-    getArea m i |> Maybe.map .name
+getAreaName : Data -> Int -> Maybe String
+getAreaName d i =
+    getArea d i |> Maybe.map .name
 
 
-getAreaNameSafe : Model -> Int -> String
-getAreaNameSafe m i =
-    getArea m i |> Maybe.map .name |> Maybe.withDefault "N/A"
+getAreaNameSafe : Data -> Int -> String
+getAreaNameSafe d i =
+    getArea d i |> Maybe.map .name |> Maybe.withDefault "N/A"
 
 
 isSectorOf : Area -> Sector -> Bool
@@ -60,29 +60,29 @@ deleteArea i m =
 --| Sector
 
 
-getSector : Model -> Int -> Maybe Sector
-getSector m i =
-    Dict.get i m.sectors
+getSector : Data -> Int -> Maybe Sector
+getSector d i =
+    Dict.get i d.sectors
 
 
-getSectorName : Model -> Int -> Maybe String
-getSectorName m i =
-    getSector m i |> Maybe.map .name
+getSectorName : Data -> Int -> Maybe String
+getSectorName d i =
+    getSector d i |> Maybe.map .name
 
 
-getSectorAndAreaNameSafe : Model -> Int -> String
-getSectorAndAreaNameSafe m i =
-    case getSector m i of
+getSectorAndAreaNameSafe : Data -> Int -> String
+getSectorAndAreaNameSafe d i =
+    case getSector d i of
         Nothing ->
             "N/A"
 
         Just sector ->
-            Utilities.stringFromList [ sector.name, " [", getAreaNameSafe m sector.areaId, "]" ]
+            Utilities.stringFromList [ sector.name, " [", getAreaNameSafe d sector.areaId, "]" ]
 
 
-getSectorNameSafe : Model -> Int -> String
-getSectorNameSafe m i =
-    getSector m i |> Maybe.map .name |> Maybe.withDefault "N/A"
+getSectorNameSafe : Data -> Int -> String
+getSectorNameSafe d i =
+    getSector d i |> Maybe.map .name |> Maybe.withDefault "N/A"
 
 
 isClimbingRouteOf : Sector -> ClimbingRoute -> Bool
@@ -152,9 +152,9 @@ isAscentOf c a =
     c.id == a.routeId
 
 
-getAscents : Model -> ClimbingRoute -> List Ascent
-getAscents m c =
-    Utilities.dictToList m.ascents |> List.filter (isAscentOf c) |> Utilities.sortByDescending (.date >> Date.toIsoString)
+getAscents : Data -> ClimbingRoute -> List Ascent
+getAscents d c =
+    Utilities.dictToList d.ascents |> List.filter (isAscentOf c) |> Utilities.sortByDescending (.date >> Date.toIsoString)
 
 
 

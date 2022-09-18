@@ -1,12 +1,12 @@
 module View.PerGradeStat exposing (countPerGrade, viewChart, viewHeader, viewTable)
 
 import Axis
+import DataAccessors as MA
 import DataParser exposing (ClimbingRouteKind(..))
 import Dict
 import Html.Styled as H
 import Message exposing (Msg)
 import Model exposing (Model)
-import ModelAccessors as MA
 import Scale exposing (BandScale, ContinuousScale, bandwidth, defaultBandConfig)
 import Set
 import TypedSvg exposing (g, rect, style, svg, text_)

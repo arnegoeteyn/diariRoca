@@ -82,7 +82,7 @@ view model =
                 }
 
         ClimbingRoute climbingRoute ->
-            Skeleton.view ClimbingRouteMsg (ClimbingRoute.view climbingRoute model.general.data)
+            Skeleton.view ClimbingRouteMsg (ClimbingRoute.view climbingRoute model.general)
 
 
 
@@ -191,13 +191,13 @@ update message model =
                 ClimbingRouteMsg msg ->
                     case model.route of
                         ClimbingRoute climbingRoute ->
-                            stepClimbingRoute model (ClimbingRoute.update msg climbingRoute)
+                            stepClimbingRoute model (ClimbingRoute.update msg climbingRoute model.general)
 
                         _ ->
                             ( model, Cmd.none, General.None )
 
         ( general, generalcmds ) =
-            case Debug.log "test" generalMsg of
+            case generalMsg of
                 General.None ->
                     ( newModel, Cmd.none )
 
