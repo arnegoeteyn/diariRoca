@@ -1,8 +1,8 @@
 module DataParser exposing (..)
 
+import Data exposing (Area, Ascent, AscentKind(..), ClimbingRoute, ClimbingRouteKind(..), Data, Media, Sector, Trip)
 import Date exposing (Date)
 import Dict
-import General exposing (Area, Ascent, AscentKind(..), ClimbingRoute, ClimbingRouteKind(..), Data, Media, Sector, Trip)
 import Json.Decode exposing (fail, field, int, string, succeed)
 import Json.Decode.Pipeline exposing (optional, required)
 import Json.Encode

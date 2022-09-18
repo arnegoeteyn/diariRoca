@@ -1,7 +1,8 @@
 module Page.ClimbingRoute exposing (Model, Msg(..), init, update, view)
 
+import Data exposing (ClimbingRoute, Data)
 import Forms.Criterium exposing (textCriterium)
-import General exposing (ClimbingRoute, Data)
+import General
 import Html.Styled as H exposing (Html)
 import Html.Styled.Attributes as A
 import ModelAccessors as MA

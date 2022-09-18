@@ -3,10 +3,11 @@ module Main exposing (main)
 import Browser
 import Browser.Navigation as Nav
 import Command
+import Data exposing (Data)
 import DataParser exposing (encodedJsonFile, jsonFileDecoder)
 import Date exposing (Date)
 import Dict
-import General exposing (Data)
+import General
 import Html.Styled as H
 import Json.Decode exposing (decodeString)
 import Page.ClimbingRoute as ClimbingRoute
@@ -89,7 +90,7 @@ view model =
 
 
 init : { storageCache : String, posixTime : Int, version : String } -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
-init { storageCache, posixTime, version } url key =
+init ({ storageCache, posixTime, version } as flags) url key =
     let
         date =
             Date.fromPosix Time.utc (Time.millisToPosix posixTime)
@@ -112,7 +113,7 @@ init { storageCache, posixTime, version } url key =
             -- , modal = Model.Empty
             , settingsOpen = False
             , googleDriveAuthorized = False
-            , general = { data = jsonFile }
+            , general = General.init flags
             }
 
 
@@ -196,7 +197,7 @@ update message model =
                             ( model, Cmd.none, General.None )
 
         ( general, generalcmds ) =
-            case generalMsg of
+            case Debug.log "test" generalMsg of
                 General.None ->
                     ( newModel, Cmd.none )
 
@@ -238,7 +239,7 @@ loadContent model content =
 
 stepGeneral : Model -> ( General.Model, Cmd General.Msg ) -> ( Model, Cmd Msg )
 stepGeneral model ( general, cmds ) =
-    ( model
+    ( { model | general = general }
     , Cmd.map GeneralMsg cmds
     )
 

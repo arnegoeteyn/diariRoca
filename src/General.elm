@@ -1,7 +1,10 @@
 module General exposing (..)
 
+import Data exposing (ClimbingRoute, Data)
+import DataParser exposing (jsonFileDecoder)
 import Date exposing (Date)
 import Dict exposing (Dict)
+import Json.Decode exposing (decodeString)
 
 
 
@@ -10,74 +13,39 @@ import Dict exposing (Dict)
 
 type alias Model =
     { data : Data
+    , modal : ModalContent
     }
 
 
-type alias Data =
-    { climbingRoutes : Dict Int ClimbingRoute
-    , ascents : Dict Int Ascent
-    , sectors : Dict Int Sector
-    , areas : Dict Int Area
-    , trips : Dict Int Trip
-    }
+type ModalContent
+    = Empty
+      -- | TripFormModal
+      -- | TripOverviewModal Trip
+      -- | AreaFormModal
+      -- | SectorFormModal
+      -- | ClimbingRouteFormModal
+      -- | AscentFormModal
+      -- | DeleteAreaRequestModal Area
+      -- | DeleteSectorRequestModal Sector
+    | DeleteClimbingRouteRequestModal ClimbingRoute
 
 
-type alias ClimbingRoute =
-    { id : Int
-    , sectorId : Int
-    , name : String
-    , grade : String
-    , comment : Maybe String
-    , beta : Maybe String
-    , kind : ClimbingRouteKind
-    , media : List Media
-    }
+
+-- | DeleteAscentRequestModal Ascent
+-- Init
 
 
-type ClimbingRouteKind
-    = Boulder
-    | Sport
+init : { storageCache : String, posixTime : Int, version : String } -> Model
+init { storageCache } =
+    let
+        decodedStorage =
+            decodeString jsonFileDecoder storageCache
 
-
-type alias Media =
-    { link : String, label : String }
-
-
-type alias Ascent =
-    { id : Int
-    , routeId : Int
-    , date : Date
-    , comment : Maybe String
-    , kind : AscentKind
-    }
-
-
-type AscentKind
-    = Onsight
-    | Flash
-    | SecondGo
-    | Redpoint
-    | Repeat
-
-
-type alias Sector =
-    { id : Int
-    , areaId : Int
-    , name : String
-    }
-
-
-type alias Area =
-    { id : Int
-    , name : String
-    , country : String
-    }
-
-
-type alias Trip =
-    { id : Int
-    , from : Date
-    , to : Date
+        jsonFile =
+            Result.withDefault { climbingRoutes = Dict.empty, ascents = Dict.empty, sectors = Dict.empty, areas = Dict.empty, trips = Dict.empty } <| decodedStorage
+    in
+    { data = jsonFile
+    , modal = Empty
     }
 
 
@@ -98,8 +66,7 @@ update msg model =
             ( model, Cmd.none )
 
         DeleteClimbingRouteRequested route ->
-            -- ( { model | modal = Model.DeleteClimbingRouteRequestModal route }, Cmd.none )
-            ( model, Cmd.none )
+            ( { model | modal = Debug.log "hierzo" DeleteClimbingRouteRequestModal route }, Cmd.none )
 
         DeleteClimbingRouteConfirmation route ->
             ( model, Cmd.none )

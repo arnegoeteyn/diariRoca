@@ -1,9 +1,9 @@
 module Message exposing (..)
 
 import Browser
+import Data exposing (Area, Ascent, ClimbingRoute, ClimbingRouteKind, Media, Sector, Trip)
 import DatePicker
 import File exposing (File)
-import General exposing (Area, Ascent, ClimbingRoute, ClimbingRouteKind, Media, Sector, Trip)
 import Model exposing (AreaForm, AscentForm, ClimbingRouteForm, SectorForm, TripForm)
 import Select
 import Url

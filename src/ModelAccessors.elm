@@ -1,8 +1,8 @@
 module ModelAccessors exposing (..)
 
+import Data exposing (Area, Ascent, ClimbingRoute, Data, Sector, Trip)
 import Date exposing (Date)
 import Dict exposing (Dict)
-import General exposing (Area, Ascent, ClimbingRoute, Data, Sector, Trip)
 import Model exposing (Model)
 import Set
 import Utilities
