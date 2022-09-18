@@ -1,7 +1,7 @@
 module View.Ascent exposing (viewAscentTripIndicator)
 
 import Css
-import Data exposing (Ascent, Trip)
+import DataParser exposing (Ascent, Trip)
 import Dict exposing (Dict)
 import Html.Styled as H exposing (Html)
 import Html.Styled.Attributes as A

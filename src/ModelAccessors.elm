@@ -1,8 +1,8 @@
 module ModelAccessors exposing (..)
 
-import Data exposing (Area, Ascent, ClimbingRoute, Sector, Trip)
 import Date exposing (Date)
 import Dict exposing (Dict)
+import General exposing (Area, Ascent, ClimbingRoute, Data, Sector, Trip)
 import Model exposing (Model)
 import Set
 import Utilities
@@ -118,7 +118,7 @@ deleteSector i m =
 --| ClimbingRoute
 
 
-getClimbingRoute : Model -> Int -> Maybe ClimbingRoute
+getClimbingRoute : Data -> Int -> Maybe ClimbingRoute
 getClimbingRoute m i =
     Dict.get i m.climbingRoutes
 
@@ -166,9 +166,9 @@ getAscent m i =
     Dict.get i m.ascents
 
 
-getClimbingRouteFromAscent : Model -> Ascent -> Maybe ClimbingRoute
-getClimbingRouteFromAscent m c =
-    getClimbingRoute m c.routeId
+getClimbingRouteFromAscent : Data -> Ascent -> Maybe ClimbingRoute
+getClimbingRouteFromAscent data c =
+    getClimbingRoute data c.routeId
 
 
 deleteAscent : Int -> Model -> Model

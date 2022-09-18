@@ -4,7 +4,7 @@ import Browser
 import Browser.Dom
 import Browser.Navigation as Nav
 import Command
-import Data exposing (encodedJsonFile, jsonFileDecoder)
+import DataParser exposing (encodedJsonFile, jsonFileDecoder)
 import Date
 import DatePicker exposing (DateEvent(..))
 import Dict
@@ -19,9 +19,9 @@ import Json.Encode exposing (encode)
 import Message exposing (ClimbingRoutesPageMsg(..), FormMsg(..), Msg(..), SectorsPageMsg(..))
 import Model exposing (DateCriterium, ModalContent(..), Model, SectorsPageModel, SelectionCriterium)
 import ModelAccessors as MA
+import Page.ClimbingRoutePage.Update as ClimbingRoutePageUpdate
 import Select
 import Task
-import Update.ClimbingRoutePageUpdate as ClimbingRoutePageUpdate
 import Update.ClimbingRoutesPageUpdate as ClimbingRoutesPageUpdate
 import Url
 import Utilities exposing (flip, replaceFirst)
@@ -420,23 +420,6 @@ updateSectorsPage msg model =
     case msg of
         AreaSelected area ->
             ( { model | selectedArea = area }, Cmd.none )
-
-
-updateWithStorage : Msg -> Model -> ( Model, Cmd Msg )
-updateWithStorage msg model =
-    let
-        ( newModel, cmds ) =
-            update msg model
-    in
-    ( newModel
-    , Cmd.batch
-        [ Command.storeCache
-            (encodedJsonFile
-                { climbingRoutes = newModel.climbingRoutes, ascents = newModel.ascents, sectors = newModel.sectors, areas = newModel.areas, trips = newModel.trips }
-            )
-        , cmds
-        ]
-    )
 
 
 

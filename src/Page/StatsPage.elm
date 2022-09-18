@@ -1,6 +1,6 @@
 module Page.StatsPage exposing (view)
 
-import Data exposing (ClimbingRouteKind(..))
+import DataParser exposing (ClimbingRouteKind(..))
 import Html.Styled as H
 import Html.Styled.Attributes as A
 import Message exposing (Msg)

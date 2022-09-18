@@ -1,7 +1,7 @@
 module Page.AscentsPage exposing (view)
 
 import Css
-import Data exposing (Ascent, Trip)
+import DataParser exposing (Ascent, Trip)
 import Date
 import Dict exposing (Dict)
 import Html.Styled as H
@@ -51,8 +51,8 @@ viewAscentRow model ascent =
         , H.div [ A.css [ Tw.w_2over6 ] ]
             [ H.text <| Utilities.stringFromList [ routeName, " ", "(", routeGrade, ")" ]
             ]
-        , H.div [ A.css [ Tw.w_2over6 ] ] [ H.text (Data.ascentKindToString ascent.kind) ]
-        , H.div [ A.css [ Tw.w_2over6 ] ] [ H.text (Data.ascentKindToString ascent.kind) ]
+        , H.div [ A.css [ Tw.w_2over6 ] ] [ H.text (DataParser.ascentKindToString ascent.kind) ]
+        , H.div [ A.css [ Tw.w_2over6 ] ] [ H.text (DataParser.ascentKindToString ascent.kind) ]
         , case maybeRoute of
             Just route ->
                 Button.gotoButton (Button.defaultOptions |> Button.withHref ("routes/" ++ String.fromInt route.id))

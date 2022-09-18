@@ -1,11 +1,11 @@
 module Model exposing (..)
 
 import Browser.Navigation as Nav
-import Data exposing (Area, Ascent, AscentKind, ClimbingRoute, ClimbingRouteKind, Sector, Trip)
 import Date exposing (Date)
 import DatePicker exposing (DatePicker)
 import Dict exposing (Dict)
 import Forms.Form exposing (Form)
+import General exposing (Area, Ascent, AscentKind, ClimbingRoute, ClimbingRouteKind, Sector, Trip)
 import Select
 import Url
 
@@ -13,8 +13,6 @@ import Url
 type alias Model =
     { key : Nav.Key
     , url : Url.Url
-    , route : Route
-    , appState : AppState
     , startUpDate : Date
     , version : String
     , modal : ModalContent
@@ -37,7 +35,6 @@ type alias Model =
 
     -- Pages
     , climbingRoutesPageModel : ClimbingRoutesPageModel
-    , climbingRoutePageModel : ClimbingRoutePageModel
     , sectorsPageModel : SectorsPageModel
     }
 
@@ -53,20 +50,9 @@ type alias ClimbingRoutesPageModel =
     }
 
 
-type alias ClimbingRoutePageModel =
-    { mediaLink : String
-    , mediaLabel : String
-    }
-
-
 type alias SectorsPageModel =
     { selectedArea : Maybe Area
     }
-
-
-type AppState
-    = NotReady
-    | Ready
 
 
 type ModalContent
@@ -205,12 +191,3 @@ type alias AscentForm =
 
 
 -- Routing
-
-
-type Route
-    = NotFoundRoute
-    | SectorsRoute
-    | ClimbingRoutesRoute
-    | ClimbingRouteRoute Int
-    | AscentsRoute
-    | StatsRoute

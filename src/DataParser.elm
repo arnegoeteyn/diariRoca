@@ -1,22 +1,14 @@
-module Data exposing (Area, Ascent, AscentKind(..), ClimbingRoute, ClimbingRouteKind(..), JsonFile, Media, Sector, Trip, ascentKindEnum, ascentKindFromString, ascentKindToString, climbingRouteKindEnum, climbingRouteKindFromString, climbingRouteKindToString, encodedJsonFile, jsonFileDecoder)
+module DataParser exposing (..)
 
 import Date exposing (Date)
-import Dict exposing (Dict)
+import Dict
+import General exposing (Area, Ascent, AscentKind(..), ClimbingRoute, ClimbingRouteKind(..), Data, Media, Sector, Trip)
 import Json.Decode exposing (fail, field, int, string, succeed)
 import Json.Decode.Pipeline exposing (optional, required)
 import Json.Encode
 
 
-type alias JsonFile =
-    { climbingRoutes : Dict Int ClimbingRoute
-    , ascents : Dict Int Ascent
-    , sectors : Dict Int Sector
-    , areas : Dict Int Area
-    , trips : Dict Int Trip
-    }
-
-
-jsonFileDecoder : Json.Decode.Decoder JsonFile
+jsonFileDecoder : Json.Decode.Decoder Data
 jsonFileDecoder =
     let
         generalDecoder specificDecoder =
@@ -38,7 +30,7 @@ jsonFileDecoder =
         decodedTrips =
             generalDecoder tripDecoder
     in
-    Json.Decode.map5 JsonFile
+    Json.Decode.map5 Data
         (Json.Decode.field "routes" <| decodedRoutes)
         (Json.Decode.field "ascents" <| decodedAscents)
         (Json.Decode.field "sectors" <| decodedSectors)
@@ -46,7 +38,7 @@ jsonFileDecoder =
         (Json.Decode.field "trips" <| decodedTrips)
 
 
-encodedJsonFile : JsonFile -> Json.Encode.Value
+encodedJsonFile : Data -> Json.Encode.Value
 encodedJsonFile root =
     Json.Encode.object
         [ ( "routes", Json.Encode.list encodeClimbingRoute (Dict.values root.climbingRoutes) )
@@ -59,11 +51,6 @@ encodedJsonFile root =
 
 
 --| ClimbingRoute
-
-
-type ClimbingRouteKind
-    = Boulder
-    | Sport
 
 
 climbingRouteKindDecoder : Json.Decode.Decoder ClimbingRouteKind
@@ -113,22 +100,6 @@ encodeClimbingRouteKind =
     Json.Encode.string << climbingRouteKindToString
 
 
-type alias Media =
-    { link : String, label : String }
-
-
-type alias ClimbingRoute =
-    { id : Int
-    , sectorId : Int
-    , name : String
-    , grade : String
-    , comment : Maybe String
-    , beta : Maybe String
-    , kind : ClimbingRouteKind
-    , media : List Media
-    }
-
-
 climbingRouteDecoder : Json.Decode.Decoder ClimbingRoute
 climbingRouteDecoder =
     let
@@ -170,23 +141,6 @@ encodeClimbingRoute route =
 
 
 --| Ascent
-
-
-type alias Ascent =
-    { id : Int
-    , routeId : Int
-    , date : Date
-    , comment : Maybe String
-    , kind : AscentKind
-    }
-
-
-type AscentKind
-    = Onsight
-    | Flash
-    | SecondGo
-    | Redpoint
-    | Repeat
 
 
 ascentKindEnum : List AscentKind
@@ -279,13 +233,6 @@ encodeAscent ascent =
 --| Sector
 
 
-type alias Sector =
-    { id : Int
-    , areaId : Int
-    , name : String
-    }
-
-
 sectorDecoder : Json.Decode.Decoder Sector
 sectorDecoder =
     Json.Decode.succeed Sector
@@ -307,13 +254,6 @@ encodeSector sector =
 --| Area
 
 
-type alias Area =
-    { id : Int
-    , name : String
-    , country : String
-    }
-
-
 areaDecoder : Json.Decode.Decoder Area
 areaDecoder =
     Json.Decode.succeed Area
@@ -333,13 +273,6 @@ encodeArea area =
 
 
 --| Trip
-
-
-type alias Trip =
-    { id : Int
-    , from : Date
-    , to : Date
-    }
 
 
 tripDecoder : Json.Decode.Decoder Trip

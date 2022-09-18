@@ -1,7 +1,7 @@
 module View.PerGradeStat exposing (countPerGrade, viewChart, viewHeader, viewTable)
 
 import Axis
-import Data exposing (ClimbingRouteKind(..))
+import DataParser exposing (ClimbingRouteKind(..))
 import Dict
 import Html.Styled as H
 import Message exposing (Msg)

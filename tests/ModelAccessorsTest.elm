@@ -1,6 +1,6 @@
 module ModelAccessorsTest exposing (testRemoval)
 
-import Data exposing (Area, Ascent, AscentKind(..), ClimbingRoute, Sector)
+import DataParser exposing (Area, Ascent, AscentKind(..), ClimbingRoute, Sector)
 import Date exposing (Date)
 import Dict exposing (Dict)
 import Expect

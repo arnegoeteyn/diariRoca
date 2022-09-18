@@ -6,13 +6,12 @@ import FontAwesome.Solid as Icon
 import Html.Styled as H exposing (Html)
 import Html.Styled.Attributes as A
 import Html.Styled.Events as E
-import Message exposing (Msg)
 import Tailwind.Utilities as Tw
 
 
-type alias ButtonOptions =
+type alias ButtonOptions msg =
     { kind : ButtonKind
-    , msg : Msg
+    , msg : Maybe msg
     , href : Maybe String
     }
 
@@ -25,7 +24,7 @@ type ButtonKind
 
 defaultOptions =
     { kind = Icon
-    , msg = Message.Dummy
+    , msg = Nothing
     , href = Nothing
     }
 
@@ -38,9 +37,9 @@ withHref href options =
     { options | href = Just href }
 
 
-withMsg : Msg -> ButtonOptions -> ButtonOptions
+withMsg : msg -> ButtonOptions msg -> ButtonOptions msg
 withMsg msg options =
-    { options | msg = msg }
+    { options | msg = Just msg }
 
 
 
@@ -75,7 +74,7 @@ iconButtonCss =
         ]
 
 
-iconButton : ButtonOptions -> Icon.Icon hasId -> String -> Html Msg
+iconButton : ButtonOptions msg -> Icon.Icon hasId -> String -> Html msg
 iconButton options defaultIcon defaultText =
     let
         icon =
@@ -91,7 +90,7 @@ iconButton options defaultIcon defaultText =
 
                 Nothing ->
                     H.button
-                        [ E.onClick options.msg
+                        [ Maybe.map E.onClick options.msg |> Maybe.withDefault (A.css [ Tw.cursor_not_allowed ])
                         , iconButtonCss
                         ]
     in
@@ -112,21 +111,21 @@ iconButton options defaultIcon defaultText =
 --| Buttons
 
 
-addButton : ButtonOptions -> Html Msg
+addButton : ButtonOptions msg -> Html msg
 addButton options =
     iconButton options Icon.plus "Add"
 
 
-deleteButton : ButtonOptions -> Html Msg
+deleteButton : ButtonOptions msg -> Html msg
 deleteButton options =
     iconButton options Icon.trash "Delete"
 
 
-editButton : ButtonOptions -> Html Msg
+editButton : ButtonOptions msg -> Html msg
 editButton options =
     iconButton options Icon.pencil "Edit"
 
 
-gotoButton : ButtonOptions -> Html Msg
+gotoButton : ButtonOptions msg -> Html msg
 gotoButton options =
     iconButton options Icon.arrowRight "Goto"

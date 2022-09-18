@@ -1,6 +1,6 @@
 module Page.SectorsPage exposing (..)
 
-import Data exposing (Area, Sector)
+import DataParser exposing (Area, Sector)
 import DataUtilities as DU
 import Html.Styled as H exposing (Html)
 import Html.Styled.Attributes as A

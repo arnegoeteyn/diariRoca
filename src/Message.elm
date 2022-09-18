@@ -1,9 +1,9 @@
 module Message exposing (..)
 
 import Browser
-import Data exposing (Area, Ascent, ClimbingRoute, ClimbingRouteKind, Media, Sector, Trip)
 import DatePicker
 import File exposing (File)
+import General exposing (Area, Ascent, ClimbingRoute, ClimbingRouteKind, Media, Sector, Trip)
 import Model exposing (AreaForm, AscentForm, ClimbingRouteForm, SectorForm, TripForm)
 import Select
 import Url
@@ -25,7 +25,6 @@ type Msg
     | ToggleSettings
       -- Pages
     | ClimbingRoutesPageMessage ClimbingRoutesPageMsg
-    | ClimbingRoutePageMessage ClimbingRoutePageMsg
     | SectorsPageMessage SectorsPageMsg
       -- Data - Trip
     | OpenTripForm (Maybe Trip)
@@ -59,11 +58,6 @@ type ClimbingRoutesPageMsg
     | SelectSector (Maybe Sector)
     | OnRemoveSectorSelection Sector
     | SetClimbingRouteKindFilter (Maybe ClimbingRouteKind)
-
-
-type ClimbingRoutePageMsg
-    = SetMediaLink String
-    | SetMediaLabel String
 
 
 type SectorsPageMsg

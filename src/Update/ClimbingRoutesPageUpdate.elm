@@ -1,6 +1,6 @@
 module Update.ClimbingRoutesPageUpdate exposing (selectClimbingRoute, update)
 
-import Data exposing (ClimbingRoute)
+import DataParser exposing (ClimbingRoute)
 import Init
 import Message exposing (ClimbingRoutesPageMsg(..), Msg)
 import Model exposing (ClimbingRoutesPageModel, Model)

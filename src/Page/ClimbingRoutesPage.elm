@@ -1,6 +1,6 @@
 module Page.ClimbingRoutesPage exposing (view)
 
-import Data exposing (ClimbingRoute, ascentKindToString, climbingRouteKindEnum, climbingRouteKindFromString, climbingRouteKindToString)
+import DataParser exposing (ClimbingRoute, ascentKindToString, climbingRouteKindEnum, climbingRouteKindFromString, climbingRouteKindToString)
 import DataUtilities
 import Dict
 import Forms.Criterium exposing (selectionCriterium, selectionWithSearchCriterium, textCriterium)
@@ -160,7 +160,7 @@ viewRouteRow model route =
             [ H.div [ A.css [ Tw.font_bold ] ] [ H.text route.name ]
             , sectorLink
             ]
-        , H.td [ cellCss ] [ H.text (Data.climbingRouteKindToString route.kind) ]
+        , H.td [ cellCss ] [ H.text (DataParser.climbingRouteKindToString route.kind) ]
         , H.td [ cellCss ] [ (H.text << String.fromInt << List.length) ascents ]
         , H.td []
             [ Button.deleteButton
@@ -195,7 +195,7 @@ sortedAndFilteredRoutes model =
         routes =
             Dict.toList model.climbingRoutes |> List.map Tuple.second
     in
-    (DataUtilities.filterRoutes m.routeFilter m.selected m.routeKindFilter >> DataUtilities.sortRoutes) routes
+    (DataParserUtilities.filterRoutes m.routeFilter m.selected m.routeKindFilter >> DataParserUtilities.sortRoutes) routes
 
 
 w : (a -> Message.ClimbingRoutesPageMsg) -> a -> Msg

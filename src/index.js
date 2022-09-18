@@ -33,24 +33,24 @@ app.ports.storeCache.subscribe(function (val) {
   }
 });
 
-app.ports.googleDriveCommandPort.subscribe(function (request) {
-  switch (request.type_.toLowerCase()) {
-    case "authorize":
-      drive.handleAuthClick(onGoogleDriveAuthorized);
-      break;
+// app.ports.googleDriveCommandPort.subscribe(function (request) {
+//   switch (request.type_.toLowerCase()) {
+//     case "authorize":
+//       drive.handleAuthClick(onGoogleDriveAuthorized);
+//       break;
 
-    case "showpicker":
-      drive.createPicker(onDriveFileChosen);
-      break;
+//     case "showpicker":
+//       drive.createPicker(onDriveFileChosen);
+//       break;
 
-    case "save":
-      drive.saveFile(request.argument, onDriveFileUploaded);
-      break;
+//     case "save":
+//       drive.saveFile(request.argument, onDriveFileUploaded);
+//       break;
 
-    default:
-      break;
-  }
-});
+//     default:
+//       break;
+//   }
+// });
 
 function onGoogleDriveAuthorized() {
   app.ports.googleDriveSubscriptionPort.send({ type_: "Authorized", argument: null });

@@ -1,6 +1,6 @@
 module Modal exposing (viewModal)
 
-import Data exposing (Area, Ascent, ClimbingRoute, Sector, Trip)
+import DataParser exposing (Area, Ascent, ClimbingRoute, Sector, Trip)
 import Date
 import Dict
 import Forms.Forms

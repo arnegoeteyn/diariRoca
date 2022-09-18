@@ -1,7 +1,7 @@
 module Init exposing (..)
 
 import Browser.Navigation as Nav
-import Data exposing (Area, Ascent, AscentKind(..), ClimbingRoute, ClimbingRouteKind(..), Sector, Trip, ascentKindToString, climbingRouteKindToString, jsonFileDecoder)
+import DataParser exposing (Area, Ascent, AscentKind(..), ClimbingRoute, ClimbingRouteKind(..), Sector, Trip, ascentKindToString, climbingRouteKindToString, jsonFileDecoder)
 import DataUtilities
 import Date exposing (Date)
 import DatePicker exposing (defaultSettings)
@@ -192,7 +192,7 @@ sectorFormAreaSelectConfig =
     let
         r : Select.RequiredConfig Message.Msg Area
         r =
-            { filter = \x y -> DataUtilities.filterAreasByName x y |> Utilities.listToMaybe
+            { filter = \x y -> DataParserUtilities.filterAreasByName x y |> Utilities.listToMaybe
             , toLabel = .name
             , onSelect = FormMessage << SectorFormSelectArea
             , toMsg = FormMessage << SectorFormSelectAreaMsg
@@ -206,7 +206,7 @@ climbingRouteFormSectorSelectConfig model =
     let
         r : Select.RequiredConfig Msg Sector
         r =
-            { filter = \x y -> DataUtilities.filterSectorsByName x y |> Utilities.listToMaybe
+            { filter = \x y -> DataParserUtilities.filterSectorsByName x y |> Utilities.listToMaybe
             , toLabel = \sector -> sector.name ++ " [" ++ MA.getAreaNameSafe model sector.areaId ++ "]"
             , onSelect = FormMessage << ClimbingRouteFormSelectSector
             , toMsg = FormMessage << ClimbingRouteFormSelectSectorMsg
@@ -222,7 +222,7 @@ sectorSelectConfig model =
     let
         r : Select.RequiredConfig Msg Sector
         r =
-            { filter = \x y -> DataUtilities.filterSectorsByName x y |> Utilities.listToMaybe
+            { filter = \x y -> DataParserUtilities.filterSectorsByName x y |> Utilities.listToMaybe
             , toLabel = \sector -> sector.name ++ " [" ++ MA.getAreaNameSafe model sector.areaId ++ "]"
             , onSelect = ClimbingRoutesPageMessage << SelectSector
             , toMsg = wrapCrpMessage SelectMsg
