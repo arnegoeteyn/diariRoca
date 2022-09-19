@@ -7,6 +7,7 @@ import Date exposing (Date)
 import Dict exposing (Dict)
 import Forms.Forms as Forms
 import Json.Decode exposing (decodeString)
+import Time
 
 
 
@@ -15,6 +16,7 @@ import Json.Decode exposing (decodeString)
 
 type alias Model =
     { data : Data
+    , startUpDate : Date
     }
 
 
@@ -24,7 +26,7 @@ type alias Model =
 
 
 init : { storageCache : String, posixTime : Int, version : String } -> Model
-init { storageCache } =
+init { storageCache, posixTime, version } =
     let
         decodedStorage =
             decodeString jsonFileDecoder storageCache
@@ -41,6 +43,7 @@ init { storageCache } =
                 decodedStorage
     in
     { data = jsonFile
+    , startUpDate = Date.fromPosix Time.utc (Time.millisToPosix posixTime)
     }
 
 

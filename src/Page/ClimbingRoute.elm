@@ -1,13 +1,16 @@
 module Page.ClimbingRoute exposing (Model, Msg(..), init, update, view)
 
-import Data exposing (ClimbingRoute, ClimbingRouteKind, Sector)
+import Data exposing (Ascent, AscentKind, ClimbingRoute, ClimbingRouteKind, Sector)
 import DataAccessors as DA
 import DataUtilities
-import Date
+import Date exposing (Date)
+import DatePicker
 import Dict
+import FontAwesome as Icon
+import FontAwesome.Solid as Icon
 import Forms.Criterium exposing (formSelectionCriterium, formSelectionWithSearchCriterium, formTextAreaCriterium, formTextCriterium, textCriterium)
 import Forms.Form as Form exposing (Form(..))
-import Forms.Forms exposing (SelectionCriterium, idForForm, validateNonEmpty, validateOptional)
+import Forms.Forms exposing (DateCriterium, SelectionCriterium, idForForm, validateNonEmpty, validateOptional)
 import General
 import Html.Styled as H exposing (Html)
 import Html.Styled.Attributes as A
@@ -29,6 +32,7 @@ type alias Model =
     , mediaLabel : String
     , routeId : Int
     , climbingRouteForm : ( ClimbingRouteForm, Maybe ClimbingRoute )
+    , ascentForm : ( AscentForm, Maybe AscentFormMeta )
     , modal : ModalContent
     }
 
@@ -37,21 +41,28 @@ type ModalContent
     = Empty
     | ClimbingRouteFormModal
     | DeleteClimbingRouteRequestModal ClimbingRoute
+    | AscentFormModal
+    | DeleteAscentRequestModal Ascent
 
 
 
 -- Init
 
 
-init : Int -> ( Model, Cmd Msg )
-init id =
+init : General.Model -> Int -> ( Model, Cmd Msg )
+init general id =
+    let
+        ( ascentForm, ascentFormCmd ) =
+            initAscentForm general.startUpDate Nothing
+    in
     ( { mediaLink = ""
       , mediaLabel = ""
       , routeId = id
       , climbingRouteForm = ( initClimbingRouteForm Nothing Nothing, Nothing )
       , modal = Empty
+      , ascentForm = ( ascentForm, Nothing )
       }
-    , Cmd.none
+    , ascentFormCmd
     )
 
 
@@ -73,6 +84,21 @@ initClimbingRouteForm maybeModel climbingRoute =
         }
 
 
+initAscentForm : Date -> Maybe Ascent -> ( AscentForm, Cmd Msg )
+initAscentForm date maybeAscent =
+    let
+        ( datePicker, datePickerFx ) =
+            DatePicker.init
+    in
+    ( Idle
+        { comment = Maybe.andThen .comment maybeAscent |> Maybe.withDefault ""
+        , kind = Data.ascentKindToString <| Maybe.withDefault Data.Onsight <| Maybe.map .kind maybeAscent
+        , date = ( Date.toRataDie (Maybe.map .date maybeAscent |> Maybe.withDefault date), datePicker )
+        }
+    , Cmd.map AscentFormToDatePicker datePickerFx
+    )
+
+
 
 -- Update
 
@@ -88,8 +114,14 @@ type Msg
     | SaveClimbingRouteForm
     | DeleteClimbingRouteRequested ClimbingRoute
     | CloseModal
+    | OpenAscentForm (Maybe Ascent) ClimbingRoute -- todo do we need ClimbingRoute here?
+    | DeleteAscentConfirmation Ascent
+    | DeleteAscentRequested Ascent
       -- General
     | DeleteClimbingRouteConfirmation ClimbingRoute
+    | UpdateAscentForm AscentForm
+    | AscentFormToDatePicker DatePicker.Msg
+    | SaveAscentForm
 
 
 update : Msg -> Model -> General.Model -> ( Model, Cmd Msg, General.Msg )
@@ -166,6 +198,62 @@ update msg model general =
         CloseModal ->
             ( { model | modal = Empty }, Cmd.none, General.None )
 
+        OpenAscentForm maybeAscent climbingRoute ->
+            let
+                ( ascentForm, ascentCmd ) =
+                    initAscentForm general.startUpDate maybeAscent
+            in
+            ( { model
+                | modal = AscentFormModal
+                , ascentForm = ( ascentForm, Just ( maybeAscent, climbingRoute ) )
+              }
+            , ascentCmd
+            , General.None
+            )
+
+        DeleteAscentRequested ascent ->
+            ( { model | modal = DeleteAscentRequestModal ascent }, Cmd.none, General.None )
+
+        DeleteAscentConfirmation ascent ->
+            ( model, Cmd.none, General.None )
+
+        -- ( DA.deleteAscent ascent.id { model | modal = Empty }, Cmd.none, General.None )
+        UpdateAscentForm values ->
+            ( { model | ascentForm = Utilities.replaceFirst values model.ascentForm }, Cmd.none, General.None )
+
+        AscentFormToDatePicker subMsg ->
+            ( { model
+                | ascentForm =
+                    Tuple.mapFirst
+                        (updateDateCriterium .date
+                            (\x v -> { v | date = x })
+                            ascentFormDatePickerSettings
+                            subMsg
+                        )
+                        model.ascentForm
+              }
+            , Cmd.none
+            , General.None
+            )
+
+        SaveAscentForm ->
+            -- let
+            --     ( newForm, maybeAscent ) =
+            --         Forms.Forms.validateAscentForm model
+            -- in
+            -- ( case maybeAscent of
+            --     Just ascent ->
+            --         { model
+            --             | ascentForm = Utilities.replaceFirst newForm model.ascentForm
+            --             , modal = Empty
+            --             , ascents = Dict.insert ascent.id ascent model.ascents
+            --         }
+            --     _ ->
+            --         { model | ascentForm = Utilities.replaceFirst newForm model.ascentForm }
+            -- , Cmd.none
+            -- )
+            ( model, Cmd.none, General.None )
+
 
 
 -- View
@@ -199,6 +287,9 @@ view model general =
 
                         DeleteClimbingRouteRequestModal climbingRoute ->
                             modal [ viewDeleteClimbingRouteConfirmation climbingRoute ]
+
+                        _ ->
+                            modal [ H.text "ohlolol" ]
                     ]
 
             Nothing ->
@@ -305,8 +396,7 @@ viewAscentsList model general route =
     H.div [ A.css [] ]
         [ H.h3 [ A.css [] ]
             [ H.text (Utilities.stringFromList [ String.fromInt <| List.length ascents, " ascents:" ])
-
-            -- , Button.addButton (Button.defaultOptions |> Button.withMsg (OpenAscentForm Nothing route))
+            , Button.addButton (Button.defaultOptions |> Button.withMsg (OpenAscentForm Nothing route))
             ]
         , H.div [ A.css [ Tw.divide_solid, Tw.divide_y_2, Tw.divide_x_0 ] ] <|
             List.map
@@ -326,6 +416,30 @@ viewAscentsList model general route =
                 )
                 ascents
         ]
+
+
+type alias AscentFormMeta =
+    ( Maybe Ascent, ClimbingRoute )
+
+
+type alias AscentFormValues =
+    { date : DateCriterium
+    , kind : String
+    , comment : String
+    }
+
+
+type alias ValidatedAscentFormValues =
+    { id : Int
+    , climbingRouteId : Int
+    , date : Date
+    , kind : AscentKind
+    , comment : Maybe String
+    }
+
+
+type alias AscentForm =
+    Form AscentFormValues ValidatedAscentFormValues
 
 
 
@@ -494,3 +608,40 @@ updateSelectCriteriumMsg extractor wrapper config msg =
             , selectCmd
             )
         )
+
+
+updateDateCriterium : (values -> DateCriterium) -> (DateCriterium -> values -> values) -> DatePicker.Settings -> DatePicker.Msg -> Form values r -> Form values r
+updateDateCriterium extractor wrapper settings msg form =
+    let
+        ( updatedForm, cmd ) =
+            Form.mapAndReturn
+                (\values ->
+                    let
+                        date =
+                            extractor values
+
+                        ( updated, selectCmd ) =
+                            DatePicker.update settings msg (Tuple.second date)
+                    in
+                    ( wrapper (Tuple.mapSecond (\_ -> updated) date) values, selectCmd )
+                )
+                form
+
+        newDateForm =
+            Form.mapValues
+                (\values ->
+                    case cmd of
+                        DatePicker.Picked newDate ->
+                            wrapper (Tuple.mapFirst (\_ -> Date.toRataDie newDate) (extractor values)) values
+
+                        _ ->
+                            values
+                )
+                updatedForm
+    in
+    newDateForm
+
+
+ascentFormDatePickerSettings : DatePicker.Settings
+ascentFormDatePickerSettings =
+    DatePicker.defaultSettings

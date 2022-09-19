@@ -265,7 +265,7 @@ stepUrl url model =
                     (\climbingRouteId ->
                         let
                             ( m, msg ) =
-                                ClimbingRoute.init climbingRouteId
+                                ClimbingRoute.init model.general climbingRouteId
                         in
                         stepClimbingRoute model ( m, msg, General.None )
                     )

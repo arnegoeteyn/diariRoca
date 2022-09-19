@@ -1,6 +1,7 @@
 module Skeleton exposing (..)
 
 import Browser
+import FontAwesome.Styles as Icon
 import Html.Styled as H
 import Html.Styled.Attributes as A
 import Html.Styled.Lazy
@@ -31,7 +32,8 @@ view toMsg details =
     { title =
         details.title
     , body =
-        [ H.toUnstyled <|
+        [ Icon.css
+        , H.toUnstyled <|
             H.div []
                 [ viewHeader
                 , Html.Styled.Lazy.lazy viewWarning details.warning

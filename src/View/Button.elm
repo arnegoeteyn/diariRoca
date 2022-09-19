@@ -103,7 +103,7 @@ iconButton options defaultIcon defaultText =
                 [ icon ]
 
             TextAndIcon ->
-                [ text, H.text "", icon ]
+                [ text, H.text "", Debug.log "icon" icon ]
         )
 
 
