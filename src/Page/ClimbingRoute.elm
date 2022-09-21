@@ -1,13 +1,11 @@
 module Page.ClimbingRoute exposing (Model, Msg(..), init, update, view)
 
-import Data exposing (Ascent, AscentKind, ClimbingRoute, ClimbingRouteKind, Sector)
+import Data exposing (Ascent, AscentKind, ClimbingRoute, ClimbingRouteKind, Media, Sector)
 import DataAccessors as DA
 import DataUtilities
 import Date exposing (Date)
 import DatePicker
 import Dict
-import FontAwesome as Icon
-import FontAwesome.Solid as Icon
 import Forms.Criterium exposing (formSelectionCriterium, formSelectionWithSearchCriterium, formTextAreaCriterium, formTextCriterium, textCriterium)
 import Forms.Form as Form exposing (Form(..))
 import Forms.Forms exposing (DateCriterium, SelectionCriterium, idForForm, validateNonEmpty, validateOptional)
@@ -107,8 +105,12 @@ initAscentForm date maybeAscent =
 
 type Msg
     = NoOp
+      -- Media
     | SetMediaLink String
     | SetMediaLabel String
+    | AddMediaToRoute ClimbingRoute
+    | RemoveMedia ClimbingRoute Media
+      -- ClimbingRouteForm
     | UpdateClimbingRouteForm ClimbingRouteForm
     | OpenClimbingRouteForm (Maybe ClimbingRoute)
     | ClimbingRouteFormSelectSector (Maybe Sector)
@@ -133,11 +135,25 @@ update msg model =
             List.filter (\c -> c /= item)
     in
     case msg of
+        NoOp ->
+            ( model, Cmd.none )
+
+        -- Media
         SetMediaLink link ->
             ( { model | mediaLink = link }, Cmd.none )
 
         SetMediaLabel label ->
             ( { model | mediaLabel = label }, Cmd.none )
+
+        AddMediaToRoute climbingRoute ->
+            let
+                media =
+                    Media model.mediaLink model.mediaLabel
+            in
+            Session.assign model <| Session.addMediaToRoute climbingRoute media model.session
+
+        RemoveMedia climbingRoute media ->
+            Session.assign model <| Session.removeMediaFromRoute climbingRoute media model.session
 
         OpenClimbingRouteForm maybeClimbingRoute ->
             ( { model
@@ -189,9 +205,6 @@ update msg model =
             )
 
         DeleteClimbingRouteConfirmation climbingRoute ->
-            ( model, Cmd.none )
-
-        NoOp ->
             ( model, Cmd.none )
 
         CloseModal ->
@@ -345,8 +358,7 @@ viewRouteMedia model route =
             H.div []
                 [ textCriterium "Link" .mediaLink identity SetMediaLink model
                 , textCriterium "Link" .mediaLabel identity SetMediaLabel model
-
-                -- , Button.addButton (Button.defaultOptions |> Button.withMsg (AddMediaToRoute route))
+                , Button.addButton (Button.defaultOptions |> Button.withMsg (AddMediaToRoute route))
                 ]
     in
     H.div []
@@ -357,8 +369,7 @@ viewRouteMedia model route =
                     (\media ->
                         H.li []
                             [ H.a [ A.css [ Tw.break_words ], A.href media.link, A.target "_blank" ] [ H.text media.label ]
-
-                            -- , H.button [ E.onClick <| RemoveMedia route media ] [ H.text "x" ]
+                            , H.button [ E.onClick <| RemoveMedia route media ] [ H.text "x" ]
                             ]
                     )
                     route.media

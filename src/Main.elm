@@ -26,7 +26,7 @@ main =
     Browser.application
         { view = view
         , init = init
-        , update = updateWithStorage
+        , update = update
         , subscriptions = subscriptions
         , onUrlChange = UrlChanged
         , onUrlRequest = LinkClicked
@@ -123,23 +123,6 @@ type Msg
     | JsonLoaded String
     | GoogleDriveResponse { type_ : String, argument : Maybe String }
     | ClimbingRouteMsg ClimbingRoute.Msg
-
-
-updateWithStorage : Msg -> Model -> ( Model, Cmd Msg )
-updateWithStorage msg model =
-    let
-        session =
-            exit model
-
-        ( newModel, cmds ) =
-            update msg model
-    in
-    ( newModel
-    , Cmd.batch
-        [ Command.storeCache (encodedJsonFile session.data)
-        , cmds
-        ]
-    )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
