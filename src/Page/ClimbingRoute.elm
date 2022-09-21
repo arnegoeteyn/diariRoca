@@ -11,12 +11,12 @@ import FontAwesome.Solid as Icon
 import Forms.Criterium exposing (formSelectionCriterium, formSelectionWithSearchCriterium, formTextAreaCriterium, formTextCriterium, textCriterium)
 import Forms.Form as Form exposing (Form(..))
 import Forms.Forms exposing (DateCriterium, SelectionCriterium, idForForm, validateNonEmpty, validateOptional)
-import General
 import Html.Styled as H exposing (Html)
 import Html.Styled.Attributes as A
 import Html.Styled.Events as E
 import Modal
 import Select
+import Session
 import Skeleton
 import Tailwind.Utilities as Tw
 import Utilities
@@ -28,7 +28,8 @@ import View.Button as Button
 
 
 type alias Model =
-    { mediaLink : String
+    { session : Session.Model
+    , mediaLink : String
     , mediaLabel : String
     , routeId : Int
     , climbingRouteForm : ( ClimbingRouteForm, Maybe ClimbingRoute )
@@ -49,13 +50,14 @@ type ModalContent
 -- Init
 
 
-init : General.Model -> Int -> ( Model, Cmd Msg )
-init general id =
+init : Session.Model -> Int -> ( Model, Cmd Msg )
+init session id =
     let
         ( ascentForm, ascentFormCmd ) =
-            initAscentForm general.startUpDate Nothing
+            initAscentForm session.startUpDate Nothing
     in
-    ( { mediaLink = ""
+    ( { session = session
+      , mediaLink = ""
       , mediaLabel = ""
       , routeId = id
       , climbingRouteForm = ( initClimbingRouteForm Nothing Nothing, Nothing )
@@ -66,7 +68,7 @@ init general id =
     )
 
 
-initClimbingRouteForm : Maybe General.Model -> Maybe ClimbingRoute -> ClimbingRouteForm
+initClimbingRouteForm : Maybe Session.Model -> Maybe ClimbingRoute -> ClimbingRouteForm
 initClimbingRouteForm maybeModel climbingRoute =
     Idle
         { name = Maybe.map .name climbingRoute |> Maybe.withDefault ""
@@ -124,30 +126,29 @@ type Msg
     | SaveAscentForm
 
 
-update : Msg -> Model -> General.Model -> ( Model, Cmd Msg, General.Msg )
-update msg model general =
+update : Msg -> Model -> ( Model, Cmd Msg )
+update msg model =
     let
         removeFromSelected item =
             List.filter (\c -> c /= item)
     in
     case msg of
         SetMediaLink link ->
-            ( { model | mediaLink = link }, Cmd.none, General.None )
+            ( { model | mediaLink = link }, Cmd.none )
 
         SetMediaLabel label ->
-            ( { model | mediaLabel = label }, Cmd.none, General.None )
+            ( { model | mediaLabel = label }, Cmd.none )
 
         OpenClimbingRouteForm maybeClimbingRoute ->
             ( { model
                 | modal = ClimbingRouteFormModal
-                , climbingRouteForm = ( initClimbingRouteForm (Just general) maybeClimbingRoute, maybeClimbingRoute )
+                , climbingRouteForm = ( initClimbingRouteForm (Just model.session) maybeClimbingRoute, maybeClimbingRoute )
               }
             , Cmd.none
-            , General.None
             )
 
         UpdateClimbingRouteForm values ->
-            ( { model | climbingRouteForm = Utilities.replaceFirst values model.climbingRouteForm }, Cmd.none, General.None )
+            ( { model | climbingRouteForm = Utilities.replaceFirst values model.climbingRouteForm }, Cmd.none )
 
         ClimbingRouteFormSelectSector maybeSector ->
             let
@@ -160,14 +161,14 @@ update msg model general =
                                     f.sectorId
                         }
             in
-            ( { model | climbingRouteForm = Tuple.mapFirst (Form.mapValues newForm) model.climbingRouteForm }, Cmd.none, General.None )
+            ( { model | climbingRouteForm = Tuple.mapFirst (Form.mapValues newForm) model.climbingRouteForm }, Cmd.none )
 
         ClimbingRouteFormSelectSectorMsg subMsg ->
             let
                 ( updatedForm, cmd ) =
                     updateSelectCriteriumMsg .sectorId
                         (\x v -> { v | sectorId = x })
-                        (climbingRouteFormSectorSelectConfig general)
+                        (climbingRouteFormSectorSelectConfig model)
                         subMsg
                         (Tuple.first model.climbingRouteForm)
             in
@@ -176,50 +177,47 @@ update msg model general =
                     Utilities.replaceFirst updatedForm model.climbingRouteForm
               }
             , cmd
-            , General.None
             )
 
         SaveClimbingRouteForm ->
             -- Todo
-            ( model, Cmd.none, General.None )
+            ( model, Cmd.none )
 
         DeleteClimbingRouteRequested climbingRoute ->
             ( { model | modal = DeleteClimbingRouteRequestModal climbingRoute }
             , Cmd.none
-            , General.None
             )
 
         DeleteClimbingRouteConfirmation climbingRoute ->
-            ( model, Cmd.none, General.DeleteClimbingRouteConfirmation climbingRoute )
+            ( model, Cmd.none )
 
         NoOp ->
-            General.withNothing ( model, Cmd.none )
+            ( model, Cmd.none )
 
         CloseModal ->
-            ( { model | modal = Empty }, Cmd.none, General.None )
+            ( { model | modal = Empty }, Cmd.none )
 
         OpenAscentForm maybeAscent climbingRoute ->
             let
                 ( ascentForm, ascentCmd ) =
-                    initAscentForm general.startUpDate maybeAscent
+                    initAscentForm model.session.startUpDate maybeAscent
             in
             ( { model
                 | modal = AscentFormModal
                 , ascentForm = ( ascentForm, Just ( maybeAscent, climbingRoute ) )
               }
             , ascentCmd
-            , General.None
             )
 
         DeleteAscentRequested ascent ->
-            ( { model | modal = DeleteAscentRequestModal ascent }, Cmd.none, General.None )
+            ( { model | modal = DeleteAscentRequestModal ascent }, Cmd.none )
 
         DeleteAscentConfirmation ascent ->
-            ( model, Cmd.none, General.None )
+            ( model, Cmd.none )
 
         -- ( DA.deleteAscent ascent.id { model | modal = Empty }, Cmd.none, General.None )
         UpdateAscentForm values ->
-            ( { model | ascentForm = Utilities.replaceFirst values model.ascentForm }, Cmd.none, General.None )
+            ( { model | ascentForm = Utilities.replaceFirst values model.ascentForm }, Cmd.none )
 
         AscentFormToDatePicker subMsg ->
             ( { model
@@ -233,7 +231,6 @@ update msg model general =
                         model.ascentForm
               }
             , Cmd.none
-            , General.None
             )
 
         SaveAscentForm ->
@@ -252,18 +249,18 @@ update msg model general =
             --         { model | ascentForm = Utilities.replaceFirst newForm model.ascentForm }
             -- , Cmd.none
             -- )
-            ( model, Cmd.none, General.None )
+            ( model, Cmd.none )
 
 
 
 -- View
 
 
-view : Model -> General.Model -> Skeleton.Details Msg
-view model general =
+view : Model -> Skeleton.Details Msg
+view model =
     let
         maybeRoute =
-            DA.getClimbingRoute general.data model.routeId
+            DA.getClimbingRoute model.session.data model.routeId
     in
     { title = "Climbing Route"
     , header = []
@@ -277,13 +274,13 @@ view model general =
             Just route ->
                 H.div []
                     [ H.h1 [] [ H.text route.name ]
-                    , viewRouteDetail model general route
+                    , viewRouteDetail model route
                     , case model.modal of
                         Empty ->
                             H.text ""
 
                         ClimbingRouteFormModal ->
-                            modal [ viewClimbingRouteFormModal model general ]
+                            modal [ viewClimbingRouteFormModal model ]
 
                         DeleteClimbingRouteRequestModal climbingRoute ->
                             modal [ viewDeleteClimbingRouteConfirmation climbingRoute ]
@@ -298,8 +295,8 @@ view model general =
     }
 
 
-viewRouteDetail : Model -> General.Model -> ClimbingRoute -> Html Msg
-viewRouteDetail model general route =
+viewRouteDetail : Model -> ClimbingRoute -> Html Msg
+viewRouteDetail model route =
     H.div [ A.css [ Tw.grid, Tw.gap_4, Tw.grid_cols_3 ] ]
         [ H.div [ A.css [ Tw.flex, Tw.flex_col, Tw.justify_around, Tw.col_span_2 ] ]
             [ viewRouteInfo model route
@@ -312,7 +309,7 @@ viewRouteDetail model general route =
 
                 Nothing ->
                     H.text ""
-            , viewAscentsList model general route
+            , viewAscentsList model route
             ]
         , H.div [ A.css [] ]
             [ viewRouteImage route
@@ -381,17 +378,17 @@ viewDeleteClimbingRouteConfirmation route =
         ]
 
 
-viewClimbingRouteFormModal : Model -> General.Model -> Html Msg
-viewClimbingRouteFormModal model general =
+viewClimbingRouteFormModal : Model -> Html Msg
+viewClimbingRouteFormModal model =
     H.div []
-        [ H.h2 [] [ H.text "New climbingroute" ], climbingRouteForm model general ]
+        [ H.h2 [] [ H.text "New climbingroute" ], climbingRouteForm model ]
 
 
-viewAscentsList : Model -> General.Model -> ClimbingRoute -> Html Msg
-viewAscentsList model general route =
+viewAscentsList : Model -> ClimbingRoute -> Html Msg
+viewAscentsList model route =
     let
         ascents =
-            DA.getAscents general.data route
+            DA.getAscents model.session.data route
     in
     H.div [ A.css [] ]
         [ H.h3 [ A.css [] ]
@@ -471,8 +468,8 @@ type alias ValidatedClimbingRouteFormValues =
     }
 
 
-climbingRouteForm : Model -> General.Model -> H.Html Msg
-climbingRouteForm model general =
+climbingRouteForm : Model -> H.Html Msg
+climbingRouteForm model =
     let
         form =
             Tuple.first model.climbingRouteForm
@@ -480,7 +477,11 @@ climbingRouteForm model general =
     H.form [ A.css [ Tw.space_y_1 ] ]
         [ formTextCriterium "Name" .name updateName UpdateClimbingRouteForm form
         , formTextCriterium "Grade" .grade updateGrade UpdateClimbingRouteForm form
-        , formSelectionWithSearchCriterium "Sector" (climbingRouteFormSectorSelectConfig general) .sectorId (Dict.values general.data.sectors) form
+        , formSelectionWithSearchCriterium "Sector"
+            (climbingRouteFormSectorSelectConfig model)
+            .sectorId
+            (Dict.values model.session.data.sectors)
+            form
         , formTextAreaCriterium "Comment" .comment updateComment UpdateClimbingRouteForm form
         , formTextAreaCriterium "Beta" .beta updateBeta UpdateClimbingRouteForm form
         , formSelectionCriterium "Kind"
@@ -494,13 +495,13 @@ climbingRouteForm model general =
         ]
 
 
-climbingRouteFormSectorSelectConfig : General.Model -> Select.Config Msg Sector
-climbingRouteFormSectorSelectConfig general =
+climbingRouteFormSectorSelectConfig : Model -> Select.Config Msg Sector
+climbingRouteFormSectorSelectConfig model =
     let
         r : Select.RequiredConfig Msg Sector
         r =
             { filter = \x y -> DataUtilities.filterSectorsByName x y |> Utilities.listToMaybe
-            , toLabel = \sector -> sector.name ++ " [" ++ DA.getAreaNameSafe general.data sector.areaId ++ "]"
+            , toLabel = \sector -> sector.name ++ " [" ++ DA.getAreaNameSafe model.session.data sector.areaId ++ "]"
             , onSelect = ClimbingRouteFormSelectSector
             , toMsg = ClimbingRouteFormSelectSectorMsg
             }
@@ -510,7 +511,7 @@ climbingRouteFormSectorSelectConfig general =
         |> Select.withPrompt "Sector"
 
 
-validateClimbingRouteForm : Model -> General.Model -> ( ClimbingRouteForm, Maybe ClimbingRoute )
+validateClimbingRouteForm : Model -> Session.Model -> ( ClimbingRouteForm, Maybe ClimbingRoute )
 validateClimbingRouteForm model general =
     let
         form =

@@ -7,10 +7,10 @@ import Data exposing (Data)
 import DataParser exposing (encodedJsonFile, jsonFileDecoder)
 import Date exposing (Date)
 import Dict
-import General
 import Html.Styled as H
 import Json.Decode exposing (decodeString)
 import Page.ClimbingRoute as ClimbingRoute
+import Session
 import Skeleton
 import Time
 import Url
@@ -48,12 +48,11 @@ type alias Model =
     -- , modal : ModalContent
     , settingsOpen : Bool
     , googleDriveAuthorized : Bool
-    , general : General.Model
     }
 
 
 type Route
-    = NotFoundRoute
+    = NotFoundRoute Session.Model
     | ClimbingRoute ClimbingRoute.Model
 
 
@@ -73,7 +72,7 @@ subscriptions _ =
 view : Model -> Browser.Document Msg
 view model =
     case model.route of
-        NotFoundRoute ->
+        NotFoundRoute _ ->
             Skeleton.view never
                 { title = "Not Found"
                 , header = []
@@ -82,7 +81,7 @@ view model =
                 }
 
         ClimbingRoute climbingRoute ->
-            Skeleton.view ClimbingRouteMsg (ClimbingRoute.view climbingRoute model.general)
+            Skeleton.view ClimbingRouteMsg (ClimbingRoute.view climbingRoute)
 
 
 
@@ -101,18 +100,16 @@ init ({ storageCache, posixTime, version } as flags) url key =
         jsonFile =
             Result.withDefault { climbingRoutes = Dict.empty, ascents = Dict.empty, sectors = Dict.empty, areas = Dict.empty, trips = Dict.empty } <| decodedStorage
     in
-    General.ignore <|
-        stepUrl url
-            { key = key
-            , url = url
-            , route = NotFoundRoute
-            , appState = Ready
-            , startUpDate = date
-            , version = version
-            , settingsOpen = False
-            , googleDriveAuthorized = False
-            , general = General.init flags
-            }
+    stepUrl url
+        { key = key
+        , url = url
+        , route = NotFoundRoute <| Session.init flags
+        , appState = Ready
+        , startUpDate = date
+        , version = version
+        , settingsOpen = False
+        , googleDriveAuthorized = False
+        }
 
 
 
@@ -125,20 +122,21 @@ type Msg
     | UrlChanged Url.Url
     | JsonLoaded String
     | GoogleDriveResponse { type_ : String, argument : Maybe String }
-    | GeneralMsg General.Msg
     | ClimbingRouteMsg ClimbingRoute.Msg
 
 
 updateWithStorage : Msg -> Model -> ( Model, Cmd Msg )
 updateWithStorage msg model =
     let
+        session =
+            exit model
+
         ( newModel, cmds ) =
             update msg model
     in
     ( newModel
     , Cmd.batch
-        [ Command.storeCache
-            (encodedJsonFile newModel.general.data)
+        [ Command.storeCache (encodedJsonFile session.data)
         , cmds
         ]
     )
@@ -146,66 +144,49 @@ updateWithStorage msg model =
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update message model =
-    let
-        ( newModel, cmds, generalMsg ) =
-            case message of
-                NoOp ->
-                    ( model, Cmd.none, General.None )
+    case message of
+        NoOp ->
+            ( model, Cmd.none )
 
-                LinkClicked urlRequest ->
-                    case urlRequest of
-                        Browser.Internal url ->
-                            ( model
-                            , Nav.pushUrl model.key (Url.toString url)
-                            , General.None
-                            )
+        LinkClicked urlRequest ->
+            case urlRequest of
+                Browser.Internal url ->
+                    ( model
+                    , Nav.pushUrl model.key (Url.toString url)
+                    )
 
-                        Browser.External href ->
-                            ( model
-                            , Nav.load href
-                            , General.None
-                            )
+                Browser.External href ->
+                    ( model
+                    , Nav.load href
+                    )
 
-                UrlChanged url ->
-                    stepUrl url model
+        UrlChanged url ->
+            stepUrl url model
 
-                JsonLoaded content ->
-                    loadContent model content
+        JsonLoaded content ->
+            loadContent model content
 
-                GoogleDriveResponse response ->
-                    case String.toLower response.type_ of
-                        "authorized" ->
-                            ( { model | googleDriveAuthorized = True }, Cmd.none, General.None )
+        GoogleDriveResponse response ->
+            case String.toLower response.type_ of
+                "authorized" ->
+                    ( { model | googleDriveAuthorized = True }, Cmd.none )
 
-                        "filechosen" ->
-                            Maybe.map (loadContent model) response.argument |> Maybe.withDefault ( model, Cmd.none, General.None )
-
-                        _ ->
-                            ( model, Cmd.none, General.None )
-
-                GeneralMsg msg ->
-                    General.withNothing <| stepGeneral model (General.update msg model.general)
-
-                ClimbingRouteMsg msg ->
-                    case model.route of
-                        ClimbingRoute climbingRoute ->
-                            stepClimbingRoute model (ClimbingRoute.update msg climbingRoute model.general)
-
-                        _ ->
-                            ( model, Cmd.none, General.None )
-
-        ( general, generalcmds ) =
-            case generalMsg of
-                General.None ->
-                    ( newModel, Cmd.none )
+                "filechosen" ->
+                    Maybe.map (loadContent model) response.argument |> Maybe.withDefault ( model, Cmd.none )
 
                 _ ->
-                    stepGeneral newModel (General.update generalMsg newModel.general)
-    in
-    ( general, Cmd.batch [ cmds, generalcmds ] )
+                    ( model, Cmd.none )
+
+        ClimbingRouteMsg msg ->
+            case model.route of
+                ClimbingRoute climbingRoute ->
+                    stepClimbingRoute model (ClimbingRoute.update msg climbingRoute)
+
+                _ ->
+                    ( model, Cmd.none )
 
 
-loadContent : Model -> String -> ( Model, Cmd msg, General.Msg )
+loadContent : Model -> String -> ( Model, Cmd msg )
 loadContent model content =
     let
         result =
@@ -228,25 +209,16 @@ loadContent model content =
                 -- , data = data
               }
             , Cmd.none
-            , General.None
             )
 
         Err _ ->
-            ( { model | appState = Ready }, Cmd.none, General.None )
+            ( { model | appState = Ready }, Cmd.none )
 
 
-stepGeneral : Model -> ( General.Model, Cmd General.Msg ) -> ( Model, Cmd Msg )
-stepGeneral model ( general, cmds ) =
-    ( { model | general = general }
-    , Cmd.map GeneralMsg cmds
-    )
-
-
-stepClimbingRoute : Model -> ( ClimbingRoute.Model, Cmd ClimbingRoute.Msg, General.Msg ) -> ( Model, Cmd Msg, General.Msg )
-stepClimbingRoute model ( climbingRoute, cmds, msg ) =
+stepClimbingRoute : Model -> ( ClimbingRoute.Model, Cmd ClimbingRoute.Msg ) -> ( Model, Cmd Msg )
+stepClimbingRoute model ( climbingRoute, cmds ) =
     ( { model | route = ClimbingRoute climbingRoute }
     , Cmd.map ClimbingRouteMsg cmds
-    , msg
     )
 
 
@@ -254,20 +226,27 @@ stepClimbingRoute model ( climbingRoute, cmds, msg ) =
 -- ROUTER
 
 
-stepUrl : Url.Url -> Model -> ( Model, Cmd Msg, General.Msg )
+exit : Model -> Session.Model
+exit model =
+    case model.route of
+        NotFoundRoute session ->
+            session
+
+        ClimbingRoute m ->
+            m.session
+
+
+stepUrl : Url.Url -> Model -> ( Model, Cmd Msg )
 stepUrl url model =
     let
+        session =
+            exit model
+
         parser =
             oneOf
-                [ -- route top
-                  -- (Debug.todo "t")
-                  route (s "routes" </> route_)
+                [ route (s "routes" </> route_)
                     (\climbingRouteId ->
-                        let
-                            ( m, msg ) =
-                                ClimbingRoute.init model.general climbingRouteId
-                        in
-                        stepClimbingRoute model ( m, msg, General.None )
+                        stepClimbingRoute model (ClimbingRoute.init session climbingRouteId)
                     )
                 ]
     in
@@ -276,9 +255,8 @@ stepUrl url model =
             answer
 
         Nothing ->
-            ( { model | route = NotFoundRoute }
+            ( { model | route = NotFoundRoute session }
             , Cmd.none
-            , General.None
             )
 
 
