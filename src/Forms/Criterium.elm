@@ -95,12 +95,12 @@ formSelectionWithSearchCriterium label init extractor options form =
     selectionWithSearchCriterium label init (extract extractor) options form
 
 
-dateCriterium : String -> DatePicker.Settings -> (a -> DateCriterium) -> (DatePicker.Msg -> FormMsg) -> Form a r -> H.Html Msg
+dateCriterium : String -> DatePicker.Settings -> (a -> DateCriterium) -> (DatePicker.Msg -> msg) -> Form a r -> H.Html msg
 dateCriterium _ settings extractor toMsg form =
     let
         dateData =
             extract extractor form
     in
     DatePicker.view ((Just << Date.fromRataDie << Tuple.first) dateData) settings (Tuple.second dateData)
-        |> Html.map (FormMessage << toMsg)
+        |> Html.map toMsg
         |> H.fromUnstyled

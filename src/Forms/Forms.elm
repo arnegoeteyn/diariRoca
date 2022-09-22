@@ -50,12 +50,16 @@ tripForm model =
         form =
             Tuple.first model.tripForm
     in
-    H.form []
-        [ dateCriterium "Date" tripFormDatePickerSettings .from FromTripFormToDatePicker form
-        , dateCriterium "Date" tripFormDatePickerSettings .to ToTripFormToDatePicker form
-        , H.button [ A.type_ "button", E.onClick (FormMessage SaveTripForm) ] [ H.text "Save" ]
-        , viewErrors form
-        ]
+    H.div [] []
+
+
+
+-- H.form []
+--     [ dateCriterium "Date" tripFormDatePickerSettings .from FromTripFormToDatePicker form
+--     , dateCriterium "Date" tripFormDatePickerSettings .to ToTripFormToDatePicker form
+--     , H.button [ A.type_ "button", E.onClick (FormMessage SaveTripForm) ] [ H.text "Save" ]
+--     , viewErrors form
+--     ]
 
 
 validateTripForm : Model -> ( TripForm, Maybe Trip )

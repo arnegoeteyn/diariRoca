@@ -1,5 +1,6 @@
 module Page.ClimbingRoute exposing (Model, Msg(..), init, update, view)
 
+import Browser.Navigation as Nav
 import Data exposing (Ascent, AscentKind, ClimbingRoute, ClimbingRouteKind, Media, Sector)
 import DataAccessors as DA
 import DataUtilities
@@ -105,24 +106,26 @@ initAscentForm date maybeAscent =
 
 type Msg
     = NoOp
+    | CloseModal
       -- Media
     | SetMediaLink String
     | SetMediaLabel String
     | AddMediaToRoute ClimbingRoute
     | RemoveMedia ClimbingRoute Media
-      -- ClimbingRouteForm
-    | UpdateClimbingRouteForm ClimbingRouteForm
-    | OpenClimbingRouteForm (Maybe ClimbingRoute)
-    | ClimbingRouteFormSelectSector (Maybe Sector)
-    | ClimbingRouteFormSelectSectorMsg (Select.Msg Sector)
-    | SaveClimbingRouteForm
+      -- Climbing Route actions
     | DeleteClimbingRouteRequested ClimbingRoute
-    | CloseModal
+    | DeleteClimbingRouteConfirmation ClimbingRoute
+    | OpenClimbingRouteForm (Maybe ClimbingRoute)
+      -- Ascent actions
     | OpenAscentForm (Maybe Ascent) ClimbingRoute -- todo do we need ClimbingRoute here?
     | DeleteAscentConfirmation Ascent
     | DeleteAscentRequested Ascent
-      -- General
-    | DeleteClimbingRouteConfirmation ClimbingRoute
+      -- ClimbingRouteForm
+    | UpdateClimbingRouteForm ClimbingRouteForm
+    | ClimbingRouteFormSelectSector (Maybe Sector)
+    | ClimbingRouteFormSelectSectorMsg (Select.Msg Sector)
+    | SaveClimbingRouteForm
+      -- Ascent form
     | UpdateAscentForm AscentForm
     | AscentFormToDatePicker DatePicker.Msg
     | SaveAscentForm
@@ -137,6 +140,9 @@ update msg model =
     case msg of
         NoOp ->
             ( model, Cmd.none )
+
+        CloseModal ->
+            ( { model | modal = Empty }, Cmd.none )
 
         -- Media
         SetMediaLink link ->
@@ -155,6 +161,19 @@ update msg model =
         RemoveMedia climbingRoute media ->
             Session.assign model <| Session.removeMediaFromRoute climbingRoute media model.session
 
+        -- Climbing route actions
+        DeleteClimbingRouteRequested climbingRoute ->
+            ( { model | modal = DeleteClimbingRouteRequestModal climbingRoute }
+            , Cmd.none
+            )
+
+        DeleteClimbingRouteConfirmation climbingRoute ->
+            let
+                task =
+                    Nav.load "/"
+            in
+            Session.assignCommand model task <| Session.deleteClimbingRoute climbingRoute model.session
+
         OpenClimbingRouteForm maybeClimbingRoute ->
             ( { model
                 | modal = ClimbingRouteFormModal
@@ -163,6 +182,26 @@ update msg model =
             , Cmd.none
             )
 
+        -- Ascent actions
+        OpenAscentForm maybeAscent climbingRoute ->
+            let
+                ( ascentForm, ascentCmd ) =
+                    initAscentForm model.session.startUpDate maybeAscent
+            in
+            ( { model
+                | modal = AscentFormModal
+                , ascentForm = ( ascentForm, Just ( maybeAscent, climbingRoute ) )
+              }
+            , ascentCmd
+            )
+
+        DeleteAscentRequested ascent ->
+            ( { model | modal = DeleteAscentRequestModal ascent }, Cmd.none )
+
+        DeleteAscentConfirmation ascent ->
+            ( model, Cmd.none )
+
+        -- Climbing route form
         UpdateClimbingRouteForm values ->
             ( { model | climbingRouteForm = Utilities.replaceFirst values model.climbingRouteForm }, Cmd.none )
 
@@ -199,35 +238,6 @@ update msg model =
             -- Todo
             ( model, Cmd.none )
 
-        DeleteClimbingRouteRequested climbingRoute ->
-            ( { model | modal = DeleteClimbingRouteRequestModal climbingRoute }
-            , Cmd.none
-            )
-
-        DeleteClimbingRouteConfirmation climbingRoute ->
-            ( model, Cmd.none )
-
-        CloseModal ->
-            ( { model | modal = Empty }, Cmd.none )
-
-        OpenAscentForm maybeAscent climbingRoute ->
-            let
-                ( ascentForm, ascentCmd ) =
-                    initAscentForm model.session.startUpDate maybeAscent
-            in
-            ( { model
-                | modal = AscentFormModal
-                , ascentForm = ( ascentForm, Just ( maybeAscent, climbingRoute ) )
-              }
-            , ascentCmd
-            )
-
-        DeleteAscentRequested ascent ->
-            ( { model | modal = DeleteAscentRequestModal ascent }, Cmd.none )
-
-        DeleteAscentConfirmation ascent ->
-            ( model, Cmd.none )
-
         -- ( DA.deleteAscent ascent.id { model | modal = Empty }, Cmd.none, General.None )
         UpdateAscentForm values ->
             ( { model | ascentForm = Utilities.replaceFirst values model.ascentForm }, Cmd.none )
@@ -238,7 +248,7 @@ update msg model =
                     Tuple.mapFirst
                         (updateDateCriterium .date
                             (\x v -> { v | date = x })
-                            ascentFormDatePickerSettings
+                            DatePicker.defaultSettings
                             subMsg
                         )
                         model.ascentForm
@@ -297,6 +307,9 @@ view model =
 
                         DeleteClimbingRouteRequestModal climbingRoute ->
                             modal [ viewDeleteClimbingRouteConfirmation climbingRoute ]
+
+                        AscentFormModal ->
+                            modal [ viewAscentFormModal model ]
 
                         _ ->
                             modal [ H.text "ohlolol" ]
@@ -395,6 +408,12 @@ viewClimbingRouteFormModal model =
         [ H.h2 [] [ H.text "New climbingroute" ], climbingRouteForm model ]
 
 
+viewAscentFormModal : Model -> Html Msg
+viewAscentFormModal model =
+    H.div []
+        [ H.h2 [] [ H.text "New ascent" ], viewAscentForm model ]
+
+
 viewAscentsList : Model -> ClimbingRoute -> Html Msg
 viewAscentsList model route =
     let
@@ -426,6 +445,10 @@ viewAscentsList model route =
         ]
 
 
+
+-- ascentForm
+
+
 type alias AscentFormMeta =
     ( Maybe Ascent, ClimbingRoute )
 
@@ -448,6 +471,26 @@ type alias ValidatedAscentFormValues =
 
 type alias AscentForm =
     Form AscentFormValues ValidatedAscentFormValues
+
+
+viewAscentForm : Model -> H.Html Msg
+viewAscentForm model =
+    let
+        form =
+            Tuple.first model.ascentForm
+    in
+    H.form []
+        [ formTextCriterium "Comment" .comment updateComment UpdateAscentForm form
+        , formSelectionCriterium "Kind"
+            (\_ -> List.map Data.ascentKindToString Data.ascentKindEnum)
+            updateKind
+            UpdateAscentForm
+            .kind
+            form
+        , Forms.Criterium.dateCriterium "Date" DatePicker.defaultSettings .date AscentFormToDatePicker form
+        , H.button [ A.type_ "button", E.onClick SaveAscentForm ] [ H.text "Save" ]
+        , Forms.Forms.viewErrors form
+        ]
 
 
 
@@ -573,11 +616,6 @@ climbingRouteFromForm form =
 --| UpdateUtilities
 
 
-updateAreaId : a -> { b | areaId : a } -> { b | areaId : a }
-updateAreaId value form =
-    { form | areaId = value }
-
-
 updateBeta : a -> { b | beta : a } -> { b | beta : a }
 updateBeta value form =
     { form | beta = value }
@@ -586,11 +624,6 @@ updateBeta value form =
 updateComment : a -> { b | comment : a } -> { b | comment : a }
 updateComment value form =
     { form | comment = value }
-
-
-updateCountry : a -> { b | country : a } -> { b | country : a }
-updateCountry value form =
-    { form | country = value }
 
 
 updateGrade : a -> { b | grade : a } -> { b | grade : a }
@@ -652,8 +685,3 @@ updateDateCriterium extractor wrapper settings msg form =
                 updatedForm
     in
     newDateForm
-
-
-ascentFormDatePickerSettings : DatePicker.Settings
-ascentFormDatePickerSettings =
-    DatePicker.defaultSettings
