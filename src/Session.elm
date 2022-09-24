@@ -19,7 +19,15 @@ import Utilities
 type alias Model =
     { data : Data
     , startUpDate : Date
+    , version : String
+    , route : Route
+    , settingsOpen : Bool
     }
+
+
+type Route
+    = NotFoundRoute
+    | ClimbingRouteRoute
 
 
 
@@ -27,8 +35,8 @@ type alias Model =
 -- Init
 
 
-init : { storageCache : String, posixTime : Int, version : String } -> Model
-init { storageCache, posixTime, version } =
+init : { storageCache : String, posixTime : Int, version : String } -> Route -> Model
+init { storageCache, posixTime, version } route =
     let
         decodedStorage =
             decodeString jsonFileDecoder storageCache
@@ -46,6 +54,9 @@ init { storageCache, posixTime, version } =
     in
     { data = jsonFile
     , startUpDate = Date.fromPosix Time.utc (Time.millisToPosix posixTime)
+    , route = route
+    , version = version
+    , settingsOpen = False
     }
 
 

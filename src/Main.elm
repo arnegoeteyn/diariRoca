@@ -9,6 +9,7 @@ import Date exposing (Date)
 import Dict
 import Html.Styled as H
 import Json.Decode exposing (decodeString)
+import Navbar
 import Page.ClimbingRoute as ClimbingRoute
 import Session
 import Skeleton
@@ -40,7 +41,7 @@ main =
 type alias Model =
     { key : Nav.Key
     , url : Url.Url
-    , route : Route
+    , route : Page
     , appState : AppState
     , startUpDate : Date
     , version : String
@@ -51,9 +52,9 @@ type alias Model =
     }
 
 
-type Route
-    = NotFoundRoute Session.Model
-    | ClimbingRoute ClimbingRoute.Model
+type Page
+    = NotFoundPage Session.Model
+    | ClimbingRoutePage ClimbingRoute.Model
 
 
 type AppState
@@ -72,16 +73,17 @@ subscriptions _ =
 view : Model -> Browser.Document Msg
 view model =
     case model.route of
-        NotFoundRoute _ ->
+        NotFoundPage _ ->
             Skeleton.view never
+                NavbarMsg
                 { title = "Not Found"
-                , header = []
                 , warning = Skeleton.NoProblems
                 , kids = [ H.text "not found" ]
+                , session = exit model
                 }
 
-        ClimbingRoute climbingRoute ->
-            Skeleton.view ClimbingRouteMsg (ClimbingRoute.view climbingRoute)
+        ClimbingRoutePage climbingRoute ->
+            Skeleton.view ClimbingRouteMsg NavbarMsg (ClimbingRoute.view climbingRoute)
 
 
 
@@ -103,7 +105,7 @@ init ({ storageCache, posixTime, version } as flags) url key =
     stepUrl url
         { key = key
         , url = url
-        , route = NotFoundRoute <| Session.init flags
+        , route = NotFoundPage <| Session.init flags Session.NotFoundRoute
         , appState = Ready
         , startUpDate = date
         , version = version
@@ -123,6 +125,7 @@ type Msg
     | JsonLoaded String
     | GoogleDriveResponse { type_ : String, argument : Maybe String }
     | ClimbingRouteMsg ClimbingRoute.Msg
+    | NavbarMsg Navbar.Msg
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -162,11 +165,14 @@ update message model =
 
         ClimbingRouteMsg msg ->
             case model.route of
-                ClimbingRoute climbingRoute ->
+                ClimbingRoutePage climbingRoute ->
                     stepClimbingRoute model (ClimbingRoute.update msg climbingRoute)
 
                 _ ->
                     ( model, Cmd.none )
+
+        NavbarMsg msg ->
+            ( model, Cmd.none )
 
 
 loadContent : Model -> String -> ( Model, Cmd msg )
@@ -200,7 +206,7 @@ loadContent model content =
 
 stepClimbingRoute : Model -> ( ClimbingRoute.Model, Cmd ClimbingRoute.Msg ) -> ( Model, Cmd Msg )
 stepClimbingRoute model ( climbingRoute, cmds ) =
-    ( { model | route = ClimbingRoute climbingRoute }
+    ( { model | route = ClimbingRoutePage climbingRoute }
     , Cmd.map ClimbingRouteMsg cmds
     )
 
@@ -212,10 +218,10 @@ stepClimbingRoute model ( climbingRoute, cmds ) =
 exit : Model -> Session.Model
 exit model =
     case model.route of
-        NotFoundRoute session ->
+        NotFoundPage session ->
             session
 
-        ClimbingRoute m ->
+        ClimbingRoutePage m ->
             m.session
 
 
@@ -229,7 +235,8 @@ stepUrl url model =
             oneOf
                 [ route (s "routes" </> route_)
                     (\climbingRouteId ->
-                        stepClimbingRoute model (ClimbingRoute.init session climbingRouteId)
+                        stepClimbingRoute model
+                            (ClimbingRoute.init { session | route = Session.ClimbingRouteRoute } climbingRouteId)
                     )
                 ]
     in
@@ -238,7 +245,7 @@ stepUrl url model =
             answer
 
         Nothing ->
-            ( { model | route = NotFoundRoute session }
+            ( { model | route = NotFoundPage session }
             , Cmd.none
             )
 

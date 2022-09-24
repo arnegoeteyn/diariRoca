@@ -296,8 +296,8 @@ view model =
             DA.getClimbingRoute model.session.data model.routeId
     in
     { title = "Climbing Route"
-    , header = []
     , warning = Skeleton.NoProblems
+    , session = model.session
     , kids =
         let
             modal =

@@ -1,4 +1,4 @@
-module View.Navbar exposing (view)
+module Navbar exposing (Msg, view)
 
 import Css
 import Html exposing (Html)
@@ -7,15 +7,19 @@ import Html.Styled.Attributes as A
 import Html.Styled.Events as E
 import Material.Icons.Round as IconsRound
 import Material.Icons.Types exposing (Coloring(..))
-import Message exposing (Msg(..))
-import Model exposing (Model, Route(..))
+import Model exposing (Model)
+import Session exposing (Route(..))
 import Tailwind.Breakpoints as B
 import Tailwind.Utilities as Tw
 import Utilities
 import View.Icon exposing (iconButton)
 
 
-view : Model -> Html Msg
+type Msg
+    = NoOp
+
+
+view : Session.Model -> Html Msg
 view model =
     let
         logo =
@@ -23,12 +27,13 @@ view model =
 
         links =
             H.div [ A.css [ Tw.flex, Tw.items_center, Tw.w_auto ] ]
-                [ navLink ClimbingRoutesRoute { url = "/", caption = "Routes" }
-                , navLink AscentsRoute { url = "/ascents", caption = "Ascents" }
-                , navLink SectorsRoute { url = "/sectors", caption = "Sectors" }
-                , navLink StatsRoute { url = "/stats", caption = "Stats" }
-                ]
+                []
 
+        -- [ navLink ClimbingRoutesRoute { url = "/", caption = "Routes" }
+        -- , navLink AscentsRoute { url = "/ascents", caption = "Ascents" }
+        -- , navLink SectorsRoute { url = "/sectors", caption = "Sectors" }
+        -- , navLink StatsRoute { url = "/stats", caption = "Stats" }
+        -- ]
         navAttributes =
             [ A.css
                 [ Tw.flex
@@ -41,9 +46,8 @@ view model =
 
         isActive route =
             case ( route, model.route ) of
-                ( ClimbingRoutesRoute, ClimbingRouteRoute _ ) ->
-                    True
-
+                -- ( ClimbingRoutesRoute, ClimbingRouteRoute _ ) ->
+                --     True
                 _ ->
                     model.route == route
 
@@ -64,7 +68,7 @@ view model =
         ]
 
 
-dropDown : Model -> Html Msg
+dropDown : Session.Model -> Html Msg
 dropDown model =
     let
         versionLink =
@@ -85,8 +89,8 @@ dropDown model =
                 [ H.text ("v" ++ model.version) ]
     in
     H.li [ A.css [ Tw.block ] ]
-        [ iconButton IconsRound.settings Message.ToggleSettings
-        , H.div [ A.css [ Tw.bg_white, Tw.absolute ], A.css <| Utilities.filterList [ ( Tw.hidden, not model.settingsOpen ) ] ]
+        -- [ iconButton IconsRound.settings Message.ToggleSettings
+        [ H.div [ A.css [ Tw.bg_white, Tw.absolute ], A.css <| Utilities.filterList [ ( Tw.hidden, not model.settingsOpen ) ] ]
             (List.map
                 (\( action, text ) ->
                     H.div
@@ -103,18 +107,17 @@ dropDown model =
                         ]
                         [ H.text text ]
                 )
-                ([ ( Message.JsonRequested, "Load JSON" )
-                 , ( Message.ExportRequested, "Save JSON" )
-                 ]
-                    ++ (if model.googleDriveAuthorized then
-                            [ ( Message.GoogleDriveJsonRequested, "Load JSON from Google Drive" )
-                            , ( Message.GoogleDriveExportRequested, "Save JSON to Google Drive" )
-                            ]
-
-                        else
-                            [ ( Message.AuthorizeGoogleDrive, "Authorize Google Drive" ) ]
-                       )
-                )
-                ++ [ versionLink ]
+                []
+             --     [ ( Message.JsonRequested, "Load JSON" )
+             --  , ( Message.ExportRequested, "Save JSON" )
+             --  ]
+             -- ++ (if model.googleDriveAuthorized then
+             --         [ ( Message.GoogleDriveJsonRequested, "Load JSON from Google Drive" )
+             --         , ( Message.GoogleDriveExportRequested, "Save JSON to Google Drive" )
+             --         ]
+             --     else
+             --         [ ( Message.AuthorizeGoogleDrive, "Authorize Google Drive" ) ]
+             --    )
+             -- ++ [ versionLink ]
             )
         ]
