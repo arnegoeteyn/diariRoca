@@ -124,7 +124,6 @@ type Msg
     | UpdateClimbingRouteForm ClimbingRouteForm
     | ClimbingRouteFormSelectSector (Maybe Sector)
     | ClimbingRouteFormSelectSectorMsg (Select.Msg Sector)
-    | OnRemoveSectorSelection Sector
     | SaveClimbingRouteForm
       -- Ascent form
     | UpdateAscentForm AscentForm
@@ -230,9 +229,6 @@ update msg model =
               }
             , cmd
             )
-
-        OnRemoveSectorSelection sector ->
-            ( model, Cmd.none )
 
         SaveClimbingRouteForm ->
             let
@@ -628,7 +624,6 @@ climbingRouteFormSectorSelectConfig model =
             }
     in
     Select.newConfig r
-        |> Select.withOnRemoveItem OnRemoveSectorSelection
         |> Select.withPrompt "Sector"
 
 
