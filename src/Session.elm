@@ -6,6 +6,7 @@ import DataAccessors as DA
 import DataParser exposing (jsonFileDecoder)
 import Date exposing (Date)
 import Dict
+import Forms.Criterium exposing (updateDateCriterium)
 import Json.Decode exposing (decodeString)
 import Time
 import Utilities
@@ -53,9 +54,9 @@ assign model ( session, cmd ) =
     ( { model | session = session }, cmd )
 
 
-assignCommand : { a | session : Model } -> Cmd msg -> ( Model, Cmd msg ) -> ( { a | session : Model }, Cmd msg )
-assignCommand model cmdA ( session, cmd ) =
-    ( { model | session = session }, Cmd.batch [ cmd, cmdA ] )
+assignCommand : Cmd msg -> ( ModelEncapsulated a, Cmd msg ) -> ( ModelEncapsulated a, Cmd msg )
+assignCommand cmdA ( model, cmd ) =
+    ( model, Cmd.batch [ cmd, cmdA ] )
 
 
 updateSessionStorage : Model -> ( Model, Cmd msg )
@@ -67,16 +68,29 @@ updateSessionStorage model =
     )
 
 
+type alias ModelEncapsulated a =
+    { a | session : Model }
+
+
+update : ModelEncapsulated a -> (Model -> Model) -> ( ModelEncapsulated a, Cmd msg )
+update encapsulated f =
+    updateSessionStorage (f encapsulated.session)
+        |> Tuple.mapFirst (\session -> { encapsulated | session = session })
+
+
 
 -- Climbing Routes
 
-addClimbingRoute : ClimbingRoute -> Model -> ( Model, Cmd msg )
-addClimbingRoute climbingRoute model =
-    updateSessionStorage { model | data = DA.addClimbingRoute climbingRoute model.data }
 
-deleteClimbingRoute : ClimbingRoute -> Model -> ( Model, Cmd msg )
+addClimbingRoute : ClimbingRoute -> ModelEncapsulated a -> ( ModelEncapsulated a, Cmd msg )
+addClimbingRoute climbingRoute model =
+    update model
+        (\m -> { m | data = DA.addClimbingRoute climbingRoute m.data })
+
+
+deleteClimbingRoute : ClimbingRoute -> ModelEncapsulated a -> ( ModelEncapsulated a, Cmd msg )
 deleteClimbingRoute climbingRoute model =
-    updateSessionStorage { model | data = DA.deleteRoute climbingRoute.id model.data }
+    update model (\m -> { m | data = DA.deleteRoute climbingRoute.id m.data })
 
 
 

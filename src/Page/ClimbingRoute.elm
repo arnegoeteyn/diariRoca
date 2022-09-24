@@ -7,7 +7,7 @@ import DataUtilities
 import Date exposing (Date)
 import DatePicker
 import Dict
-import Forms.Criterium exposing (formSelectionCriterium, formSelectionWithSearchCriterium, formTextAreaCriterium, formTextCriterium, textCriterium)
+import Forms.Criterium as Criterium exposing (formSelectionCriterium, formSelectionWithSearchCriterium, formTextAreaCriterium, formTextCriterium, textCriterium)
 import Forms.Form as Form exposing (Form(..))
 import Forms.Forms exposing (DateCriterium, SelectionCriterium, idForForm, validateNonEmpty, validateOptional)
 import Html.Styled as H exposing (Html)
@@ -124,6 +124,7 @@ type Msg
     | UpdateClimbingRouteForm ClimbingRouteForm
     | ClimbingRouteFormSelectSector (Maybe Sector)
     | ClimbingRouteFormSelectSectorMsg (Select.Msg Sector)
+    | OnRemoveSectorSelection Sector
     | SaveClimbingRouteForm
       -- Ascent form
     | UpdateAscentForm AscentForm
@@ -133,10 +134,6 @@ type Msg
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    let
-        removeFromSelected item =
-            List.filter (\c -> c /= item)
-    in
     case msg of
         NoOp ->
             ( model, Cmd.none )
@@ -172,7 +169,8 @@ update msg model =
                 task =
                     Nav.load "/"
             in
-            Session.assignCommand model task <| Session.deleteClimbingRoute climbingRoute model.session
+            Session.deleteClimbingRoute climbingRoute model
+                |> Session.assignCommand task
 
         OpenClimbingRouteForm maybeClimbingRoute ->
             ( { model
@@ -220,8 +218,8 @@ update msg model =
         ClimbingRouteFormSelectSectorMsg subMsg ->
             let
                 ( updatedForm, cmd ) =
-                    updateSelectCriteriumMsg .sectorId
-                        (\x v -> { v | sectorId = x })
+                    Criterium.updateSelectCriteriumMsg .sectorId
+                        (\selected values -> { values | sectorId = selected })
                         (climbingRouteFormSectorSelectConfig model)
                         subMsg
                         (Tuple.first model.climbingRouteForm)
@@ -233,6 +231,9 @@ update msg model =
             , cmd
             )
 
+        OnRemoveSectorSelection sector ->
+            ( model, Cmd.none )
+
         SaveClimbingRouteForm ->
             let
                 ( newForm, maybeClimbingRoute ) =
@@ -240,16 +241,16 @@ update msg model =
 
                 updatedModel =
                     { model
-                        | modal = Empty
-                        , climbingRouteForm = Utilities.replaceFirst newForm model.climbingRouteForm
+                        | climbingRouteForm = Utilities.replaceFirst newForm model.climbingRouteForm
                     }
             in
             case maybeClimbingRoute of
                 Just climbingRoute ->
-                    Session.assign updatedModel <| Session.addClimbingRoute climbingRoute model.session
+                    { updatedModel | modal = Empty }
+                        |> Session.addClimbingRoute climbingRoute
 
                 Nothing ->
-                    ( model, Cmd.none )
+                    ( updatedModel, Cmd.none )
 
         -- AscentForm
         UpdateAscentForm values ->
@@ -271,13 +272,13 @@ update msg model =
                     Session.assign updatedModel <| Session.addAscent ascent model.session
 
                 Nothing ->
-                    ( model, Cmd.none )
+                    ( updatedModel, Cmd.none )
 
         AscentFormToDatePicker subMsg ->
             ( { model
                 | ascentForm =
                     Tuple.mapFirst
-                        (updateDateCriterium .date
+                        (Criterium.updateDateCriterium .date
                             (\x v -> { v | date = x })
                             DatePicker.defaultSettings
                             subMsg
@@ -309,7 +310,7 @@ view model =
         [ case maybeRoute of
             Just route ->
                 H.div []
-                    [ H.h1 [] [ H.text route.name ]
+                    [ H.h1 [] [ H.text <| route.name ++ " ~ " ++ route.grade ]
                     , viewRouteDetail model route
                     , case model.modal of
                         Empty ->
@@ -509,7 +510,7 @@ viewAscentForm model =
             UpdateAscentForm
             .kind
             form
-        , Forms.Criterium.dateCriterium "Date" DatePicker.defaultSettings .date AscentFormToDatePicker form
+        , Criterium.dateCriterium "Date" DatePicker.defaultSettings .date AscentFormToDatePicker form
         , H.button [ A.type_ "button", E.onClick SaveAscentForm ] [ H.text "Save" ]
         , Forms.Forms.viewErrors form
         ]
@@ -535,14 +536,7 @@ validateAscentForm model =
                     (\values -> Ok <| Date.fromRataDie <| Tuple.first values.date)
                 |> Form.append
                     (.kind >> Data.ascentKindFromString >> Result.fromMaybe "A valid ascentKind must be selected")
-                |> Form.append
-                    (\values ->
-                        if String.isEmpty values.comment then
-                            Ok Nothing
-
-                        else
-                            Just values.comment |> Ok
-                    )
+                |> Form.append (validateOptional .comment)
                 |> ascentFromForm
 
 
@@ -562,7 +556,7 @@ ascentFromForm form =
         Invalid errors values ->
             ( Invalid errors values, Nothing )
 
-        _ ->
+        Idle _ ->
             ( form, Nothing )
 
 
@@ -634,7 +628,7 @@ climbingRouteFormSectorSelectConfig model =
             }
     in
     Select.newConfig r
-        -- |> Select.withOnRemoveItem OnRemoveSectorSelection
+        |> Select.withOnRemoveItem OnRemoveSectorSelection
         |> Select.withPrompt "Sector"
 
 
@@ -664,24 +658,16 @@ validateClimbingRouteForm model =
 climbingRouteFromForm : ClimbingRouteForm -> ( ClimbingRouteForm, Maybe ClimbingRoute )
 climbingRouteFromForm form =
     case form of
-        Valid climbingRouteValues values ->
+        Valid result values ->
             ( Idle values
             , Just <|
-                ClimbingRoute
-                    climbingRouteValues.id
-                    climbingRouteValues.sectorId
-                    climbingRouteValues.name
-                    climbingRouteValues.grade
-                    climbingRouteValues.comment
-                    climbingRouteValues.beta
-                    climbingRouteValues.kind
-                    []
+                ClimbingRoute result.id result.sectorId result.name result.grade result.comment result.beta result.kind []
             )
 
         Invalid errors values ->
             ( Invalid errors values, Nothing )
 
-        _ ->
+        Idle _ ->
             ( form, Nothing )
 
 
@@ -712,49 +698,3 @@ updateKind value form =
 updateName : a -> { b | name : a } -> { b | name : a }
 updateName value form =
     { form | name = value }
-
-
-updateSelectCriteriumMsg : (a -> SelectionCriterium item) -> (SelectionCriterium item -> a -> a) -> Select.Config msg item -> Select.Msg item -> Form a r -> ( Form a r, Cmd msg )
-updateSelectCriteriumMsg extractor wrapper config msg =
-    Form.mapAndReturn
-        (\values ->
-            let
-                ( updated, selectCmd ) =
-                    Select.update config msg (Tuple.second (extractor values))
-            in
-            ( wrapper (Tuple.mapSecond (\_ -> updated) (extractor values)) values
-            , selectCmd
-            )
-        )
-
-
-updateDateCriterium : (values -> DateCriterium) -> (DateCriterium -> values -> values) -> DatePicker.Settings -> DatePicker.Msg -> Form values r -> Form values r
-updateDateCriterium extractor wrapper settings msg form =
-    let
-        ( updatedForm, cmd ) =
-            Form.mapAndReturn
-                (\values ->
-                    let
-                        date =
-                            extractor values
-
-                        ( updated, selectCmd ) =
-                            DatePicker.update settings msg (Tuple.second date)
-                    in
-                    ( wrapper (Tuple.mapSecond (\_ -> updated) date) values, selectCmd )
-                )
-                form
-
-        newDateForm =
-            Form.mapValues
-                (\values ->
-                    case cmd of
-                        DatePicker.Picked newDate ->
-                            wrapper (Tuple.mapFirst (\_ -> Date.toRataDie newDate) (extractor values)) values
-
-                        _ ->
-                            values
-                )
-                updatedForm
-    in
-    newDateForm

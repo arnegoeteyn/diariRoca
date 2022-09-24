@@ -1,4 +1,4 @@
-module Forms.Criterium exposing (dateCriterium, formSelectionCriterium, formSelectionWithSearchCriterium, formTextAreaCriterium, formTextCriterium, selectionCriterium, selectionWithSearchCriterium, textCriterium)
+module Forms.Criterium exposing (dateCriterium, formSelectionCriterium, formSelectionWithSearchCriterium, formTextAreaCriterium, formTextCriterium, selectionCriterium, selectionWithSearchCriterium, textCriterium, updateDateCriterium, updateSelectCriteriumMsg)
 
 import Date
 import DatePicker
@@ -7,7 +7,7 @@ import Html
 import Html.Styled as H
 import Html.Styled.Attributes as A
 import Html.Styled.Events as E
-import Message exposing (FormMsg, Msg(..))
+import Message exposing (Msg(..))
 import Model exposing (DateCriterium, SelectionCriterium)
 import Select
 
@@ -104,3 +104,53 @@ dateCriterium _ settings extractor toMsg form =
     DatePicker.view ((Just << Date.fromRataDie << Tuple.first) dateData) settings (Tuple.second dateData)
         |> Html.map toMsg
         |> H.fromUnstyled
+
+
+
+-- Update Utilities
+
+
+updateSelectCriteriumMsg : (a -> SelectionCriterium item) -> (SelectionCriterium item -> a -> a) -> Select.Config msg item -> Select.Msg item -> Form a r -> ( Form a r, Cmd msg )
+updateSelectCriteriumMsg extractor wrapper config msg =
+    Form.mapAndReturn
+        (\values ->
+            let
+                ( updated, selectCmd ) =
+                    Select.update config msg (Tuple.second (extractor values))
+            in
+            ( wrapper (Tuple.mapSecond (\_ -> updated) (extractor values)) values
+            , selectCmd
+            )
+        )
+
+
+updateDateCriterium : (values -> DateCriterium) -> (DateCriterium -> values -> values) -> DatePicker.Settings -> DatePicker.Msg -> Form values r -> Form values r
+updateDateCriterium extractor wrapper settings msg form =
+    let
+        ( updatedForm, cmd ) =
+            Form.mapAndReturn
+                (\values ->
+                    let
+                        date =
+                            extractor values
+
+                        ( updated, selectCmd ) =
+                            DatePicker.update settings msg (Tuple.second date)
+                    in
+                    ( wrapper (Tuple.mapSecond (\_ -> updated) date) values, selectCmd )
+                )
+                form
+
+        newDateForm =
+            Form.mapValues
+                (\values ->
+                    case cmd of
+                        DatePicker.Picked newDate ->
+                            wrapper (Tuple.mapFirst (\_ -> Date.toRataDie newDate) (extractor values)) values
+
+                        _ ->
+                            values
+                )
+                updatedForm
+    in
+    newDateForm
