@@ -199,7 +199,7 @@ update msg model =
             ( { model | modal = DeleteAscentRequestModal ascent }, Cmd.none )
 
         DeleteAscentConfirmation ascent ->
-            ( model, Cmd.none )
+            Session.assign model <| Session.deleteAscent ascent model.session
 
         -- Climbing route form
         UpdateClimbingRouteForm values ->
@@ -207,14 +207,13 @@ update msg model =
 
         ClimbingRouteFormSelectSector maybeSector ->
             let
-                newForm =
-                    \f ->
-                        { f
-                            | sectorId =
-                                Tuple.mapFirst
-                                    (\_ -> Maybe.withDefault [] <| Maybe.map List.singleton maybeSector)
-                                    f.sectorId
-                        }
+                newForm f =
+                    { f
+                        | sectorId =
+                            Tuple.mapFirst
+                                (\_ -> Maybe.withDefault [] <| Maybe.map List.singleton maybeSector)
+                                f.sectorId
+                    }
             in
             ( { model | climbingRouteForm = Tuple.mapFirst (Form.mapValues newForm) model.climbingRouteForm }, Cmd.none )
 
@@ -235,12 +234,44 @@ update msg model =
             )
 
         SaveClimbingRouteForm ->
-            -- Todo
-            ( model, Cmd.none )
+            let
+                ( newForm, maybeClimbingRoute ) =
+                    validateClimbingRouteForm model
 
-        -- ( DA.deleteAscent ascent.id { model | modal = Empty }, Cmd.none, General.None )
+                updatedModel =
+                    { model
+                        | modal = Empty
+                        , climbingRouteForm = Utilities.replaceFirst newForm model.climbingRouteForm
+                    }
+            in
+            case maybeClimbingRoute of
+                Just climbingRoute ->
+                    Session.assign updatedModel <| Session.addClimbingRoute climbingRoute model.session
+
+                Nothing ->
+                    ( model, Cmd.none )
+
+        -- AscentForm
         UpdateAscentForm values ->
             ( { model | ascentForm = Utilities.replaceFirst values model.ascentForm }, Cmd.none )
+
+        SaveAscentForm ->
+            let
+                ( newForm, maybeAscent ) =
+                    validateAscentForm model
+
+                updatedModel =
+                    { model
+                        | modal = Empty
+                        , ascentForm = Utilities.replaceFirst newForm model.ascentForm
+                    }
+            in
+            case maybeAscent of
+                Just ascent ->
+                    Session.assign updatedModel <| Session.addAscent ascent model.session
+
+                Nothing ->
+                    ( model, Cmd.none )
 
         AscentFormToDatePicker subMsg ->
             ( { model
@@ -255,24 +286,6 @@ update msg model =
               }
             , Cmd.none
             )
-
-        SaveAscentForm ->
-            -- let
-            --     ( newForm, maybeAscent ) =
-            --         Forms.Forms.validateAscentForm model
-            -- in
-            -- ( case maybeAscent of
-            --     Just ascent ->
-            --         { model
-            --             | ascentForm = Utilities.replaceFirst newForm model.ascentForm
-            --             , modal = Empty
-            --             , ascents = Dict.insert ascent.id ascent model.ascents
-            --         }
-            --     _ ->
-            --         { model | ascentForm = Utilities.replaceFirst newForm model.ascentForm }
-            -- , Cmd.none
-            -- )
-            ( model, Cmd.none )
 
 
 
@@ -311,8 +324,8 @@ view model =
                         AscentFormModal ->
                             modal [ viewAscentFormModal model ]
 
-                        _ ->
-                            modal [ H.text "ohlolol" ]
+                        DeleteAscentRequestModal ascent ->
+                            modal [ viewDeleteAscentConfirmation ascent ]
                     ]
 
             Nothing ->
@@ -414,6 +427,15 @@ viewAscentFormModal model =
         [ H.h2 [] [ H.text "New ascent" ], viewAscentForm model ]
 
 
+viewDeleteAscentConfirmation : Ascent -> Html Msg
+viewDeleteAscentConfirmation ascent =
+    H.div []
+        [ H.h2 []
+            [ H.text <| Utilities.stringFromList [ "Delete" ] ]
+        , H.button [ E.onClick <| DeleteAscentConfirmation ascent ] [ H.text "confirm" ]
+        ]
+
+
 viewAscentsList : Model -> ClimbingRoute -> Html Msg
 viewAscentsList model route =
     let
@@ -434,8 +456,8 @@ viewAscentsList model route =
                             , H.div [ A.css [] ] [ H.text (Data.ascentKindToString ascent.kind) ]
                             , H.div
                                 []
-                                [--  Button.deleteButton (Button.defaultOptions |> Button.withMsg (Message.DeleteAscentRequested ascent))
-                                 -- , Button.editButton (Button.defaultOptions |> Button.withMsg (Message.OpenAscentForm (Just ascent) route))
+                                [ Button.deleteButton (Button.defaultOptions |> Button.withMsg (DeleteAscentRequested ascent))
+                                , Button.editButton (Button.defaultOptions |> Button.withMsg (OpenAscentForm (Just ascent) route))
                                 ]
                             ]
                         , H.div [ A.css [] ] [ H.text <| Maybe.withDefault "" ascent.comment ]
@@ -491,6 +513,57 @@ viewAscentForm model =
         , H.button [ A.type_ "button", E.onClick SaveAscentForm ] [ H.text "Save" ]
         , Forms.Forms.viewErrors form
         ]
+
+
+validateAscentForm : Model -> ( AscentForm, Maybe Ascent )
+validateAscentForm model =
+    let
+        form =
+            Tuple.first model.ascentForm
+    in
+    case Tuple.second model.ascentForm of
+        Nothing ->
+            ( form, Nothing )
+
+        Just ( maybeAscent, climbingRoute ) ->
+            Form.succeed ValidatedAscentFormValues form
+                |> Form.append
+                    (\_ -> Ok <| idForForm model.session.data.ascents maybeAscent)
+                |> Form.append
+                    (\_ -> Ok climbingRoute.id)
+                |> Form.append
+                    (\values -> Ok <| Date.fromRataDie <| Tuple.first values.date)
+                |> Form.append
+                    (.kind >> Data.ascentKindFromString >> Result.fromMaybe "A valid ascentKind must be selected")
+                |> Form.append
+                    (\values ->
+                        if String.isEmpty values.comment then
+                            Ok Nothing
+
+                        else
+                            Just values.comment |> Ok
+                    )
+                |> ascentFromForm
+
+
+ascentFromForm : AscentForm -> ( AscentForm, Maybe Ascent )
+ascentFromForm form =
+    case form of
+        Valid ascentFormValues values ->
+            ( Idle values
+            , Just <|
+                Ascent ascentFormValues.id
+                    ascentFormValues.climbingRouteId
+                    ascentFormValues.date
+                    ascentFormValues.comment
+                    ascentFormValues.kind
+            )
+
+        Invalid errors values ->
+            ( Invalid errors values, Nothing )
+
+        _ ->
+            ( form, Nothing )
 
 
 
@@ -565,15 +638,15 @@ climbingRouteFormSectorSelectConfig model =
         |> Select.withPrompt "Sector"
 
 
-validateClimbingRouteForm : Model -> Session.Model -> ( ClimbingRouteForm, Maybe ClimbingRoute )
-validateClimbingRouteForm model general =
+validateClimbingRouteForm : Model -> ( ClimbingRouteForm, Maybe ClimbingRoute )
+validateClimbingRouteForm model =
     let
         form =
             Tuple.first model.climbingRouteForm
     in
     Form.succeed ValidatedClimbingRouteFormValues form
         |> Form.append
-            (\_ -> Ok <| idForForm general.data.climbingRoutes (Tuple.second model.climbingRouteForm))
+            (\_ -> Ok <| idForForm model.session.data.climbingRoutes (Tuple.second model.climbingRouteForm))
         |> Form.append
             (validateNonEmpty .name "Route can't have an empty name")
         |> Form.append

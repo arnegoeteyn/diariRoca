@@ -1,7 +1,7 @@
 module Session exposing (..)
 
 import Command
-import Data exposing (ClimbingRoute, Data, Media)
+import Data exposing (Ascent, ClimbingRoute, Data, Media)
 import DataAccessors as DA
 import DataParser exposing (jsonFileDecoder)
 import Date exposing (Date)
@@ -70,6 +70,9 @@ updateSessionStorage model =
 
 -- Climbing Routes
 
+addClimbingRoute : ClimbingRoute -> Model -> ( Model, Cmd msg )
+addClimbingRoute climbingRoute model =
+    updateSessionStorage { model | data = DA.addClimbingRoute climbingRoute model.data }
 
 deleteClimbingRoute : ClimbingRoute -> Model -> ( Model, Cmd msg )
 deleteClimbingRoute climbingRoute model =
@@ -102,3 +105,17 @@ removeMediaFromRoute route media model =
             { data | climbingRoutes = Dict.insert route.id newRoute data.climbingRoutes }
     in
     updateSessionStorage { model | data = newData model.data }
+
+
+
+-- Ascents
+
+
+addAscent : Ascent -> Model -> ( Model, Cmd msg )
+addAscent ascent model =
+    updateSessionStorage { model | data = DA.addAscent ascent model.data }
+
+
+deleteAscent : Ascent -> Model -> ( Model, Cmd msg )
+deleteAscent ascent model =
+    updateSessionStorage { model | data = DA.deleteAscent ascent.id model.data }

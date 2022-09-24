@@ -118,6 +118,11 @@ deleteSector i m =
 --| ClimbingRoute
 
 
+addClimbingRoute : ClimbingRoute -> Data -> Data
+addClimbingRoute climbingRoute data =
+    { data | climbingRoutes = Dict.insert climbingRoute.id climbingRoute data.climbingRoutes }
+
+
 getClimbingRoute : Data -> Int -> Maybe ClimbingRoute
 getClimbingRoute m i =
     Dict.get i m.climbingRoutes
@@ -159,6 +164,11 @@ getAscents d c =
 
 
 --| Ascent
+
+
+addAscent : Ascent -> Data -> Data
+addAscent ascent data =
+    { data | ascents = Dict.insert ascent.id ascent data.ascents }
 
 
 getAscent : Model -> Int -> Maybe Ascent
