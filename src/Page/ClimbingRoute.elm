@@ -26,15 +26,18 @@ import View.Button as Button
 -- Model
 
 
-type alias Model =
-    { session : Session.Model
-    , mediaLink : String
+type alias ModelContent =
+    { mediaLink : String
     , mediaLabel : String
     , routeId : Int
     , climbingRouteForm : ( ClimbingRouteForm, Maybe ClimbingRoute )
     , ascentForm : ( AscentForm, Maybe AscentFormMeta )
     , modal : ModalContent
     }
+
+
+type alias Model =
+    Session.ModelEncapsulated ModelContent
 
 
 type ModalContent

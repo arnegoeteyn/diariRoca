@@ -11,6 +11,7 @@ import Html.Styled as H
 import Json.Decode exposing (decodeString)
 import Navbar
 import Page.ClimbingRoute as ClimbingRoute
+import Page.ClimbingRoutes as ClimbingRoutes
 import Session
 import Skeleton
 import Time
@@ -55,6 +56,7 @@ type alias Model =
 type Page
     = NotFoundPage Session.Model
     | ClimbingRoutePage ClimbingRoute.Model
+    | ClimbingRoutesPage ClimbingRoutes.Model
 
 
 type AppState
@@ -84,6 +86,9 @@ view model =
 
         ClimbingRoutePage climbingRoute ->
             Skeleton.view ClimbingRouteMsg NavbarMsg (ClimbingRoute.view climbingRoute)
+
+        ClimbingRoutesPage climbingRoutes ->
+            Skeleton.view ClimbingRoutesMsg NavbarMsg (ClimbingRoutes.view climbingRoutes)
 
 
 
@@ -125,6 +130,7 @@ type Msg
     | JsonLoaded String
     | GoogleDriveResponse { type_ : String, argument : Maybe String }
     | ClimbingRouteMsg ClimbingRoute.Msg
+    | ClimbingRoutesMsg ClimbingRoutes.Msg
     | NavbarMsg Navbar.Msg
 
 
@@ -171,6 +177,14 @@ update message model =
                 _ ->
                     ( model, Cmd.none )
 
+        ClimbingRoutesMsg msg ->
+            case model.route of
+                ClimbingRoutesPage climbingRoutes ->
+                    stepClimbingRoutes model (ClimbingRoutes.update msg climbingRoutes)
+
+                _ ->
+                    ( model, Cmd.none )
+
         NavbarMsg msg ->
             ( model, Cmd.none )
 
@@ -211,6 +225,13 @@ stepClimbingRoute model ( climbingRoute, cmds ) =
     )
 
 
+stepClimbingRoutes : Model -> ( ClimbingRoutes.Model, Cmd ClimbingRoutes.Msg ) -> ( Model, Cmd Msg )
+stepClimbingRoutes model ( climbingRoutes, cmds ) =
+    ( { model | route = ClimbingRoutesPage climbingRoutes }
+    , Cmd.map ClimbingRoutesMsg cmds
+    )
+
+
 
 -- ROUTER
 
@@ -224,6 +245,9 @@ exit model =
         ClimbingRoutePage m ->
             m.session
 
+        ClimbingRoutesPage m ->
+            m.session
+
 
 stepUrl : Url.Url -> Model -> ( Model, Cmd Msg )
 stepUrl url model =
@@ -233,7 +257,11 @@ stepUrl url model =
 
         parser =
             oneOf
-                [ route (s "routes" </> route_)
+                [ route top
+                    (stepClimbingRoutes model
+                        (ClimbingRoutes.init { session | route = Session.ClimbingRoutesRoute })
+                    )
+                , route (s "routes" </> route_)
                     (\climbingRouteId ->
                         stepClimbingRoute model
                             (ClimbingRoute.init { session | route = Session.ClimbingRouteRoute } climbingRouteId)

@@ -28,6 +28,7 @@ type alias Model =
 type Route
     = NotFoundRoute
     | ClimbingRouteRoute
+    | ClimbingRoutesRoute
 
 
 
