@@ -42,6 +42,7 @@ view model =
                 , Tw.p_6
                 , B.lg [ Tw.flex_row ]
                 ]
+            , A.id "navbar"
             ]
 
         isActive route =

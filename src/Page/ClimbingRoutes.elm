@@ -1,21 +1,25 @@
 module Page.ClimbingRoutes exposing (Model, Msg, init, update, view)
 
+import Browser.Dom
 import Data
 import DataAccessors as MA
 import DataUtilities
 import Dict
-import Form.Criterium exposing (selectionCriterium, selectionWithSearchCriterium, textCriterium)
+import Form.Criterium as Criterium exposing (selectionCriterium, selectionWithSearchCriterium, textCriterium)
+import Form.Form as Form
+import Form.Forms.ClimbingRouteForm as ClimbingRouteForm
 import Html.Styled as H exposing (Html)
 import Html.Styled.Attributes as A
+import Html.Styled.Events as E
 import Message exposing (ClimbingRoutesPageMsg(..))
 import Modal
 import Select
 import Session
 import Skeleton
 import Tailwind.Utilities as Tw
+import Task
 import Utilities
 import View.Button as Button
-import View.Link as Link
 
 
 
@@ -29,6 +33,7 @@ type alias ModelContent =
     , selected : List Data.Sector
     , selectState : Select.State
     , modal : ModalContent
+    , climbingRouteForm : ( ClimbingRouteForm.ClimbingRouteForm, Maybe Data.ClimbingRoute )
     }
 
 
@@ -55,6 +60,7 @@ init session =
       , selectedClimbingRoute = Nothing
       , modal = Empty
       , session = session
+      , climbingRouteForm = ( ClimbingRouteForm.initClimbingRouteForm Nothing Nothing, Nothing )
       }
     , Cmd.none
     )
@@ -76,6 +82,15 @@ sectorSelectConfig model =
         |> Select.withPrompt "Filter by sector"
 
 
+climbingRouteFormSettings : ClimbingRouteForm.ClimbingRouteFormSettings Msg
+climbingRouteFormSettings =
+    { onSave = SaveClimbingRouteForm
+    , onUpdate = UpdateClimbingRouteForm
+    , onSelect = ClimbingRouteFormSelectSector
+    , selectToMsg = ClimbingRouteFormSelectSectorMsg
+    }
+
+
 
 -- UPDATE
 
@@ -88,6 +103,14 @@ type Msg
     | SelectMsg (Select.Msg Data.Sector)
     | SelectSector (Maybe Data.Sector)
     | OnRemoveSectorSelection Data.Sector
+    | OpenClimbingRouteForm (Maybe Data.ClimbingRoute)
+    | DeleteClimbingRouteRequested Data.ClimbingRoute
+    | DeleteClimbingRouteConfirmation Data.ClimbingRoute
+      -- ClimbingRouteForm
+    | UpdateClimbingRouteForm ClimbingRouteForm.ClimbingRouteForm
+    | ClimbingRouteFormSelectSector (Maybe Data.Sector)
+    | ClimbingRouteFormSelectSectorMsg (Select.Msg Data.Sector)
+    | SaveClimbingRouteForm
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -122,6 +145,73 @@ update msg model =
         OnRemoveSectorSelection sector ->
             ( { model | selected = removeFromSelected sector model.selected }, Cmd.none )
 
+        OpenClimbingRouteForm maybeClimbingRoute ->
+            ( { model
+                | modal = ClimbingRouteFormModal
+                , climbingRouteForm = ( ClimbingRouteForm.initClimbingRouteForm (Just model.session) maybeClimbingRoute, maybeClimbingRoute )
+              }
+            , Cmd.none
+            )
+
+        DeleteClimbingRouteRequested climbingRoute ->
+            ( { model | modal = DeleteClimbingRouteRequestModal climbingRoute }
+            , Cmd.none
+            )
+
+        DeleteClimbingRouteConfirmation climbingRoute ->
+            Session.deleteClimbingRoute climbingRoute { model | modal = Empty }
+
+        -- Climbing route form
+        UpdateClimbingRouteForm values ->
+            ( { model | climbingRouteForm = Utilities.replaceFirst values model.climbingRouteForm }, Cmd.none )
+
+        ClimbingRouteFormSelectSector maybeSector ->
+            let
+                newForm f =
+                    { f
+                        | sectorId =
+                            Tuple.mapFirst
+                                (\_ -> Maybe.withDefault [] <| Maybe.map List.singleton maybeSector)
+                                f.sectorId
+                    }
+            in
+            ( { model | climbingRouteForm = Tuple.mapFirst (Form.mapValues newForm) model.climbingRouteForm }, Cmd.none )
+
+        ClimbingRouteFormSelectSectorMsg subMsg ->
+            let
+                ( updatedForm, cmd ) =
+                    Criterium.updateSelectCriteriumMsg .sectorId
+                        (\selected values -> { values | sectorId = selected })
+                        (ClimbingRouteForm.climbingRouteFormSectorSelectConfig climbingRouteFormSettings model.session)
+                        subMsg
+                        (Tuple.first model.climbingRouteForm)
+            in
+            ( { model
+                | climbingRouteForm =
+                    Utilities.replaceFirst updatedForm model.climbingRouteForm
+              }
+            , cmd
+            )
+
+        SaveClimbingRouteForm ->
+            let
+                ( newForm, maybeClimbingRoute ) =
+                    ClimbingRouteForm.validateClimbingRouteForm model
+
+                updatedModel =
+                    { model
+                        | climbingRouteForm = Utilities.replaceFirst newForm model.climbingRouteForm
+                    }
+            in
+            case maybeClimbingRoute of
+                Just climbingRoute ->
+                    { updatedModel | modal = Empty }
+                        |> Session.addClimbingRoute climbingRoute
+                        |> Session.assignCommand (showRouteTask climbingRoute)
+
+                Nothing ->
+                    ( updatedModel, Cmd.none )
+
 
 newSelected : Maybe a -> List a -> List a
 newSelected maybeItem default =
@@ -131,6 +221,16 @@ newSelected maybeItem default =
 
         Just item ->
             Utilities.addIfNotPresent item default
+
+
+showRouteTask climbingRoute =
+    let
+        tag =
+            "route-" ++ String.fromInt climbingRoute.id
+    in
+    Task.map (\info -> Browser.Dom.setViewport 0 info.element.y) (Browser.Dom.getElement tag)
+        |> Task.andThen identity
+        |> Task.attempt (\_ -> NoOp)
 
 
 
@@ -151,16 +251,29 @@ view model =
             [ viewTableHeader model
             , viewRoutesTable model
             , case model.modal of
-                _ ->
+                Empty ->
                     H.text ""
 
-            -- ClimbingRouteFormModal ->
-            --     modal
-            --         [-- viewClimbingRouteFormModal model
-            --         ]
+                ClimbingRouteFormModal ->
+                    modal
+                        (H.div []
+                            [ H.h2 [] [ H.text "New climbingroute" ], ClimbingRouteForm.viewClimbingRouteForm climbingRouteFormSettings model ]
+                        )
+
+                DeleteClimbingRouteRequestModal climbingRoute ->
+                    modal <| viewDeleteClimbingRouteConfirmation climbingRoute
             ]
         ]
     }
+
+
+viewDeleteClimbingRouteConfirmation : Data.ClimbingRoute -> Html Msg
+viewDeleteClimbingRouteConfirmation route =
+    H.div []
+        [ H.h2 []
+            [ H.text <| Utilities.stringFromList [ "Delete \"", route.name, "\" " ] ]
+        , H.button [ E.onClick <| DeleteClimbingRouteConfirmation route ] [ H.text "confirm" ]
+        ]
 
 
 viewTableHeader : Model -> Html Msg
@@ -170,7 +283,7 @@ viewTableHeader model =
             sortedAndFilteredRoutes model
 
         onRouteFilter =
-            Form.Criterium.textCriterium
+            Criterium.textCriterium
                 "route"
                 .routeFilter
                 identity
@@ -196,8 +309,7 @@ viewTableHeader model =
         [ H.div [ A.css [ Tw.py_4 ] ]
             [ H.h2 [ A.css [] ]
                 [ H.text <| Utilities.stringFromList [ (String.fromInt << List.length) routes, " routes " ]
-
-                -- , Button.addButton (Button.defaultOptions |> Button.withMsg (OpenClimbingRouteForm Nothing))
+                , Button.addButton (Button.defaultOptions |> Button.withMsg (OpenClimbingRouteForm Nothing))
                 ]
             , H.div [ A.css [] ]
                 [ onRouteFilter
@@ -262,7 +374,7 @@ viewRoutesTableBody model =
         (List.map
             (\route ->
                 viewRouteRow model route
-             --  , viewRouteDetail model route
+             -- , viewRouteDetail model route
             )
             (sortedAndFilteredRoutes model)
         )
@@ -301,12 +413,12 @@ viewRouteRow model route =
         , H.td []
             [ Button.deleteButton
                 (Button.defaultOptions
-                    -- |> Button.withMsg (Message.DeleteClimbingRouteRequested route)
+                    |> Button.withMsg (DeleteClimbingRouteRequested route)
                     |> Button.withKind Button.Icon
                 )
             , Button.editButton
                 (Button.defaultOptions
-                    -- |> Button.withMsg (Message.OpenClimbingRouteForm (Just route))
+                    |> Button.withMsg (OpenClimbingRouteForm (Just route))
                     |> Button.withKind Button.Icon
                 )
             , Button.gotoButton

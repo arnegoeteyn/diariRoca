@@ -306,16 +306,16 @@ view model =
                             H.text ""
 
                         ClimbingRouteFormModal ->
-                            modal [ viewClimbingRouteFormModal model ]
+                            modal (viewClimbingRouteFormModal model)
 
                         DeleteClimbingRouteRequestModal climbingRoute ->
-                            modal [ viewDeleteClimbingRouteConfirmation climbingRoute ]
+                            modal (viewDeleteClimbingRouteConfirmation climbingRoute)
 
                         AscentFormModal ->
-                            modal [ viewAscentFormModal model ]
+                            modal (viewAscentFormModal model)
 
                         DeleteAscentRequestModal ascent ->
-                            modal [ viewDeleteAscentConfirmation ascent ]
+                            modal (viewDeleteAscentConfirmation ascent)
                     ]
 
             Nothing ->

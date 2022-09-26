@@ -16,7 +16,7 @@ import Tailwind.Utilities as Tw
 import Utilities
 
 
-view : msg -> msg -> List (Html msg) -> Html msg
+view : msg -> msg -> Html msg -> Html msg
 view close propagation child =
     H.div [ A.css [ Tw.relative ] ]
         [ H.div
@@ -48,7 +48,7 @@ view close propagation child =
                     , Tw.p_16
                     ]
                 ]
-                child
+                [ child ]
             ]
         ]
 
