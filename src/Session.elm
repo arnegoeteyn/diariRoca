@@ -6,7 +6,7 @@ import DataAccessors as DA
 import DataParser exposing (jsonFileDecoder)
 import Date exposing (Date)
 import Dict
-import Forms.Criterium exposing (updateDateCriterium)
+import Form.Criterium exposing (updateDateCriterium)
 import Json.Decode exposing (decodeString)
 import Time
 import Utilities

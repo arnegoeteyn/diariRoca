@@ -1,8 +1,8 @@
-module Forms.Criterium exposing (dateCriterium, formSelectionCriterium, formSelectionWithSearchCriterium, formTextAreaCriterium, formTextCriterium, selectionCriterium, selectionWithSearchCriterium, textCriterium, updateDateCriterium, updateSelectCriteriumMsg)
+module Form.Criterium exposing (dateCriterium, formSelectionCriterium, formSelectionWithSearchCriterium, formTextAreaCriterium, formTextCriterium, selectionCriterium, selectionWithSearchCriterium, textCriterium, updateDateCriterium, updateSelectCriteriumMsg)
 
 import Date
 import DatePicker
-import Forms.Form as Form exposing (Form(..), extract)
+import Form.Form as Form exposing (Form(..), extract)
 import Html
 import Html.Styled as H
 import Html.Styled.Attributes as A

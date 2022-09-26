@@ -12,8 +12,8 @@ import Dict
 import File
 import File.Download
 import File.Select
-import Forms.Form as Form exposing (Form)
-import Forms.Forms
+import Form.Form as Form exposing (Form)
+import Form.Forms
 import Init exposing (initAreaForm, initAscentForm, initClimbingRouteForm, initSectorForm, initTripForm)
 import Json.Decode exposing (decodeString)
 import Json.Encode exposing (encode)
@@ -248,7 +248,7 @@ update msg model =
                 SaveTripForm ->
                     let
                         ( newForm, maybeTrip ) =
-                            Forms.Forms.validateTripForm model
+                            Form.Forms.validateTripForm model
                     in
                     ( case maybeTrip of
                         Just trip ->
@@ -270,7 +270,7 @@ update msg model =
                 SaveAreaForm ->
                     let
                         ( newForm, maybeArea ) =
-                            Forms.Forms.validateAreaForm model
+                            Form.Forms.validateAreaForm model
 
                         areaForm =
                             replaceFirst newForm model.areaForm
@@ -319,7 +319,7 @@ update msg model =
                 SaveSectorForm ->
                     let
                         ( newForm, maybeSector ) =
-                            Forms.Forms.validateSectorForm model
+                            Form.Forms.validateSectorForm model
 
                         sectorForm =
                             replaceFirst newForm model.sectorForm
@@ -364,7 +364,7 @@ update msg model =
                 SaveClimbingRouteForm ->
                     let
                         ( newForm, maybeClimbingRoute ) =
-                            Forms.Forms.validateClimbingRouteForm model
+                            Form.Forms.validateClimbingRouteForm model
 
                         climbingRouteForm =
                             replaceFirst newForm model.climbingRouteForm
@@ -400,7 +400,7 @@ update msg model =
                 SaveAscentForm ->
                     let
                         ( newForm, maybeAscent ) =
-                            Forms.Forms.validateAscentForm model
+                            Form.Forms.validateAscentForm model
                     in
                     ( case maybeAscent of
                         Just ascent ->

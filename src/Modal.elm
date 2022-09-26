@@ -4,7 +4,7 @@ import Data exposing (Area, Ascent, ClimbingRoute, Sector, Trip)
 import DataAccessors as Ma
 import Date
 import Dict
-import Forms.Forms
+import Form.Forms
 import Html exposing (Html)
 import Html.Styled as H exposing (Html)
 import Html.Styled.Attributes as A
@@ -51,6 +51,14 @@ view close propagation child =
                 child
             ]
         ]
+
+
+
+-- viewClimbingRouteFormModal : Model -> Html Msg
+-- viewClimbingRouteFormModal model =
+--     H.div []
+--         [ H.h2 [] [ H.text "New climbingroute" ], Form.Forms.climbingRouteForm model ]
+-- TODO delete beneath this
 
 
 viewModal : Model -> Html Msg

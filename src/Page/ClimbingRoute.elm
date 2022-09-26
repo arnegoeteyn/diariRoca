@@ -3,13 +3,12 @@ module Page.ClimbingRoute exposing (Model, Msg(..), init, update, view)
 import Browser.Navigation as Nav
 import Data exposing (Ascent, AscentKind, ClimbingRoute, ClimbingRouteKind, Media, Sector)
 import DataAccessors as DA
-import DataUtilities
 import Date exposing (Date)
 import DatePicker
-import Dict
-import Forms.Criterium as Criterium exposing (formSelectionCriterium, formSelectionWithSearchCriterium, formTextAreaCriterium, formTextCriterium, textCriterium)
-import Forms.Form as Form exposing (Form(..))
-import Forms.Forms exposing (DateCriterium, SelectionCriterium, idForForm, validateNonEmpty, validateOptional)
+import Form.Criterium as Criterium exposing (formSelectionCriterium, formSelectionWithSearchCriterium, formTextAreaCriterium, formTextCriterium, textCriterium)
+import Form.Form as Form exposing (Form(..))
+import Form.Forms as Forms
+import Form.Forms.ClimbingRouteForm as ClimbingRouteForm
 import Html.Styled as H exposing (Html)
 import Html.Styled.Attributes as A
 import Html.Styled.Events as E
@@ -30,7 +29,7 @@ type alias ModelContent =
     { mediaLink : String
     , mediaLabel : String
     , routeId : Int
-    , climbingRouteForm : ( ClimbingRouteForm, Maybe ClimbingRoute )
+    , climbingRouteForm : ( ClimbingRouteForm.ClimbingRouteForm, Maybe ClimbingRoute )
     , ascentForm : ( AscentForm, Maybe AscentFormMeta )
     , modal : ModalContent
     }
@@ -62,30 +61,12 @@ init session id =
       , mediaLink = ""
       , mediaLabel = ""
       , routeId = id
-      , climbingRouteForm = ( initClimbingRouteForm Nothing Nothing, Nothing )
+      , climbingRouteForm = ( ClimbingRouteForm.initClimbingRouteForm Nothing Nothing, Nothing )
       , modal = Empty
       , ascentForm = ( ascentForm, Nothing )
       }
     , ascentFormCmd
     )
-
-
-initClimbingRouteForm : Maybe Session.Model -> Maybe ClimbingRoute -> ClimbingRouteForm
-initClimbingRouteForm maybeModel climbingRoute =
-    Idle
-        { name = Maybe.map .name climbingRoute |> Maybe.withDefault ""
-        , grade = Maybe.map .grade climbingRoute |> Maybe.withDefault ""
-        , comment = Maybe.andThen .comment climbingRoute |> Maybe.withDefault ""
-        , beta = Maybe.andThen .beta climbingRoute |> Maybe.withDefault ""
-        , kind = Data.climbingRouteKindToString <| (Maybe.withDefault Data.Sport <| Maybe.map .kind climbingRoute)
-        , sectorId =
-            ( Maybe.andThen
-                (\model -> Maybe.andThen (.sectorId >> DA.getSector model.data) climbingRoute |> Maybe.map List.singleton)
-                maybeModel
-                |> Maybe.withDefault []
-            , Select.init "climbingRouteFormSectorId"
-            )
-        }
 
 
 initAscentForm : Date -> Maybe Ascent -> ( AscentForm, Cmd Msg )
@@ -101,6 +82,15 @@ initAscentForm date maybeAscent =
         }
     , Cmd.map AscentFormToDatePicker datePickerFx
     )
+
+
+climbingRouteFormSettings : ClimbingRouteForm.ClimbingRouteFormSettings Msg
+climbingRouteFormSettings =
+    { onSave = SaveClimbingRouteForm
+    , onUpdate = UpdateClimbingRouteForm
+    , onSelect = ClimbingRouteFormSelectSector
+    , selectToMsg = ClimbingRouteFormSelectSectorMsg
+    }
 
 
 
@@ -124,7 +114,7 @@ type Msg
     | DeleteAscentConfirmation Ascent
     | DeleteAscentRequested Ascent
       -- ClimbingRouteForm
-    | UpdateClimbingRouteForm ClimbingRouteForm
+    | UpdateClimbingRouteForm ClimbingRouteForm.ClimbingRouteForm
     | ClimbingRouteFormSelectSector (Maybe Sector)
     | ClimbingRouteFormSelectSectorMsg (Select.Msg Sector)
     | SaveClimbingRouteForm
@@ -177,7 +167,7 @@ update msg model =
         OpenClimbingRouteForm maybeClimbingRoute ->
             ( { model
                 | modal = ClimbingRouteFormModal
-                , climbingRouteForm = ( initClimbingRouteForm (Just model.session) maybeClimbingRoute, maybeClimbingRoute )
+                , climbingRouteForm = ( ClimbingRouteForm.initClimbingRouteForm (Just model.session) maybeClimbingRoute, maybeClimbingRoute )
               }
             , Cmd.none
             )
@@ -222,7 +212,7 @@ update msg model =
                 ( updatedForm, cmd ) =
                     Criterium.updateSelectCriteriumMsg .sectorId
                         (\selected values -> { values | sectorId = selected })
-                        (climbingRouteFormSectorSelectConfig model)
+                        (ClimbingRouteForm.climbingRouteFormSectorSelectConfig climbingRouteFormSettings model.session)
                         subMsg
                         (Tuple.first model.climbingRouteForm)
             in
@@ -236,7 +226,7 @@ update msg model =
         SaveClimbingRouteForm ->
             let
                 ( newForm, maybeClimbingRoute ) =
-                    validateClimbingRouteForm model
+                    ClimbingRouteForm.validateClimbingRouteForm model
 
                 updatedModel =
                     { model
@@ -418,7 +408,7 @@ viewDeleteClimbingRouteConfirmation route =
 viewClimbingRouteFormModal : Model -> Html Msg
 viewClimbingRouteFormModal model =
     H.div []
-        [ H.h2 [] [ H.text "New climbingroute" ], climbingRouteForm model ]
+        [ H.h2 [] [ H.text "New climbingroute" ], ClimbingRouteForm.viewClimbingRouteForm climbingRouteFormSettings model ]
 
 
 viewAscentFormModal : Model -> Html Msg
@@ -476,7 +466,7 @@ type alias AscentFormMeta =
 
 
 type alias AscentFormValues =
-    { date : DateCriterium
+    { date : Forms.DateCriterium
     , kind : String
     , comment : String
     }
@@ -502,16 +492,16 @@ viewAscentForm model =
             Tuple.first model.ascentForm
     in
     H.form []
-        [ formTextCriterium "Comment" .comment updateComment UpdateAscentForm form
+        [ formTextCriterium "Comment" .comment Forms.updateComment UpdateAscentForm form
         , formSelectionCriterium "Kind"
             (\_ -> List.map Data.ascentKindToString Data.ascentKindEnum)
-            updateKind
+            Forms.updateKind
             UpdateAscentForm
             .kind
             form
         , Criterium.dateCriterium "Date" DatePicker.defaultSettings .date AscentFormToDatePicker form
         , H.button [ A.type_ "button", E.onClick SaveAscentForm ] [ H.text "Save" ]
-        , Forms.Forms.viewErrors form
+        , Forms.viewErrors form
         ]
 
 
@@ -528,14 +518,14 @@ validateAscentForm model =
         Just ( maybeAscent, climbingRoute ) ->
             Form.succeed ValidatedAscentFormValues form
                 |> Form.append
-                    (\_ -> Ok <| idForForm model.session.data.ascents maybeAscent)
+                    (\_ -> Ok <| Forms.idForForm model.session.data.ascents maybeAscent)
                 |> Form.append
                     (\_ -> Ok climbingRoute.id)
                 |> Form.append
                     (\values -> Ok <| Date.fromRataDie <| Tuple.first values.date)
                 |> Form.append
                     (.kind >> Data.ascentKindFromString >> Result.fromMaybe "A valid ascentKind must be selected")
-                |> Form.append (validateOptional .comment)
+                |> Form.append (Forms.validateOptional .comment)
                 |> ascentFromForm
 
 
@@ -561,138 +551,3 @@ ascentFromForm form =
 
 
 -- | ClimbingRoute
-
-
-type alias ClimbingRouteForm =
-    Form ClimbingRouteFormValues ValidatedClimbingRouteFormValues
-
-
-type alias ClimbingRouteFormValues =
-    { name : String
-    , grade : String
-    , comment : String
-    , beta : String
-    , sectorId : SelectionCriterium Sector
-    , kind : String
-    }
-
-
-type alias ValidatedClimbingRouteFormValues =
-    { id : Int
-    , name : String
-    , grade : String
-    , comment : Maybe String
-    , beta : Maybe String
-    , kind : ClimbingRouteKind
-    , sectorId : Int
-    }
-
-
-climbingRouteForm : Model -> H.Html Msg
-climbingRouteForm model =
-    let
-        form =
-            Tuple.first model.climbingRouteForm
-    in
-    H.form [ A.css [ Tw.space_y_1 ] ]
-        [ formTextCriterium "Name" .name updateName UpdateClimbingRouteForm form
-        , formTextCriterium "Grade" .grade updateGrade UpdateClimbingRouteForm form
-        , formSelectionWithSearchCriterium "Sector"
-            (climbingRouteFormSectorSelectConfig model)
-            .sectorId
-            (Dict.values model.session.data.sectors)
-            form
-        , formTextAreaCriterium "Comment" .comment updateComment UpdateClimbingRouteForm form
-        , formTextAreaCriterium "Beta" .beta updateBeta UpdateClimbingRouteForm form
-        , formSelectionCriterium "Kind"
-            (\_ -> List.map Data.climbingRouteKindToString Data.climbingRouteKindEnum)
-            updateKind
-            UpdateClimbingRouteForm
-            .kind
-            form
-        , H.button [ A.type_ "button", E.onClick SaveClimbingRouteForm ] [ H.text "Save" ]
-        , Forms.Forms.viewErrors form
-        ]
-
-
-climbingRouteFormSectorSelectConfig : Model -> Select.Config Msg Sector
-climbingRouteFormSectorSelectConfig model =
-    let
-        r : Select.RequiredConfig Msg Sector
-        r =
-            { filter = \x y -> DataUtilities.filterSectorsByName x y |> Utilities.listToMaybe
-            , toLabel = \sector -> sector.name ++ " [" ++ DA.getAreaNameSafe model.session.data sector.areaId ++ "]"
-            , onSelect = ClimbingRouteFormSelectSector
-            , toMsg = ClimbingRouteFormSelectSectorMsg
-            }
-    in
-    Select.newConfig r
-        |> Select.withPrompt "Sector"
-
-
-validateClimbingRouteForm : Model -> ( ClimbingRouteForm, Maybe ClimbingRoute )
-validateClimbingRouteForm model =
-    let
-        form =
-            Tuple.first model.climbingRouteForm
-    in
-    Form.succeed ValidatedClimbingRouteFormValues form
-        |> Form.append
-            (\_ -> Ok <| idForForm model.session.data.climbingRoutes (Tuple.second model.climbingRouteForm))
-        |> Form.append
-            (validateNonEmpty .name "Route can't have an empty name")
-        |> Form.append
-            (validateNonEmpty .grade "Route can't have no grade")
-        |> Form.append
-            (validateOptional .comment)
-        |> Form.append (validateOptional .beta)
-        |> Form.append
-            (.kind >> Data.climbingRouteKindFromString >> Result.fromMaybe "A valid routeKind must be selected")
-        |> Form.append
-            (.sectorId >> Tuple.first >> List.head >> Maybe.map .id >> Result.fromMaybe "A valid sector must be selected")
-        |> climbingRouteFromForm
-
-
-climbingRouteFromForm : ClimbingRouteForm -> ( ClimbingRouteForm, Maybe ClimbingRoute )
-climbingRouteFromForm form =
-    case form of
-        Valid result values ->
-            ( Idle values
-            , Just <|
-                ClimbingRoute result.id result.sectorId result.name result.grade result.comment result.beta result.kind []
-            )
-
-        Invalid errors values ->
-            ( Invalid errors values, Nothing )
-
-        Idle _ ->
-            ( form, Nothing )
-
-
-
---| UpdateUtilities
-
-
-updateBeta : a -> { b | beta : a } -> { b | beta : a }
-updateBeta value form =
-    { form | beta = value }
-
-
-updateComment : a -> { b | comment : a } -> { b | comment : a }
-updateComment value form =
-    { form | comment = value }
-
-
-updateGrade : a -> { b | grade : a } -> { b | grade : a }
-updateGrade value form =
-    { form | grade = value }
-
-
-updateKind : a -> { b | kind : a } -> { b | kind : a }
-updateKind value form =
-    { form | kind = value }
-
-
-updateName : a -> { b | name : a } -> { b | name : a }
-updateName value form =
-    { form | name = value }

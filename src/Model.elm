@@ -5,7 +5,7 @@ import Data exposing (Area, Ascent, AscentKind, ClimbingRoute, ClimbingRouteKind
 import Date exposing (Date)
 import DatePicker exposing (DatePicker)
 import Dict exposing (Dict)
-import Forms.Form exposing (Form)
+import Form.Form exposing (Form)
 import Select
 import Url
 

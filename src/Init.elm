@@ -8,7 +8,7 @@ import DataUtilities
 import Date exposing (Date)
 import DatePicker exposing (defaultSettings)
 import Dict
-import Forms.Form exposing (Form(..))
+import Form.Form exposing (Form(..))
 import Json.Decode exposing (decodeString)
 import Message exposing (ClimbingRoutesPageMsg(..), FormMsg(..), Msg(..))
 import Model exposing (AreaForm, AscentForm, ClimbingRouteForm, ClimbingRoutesPageModel, Model, SectorForm, SectorsPageModel, TripForm)
