@@ -11,7 +11,6 @@ import Form.Forms.ClimbingRouteForm as ClimbingRouteForm
 import Html.Styled as H exposing (Html)
 import Html.Styled.Attributes as A
 import Html.Styled.Events as E
-import Message exposing (ClimbingRoutesPageMsg(..))
 import Modal
 import Select
 import Session

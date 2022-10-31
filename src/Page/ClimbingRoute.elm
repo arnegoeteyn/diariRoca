@@ -549,5 +549,3 @@ ascentFromForm form =
             ( form, Nothing )
 
 
-
--- | ClimbingRoute

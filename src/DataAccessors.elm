@@ -190,17 +190,23 @@ deleteAscent i m =
 --| Trip
 
 
-getTripFromDate : Model -> Date -> Maybe Trip
-getTripFromDate m date =
-    Dict.filter (\_ t -> Date.isBetween t.from t.to date) m.trips |> Dict.values |> List.head
+addTrip : Trip -> Data -> Data
+addTrip trip data =
+    { data | trips = Dict.insert trip.id trip data.trips }
 
 
-getRoutesFromTrip : Model -> Trip -> Dict String Int
-getRoutesFromTrip model trip =
-    Utilities.filterDictValue (.date >> Date.isBetween trip.from trip.to) model.ascents
+getTripFromDate : Data -> Date -> Maybe Trip
+getTripFromDate data date =
+    Dict.filter (\_ t -> Date.isBetween t.from t.to date) data.trips |> Dict.values |> List.head
+
+
+getRoutesFromTrip : Data -> Trip -> Dict String Int
+getRoutesFromTrip data trip =
+    -- todo houdt dit steek?
+    Utilities.filterDictValue (.date >> Date.isBetween trip.from trip.to) data.ascents
         |> Dict.map (\_ v -> v.routeId)
         |> Dict.values
         |> Set.fromList
         |> Set.toList
-        |> List.filterMap (\v -> Dict.get v model.climbingRoutes)
+        |> List.filterMap (\v -> Dict.get v data.climbingRoutes)
         |> List.foldl (\route dict -> Dict.update route.grade (\x -> Just <| Maybe.withDefault 0 x + 1) dict) Dict.empty

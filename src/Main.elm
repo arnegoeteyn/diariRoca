@@ -11,6 +11,7 @@ import Html.Styled as H
 import Json.Decode exposing (decodeString)
 import Navbar
 import Page.ClimbingRoute as ClimbingRoute
+import Page.AscentsPage as Ascents
 import Page.ClimbingRoutes as ClimbingRoutes
 import Session
 import Skeleton
@@ -57,6 +58,7 @@ type Page
     = NotFoundPage Session.Model
     | ClimbingRoutePage ClimbingRoute.Model
     | ClimbingRoutesPage ClimbingRoutes.Model
+    | AscentsPage Ascents.Model
 
 
 type AppState
@@ -89,6 +91,9 @@ view model =
 
         ClimbingRoutesPage climbingRoutes ->
             Skeleton.view ClimbingRoutesMsg NavbarMsg (ClimbingRoutes.view climbingRoutes)
+
+        AscentsPage ascentsModel ->
+            Skeleton.view AscentsMsg NavbarMsg (Ascents.view ascentsModel)
 
 
 
@@ -131,6 +136,7 @@ type Msg
     | GoogleDriveResponse { type_ : String, argument : Maybe String }
     | ClimbingRouteMsg ClimbingRoute.Msg
     | ClimbingRoutesMsg ClimbingRoutes.Msg
+    | AscentsMsg Ascents.Msg
     | NavbarMsg Navbar.Msg
 
 
@@ -185,6 +191,14 @@ update message model =
                 _ ->
                     ( model, Cmd.none )
 
+        AscentsMsg msg ->
+            case model.route of
+                AscentsPage ascentsModel ->
+                    stepAscents model (Ascents.update msg ascentsModel)
+
+                _ ->
+                    ( model, Cmd.none )
+
         NavbarMsg msg ->
             ( model, Cmd.none )
 
@@ -232,6 +246,11 @@ stepClimbingRoutes model ( climbingRoutes, cmds ) =
     )
 
 
+stepAscents : Model -> (Ascents.Model, Cmd Ascents.Msg) -> (Model, Cmd Msg)
+stepAscents model (ascentsModel, cmds) = 
+    ({model | route = AscentsPage ascentsModel}
+    , Cmd.map AscentsMsg cmds)
+
 
 -- ROUTER
 
@@ -246,6 +265,9 @@ exit model =
             m.session
 
         ClimbingRoutesPage m ->
+            m.session
+
+        AscentsPage m ->
             m.session
 
 
@@ -266,6 +288,8 @@ stepUrl url model =
                         stepClimbingRoute model
                             (ClimbingRoute.init { session | route = Session.ClimbingRouteRoute } climbingRouteId)
                     )
+                , route (s "ascents")
+                    (stepAscents model (Ascents.init {session | route = Session.AscentsRoute}))
                 ]
     in
     case Parser.parse parser url of
