@@ -5,7 +5,6 @@ import Data exposing (ClimbingRouteKind(..), Data)
 import DataAccessors as MA
 import Dict
 import Html.Styled as H
-import Model exposing (Model)
 import Scale exposing (BandScale, ContinuousScale, bandwidth, defaultBandConfig)
 import Set
 import TypedSvg exposing (g, rect, style, svg, text_)

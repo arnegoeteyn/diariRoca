@@ -7,7 +7,6 @@ import Html.Styled.Attributes as A
 import Html.Styled.Events as E
 import Material.Icons.Round as IconsRound
 import Material.Icons.Types exposing (Coloring(..))
-import Model exposing (Model)
 import Session exposing (Route(..))
 import Tailwind.Breakpoints as B
 import Tailwind.Utilities as Tw

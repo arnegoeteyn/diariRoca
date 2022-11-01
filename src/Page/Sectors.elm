@@ -6,13 +6,11 @@ import DataUtilities as DU
 import Dict
 import Form.Criterium exposing (formSelectionWithSearchCriterium, formTextCriterium, updateSelectCriteriumMsg)
 import Form.Form as Form
-import Form.Forms exposing (idForForm, updateName, validateNonEmpty, viewErrors)
+import Form.Forms exposing (SelectionCriterium, idForForm, updateName, validateNonEmpty, viewErrors)
 import Html.Styled as H exposing (Html)
 import Html.Styled.Attributes as A
 import Html.Styled.Events as E
-import Message exposing (Msg(..), SectorsPageMsg(..))
 import Modal
-import Model exposing (ModalContent(..), Model, SelectionCriterium)
 import Select
 import Session
 import Skeleton
@@ -482,7 +480,7 @@ validateSectorForm model =
         |> sectorFromForm model
 
 
-sectorFromForm : Model -> Model.ValidatedSectorForm -> ( SectorForm, Maybe Sector )
+sectorFromForm : Model -> SectorForm -> ( SectorForm, Maybe Sector )
 sectorFromForm _ form =
     case form of
         Form.Valid sectorValues values ->

@@ -3,7 +3,6 @@ module DataAccessors exposing (..)
 import Data exposing (Area, Ascent, ClimbingRoute, Data, Sector, Trip)
 import Date exposing (Date)
 import Dict exposing (Dict)
-import Model exposing (Model)
 import Set
 import Utilities
 
@@ -181,9 +180,9 @@ addAscent ascent data =
     { data | ascents = Dict.insert ascent.id ascent data.ascents }
 
 
-getAscent : Model -> Int -> Maybe Ascent
-getAscent m i =
-    Dict.get i m.ascents
+getAscent : Data -> Int -> Maybe Ascent
+getAscent data i =
+    Dict.get i data.ascents
 
 
 getClimbingRouteFromAscent : Data -> Ascent -> Maybe ClimbingRoute

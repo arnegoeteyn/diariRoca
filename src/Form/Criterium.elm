@@ -1,14 +1,12 @@
 module Form.Criterium exposing (dateCriterium, formSelectionCriterium, formSelectionWithSearchCriterium, formTextAreaCriterium, formTextCriterium, selectionCriterium, selectionWithSearchCriterium, textCriterium, updateDateCriterium, updateSelectCriteriumMsg)
 
 import Date
-import DatePicker
+import DatePicker exposing (DatePicker)
 import Form.Form as Form exposing (Form(..), extract)
 import Html
 import Html.Styled as H
 import Html.Styled.Attributes as A
 import Html.Styled.Events as E
-import Message exposing (Msg(..))
-import Model exposing (DateCriterium, SelectionCriterium)
 import Select
 
 
@@ -154,3 +152,11 @@ updateDateCriterium extractor wrapper settings msg form =
                 updatedForm
     in
     newDateForm
+
+
+type alias DateCriterium =
+    ( Int, DatePicker )
+
+
+type alias SelectionCriterium item =
+    ( List item, Select.State )
