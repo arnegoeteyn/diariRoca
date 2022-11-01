@@ -27,13 +27,13 @@ view model =
 
         links =
             H.div [ A.css [ Tw.flex, Tw.items_center, Tw.w_auto ] ]
-                []
+                [ navLink ClimbingRoutesRoute { url = "/", caption = "Routes" }
+                , navLink AscentsRoute { url = "/ascents", caption = "Ascents" }
 
-        -- [ navLink ClimbingRoutesRoute { url = "/", caption = "Routes" }
-        -- , navLink AscentsRoute { url = "/ascents", caption = "Ascents" }
-        -- , navLink SectorsRoute { url = "/sectors", caption = "Sectors" }
-        -- , navLink StatsRoute { url = "/stats", caption = "Stats" }
-        -- ]
+                -- , navLink SectorsRoute { url = "/sectors", caption = "Sectors" }
+                -- , navLink StatsRoute { url = "/stats", caption = "Stats" }
+                ]
+
         navAttributes =
             [ A.css
                 [ Tw.flex
@@ -47,8 +47,9 @@ view model =
 
         isActive route =
             case ( route, model.route ) of
-                -- ( ClimbingRoutesRoute, ClimbingRouteRoute _ ) ->
-                --     True
+                ( ClimbingRoutesRoute, ClimbingRouteRoute ) ->
+                    True
+
                 _ ->
                     model.route == route
 
