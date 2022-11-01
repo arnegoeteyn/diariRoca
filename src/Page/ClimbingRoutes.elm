@@ -158,7 +158,8 @@ update msg model =
             )
 
         DeleteClimbingRouteConfirmation climbingRoute ->
-            Session.deleteClimbingRoute climbingRoute { model | modal = Empty }
+            Session.deleteClimbingRoute climbingRoute model.session
+                |> Session.assign { model | modal = Empty }
 
         -- Climbing route form
         UpdateClimbingRouteForm values ->
@@ -204,10 +205,10 @@ update msg model =
             in
             case maybeClimbingRoute of
                 Just climbingRoute ->
-                    { updatedModel | modal = Empty }
-                        |> Session.addClimbingRoute climbingRoute
-                        |> Session.assignCommand (showRouteTask climbingRoute)
+                    Session.addClimbingRoute climbingRoute model.session
+                        |> Session.assignWithCommand { updatedModel | modal = Empty } (showRouteTask climbingRoute)
 
+                -- |> Session.assign model
                 Nothing ->
                     ( updatedModel, Cmd.none )
 

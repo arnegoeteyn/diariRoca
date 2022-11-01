@@ -1,7 +1,7 @@
 module Session exposing (..)
 
 import Command
-import Data exposing (Ascent, ClimbingRoute, Data, Media, Trip)
+import Data exposing (Area, Ascent, ClimbingRoute, Data, Media, Sector, Trip)
 import DataAccessors as DA
 import DataParser exposing (jsonFileDecoder)
 import Date exposing (Date)
@@ -30,6 +30,8 @@ type Route
     | ClimbingRouteRoute
     | ClimbingRoutesRoute
     | AscentsRoute
+    | SectorsRoute
+    | StatsRoute
 
 
 
@@ -67,9 +69,9 @@ assign model ( session, cmd ) =
     ( { model | session = session }, cmd )
 
 
-assignCommand : Cmd msg -> ( ModelEncapsulated a, Cmd msg ) -> ( ModelEncapsulated a, Cmd msg )
-assignCommand cmdA ( model, cmd ) =
-    ( model, Cmd.batch [ cmd, cmdA ] )
+assignWithCommand : ModelEncapsulated a -> Cmd msg -> ( Model, Cmd msg ) -> ( ModelEncapsulated a, Cmd msg )
+assignWithCommand encapsulatedModel cmdA ( model, cmd ) =
+    ( { encapsulatedModel | session = model }, Cmd.batch [ cmd, cmdA ] )
 
 
 updateSessionStorage : Model -> ( Model, Cmd msg )
@@ -85,25 +87,46 @@ type alias ModelEncapsulated a =
     { a | session : Model }
 
 
-update : ModelEncapsulated a -> (Model -> Model) -> ( ModelEncapsulated a, Cmd msg )
-update encapsulated f =
-    updateSessionStorage (f encapsulated.session)
-        |> Tuple.mapFirst (\session -> { encapsulated | session = session })
+
+-- Area
+
+
+deleteArea : Area -> Model -> ( Model, Cmd msg )
+deleteArea area model =
+    updateSessionStorage { model | data = DA.deleteArea area.id model.data }
+
+
+addArea : Area -> Model -> ( Model, Cmd msg )
+addArea area model =
+    updateSessionStorage { model | data = DA.addArea area model.data }
+
+
+
+-- Sector
+
+
+deleteSector : Sector -> Model -> ( Model, Cmd msg )
+deleteSector sector model =
+    updateSessionStorage { model | data = DA.deleteSector sector.id model.data }
+
+
+addSector : Sector -> Model -> ( Model, Cmd msg )
+addSector sector model =
+    updateSessionStorage { model | data = DA.addSector sector model.data }
 
 
 
 -- Climbing Routes
 
 
-addClimbingRoute : ClimbingRoute -> ModelEncapsulated a -> ( ModelEncapsulated a, Cmd msg )
+addClimbingRoute : ClimbingRoute -> Model -> ( Model, Cmd msg )
 addClimbingRoute climbingRoute model =
-    update model
-        (\m -> { m | data = DA.addClimbingRoute climbingRoute m.data })
+    updateSessionStorage { model | data = DA.addClimbingRoute climbingRoute model.data }
 
 
-deleteClimbingRoute : ClimbingRoute -> ModelEncapsulated a -> ( ModelEncapsulated a, Cmd msg )
+deleteClimbingRoute : ClimbingRoute -> Model -> ( Model, Cmd msg )
 deleteClimbingRoute climbingRoute model =
-    update model (\m -> { m | data = DA.deleteRoute climbingRoute.id m.data })
+    updateSessionStorage { model | data = DA.deleteRoute climbingRoute.id model.data }
 
 
 

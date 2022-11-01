@@ -92,31 +92,6 @@ initTripForm maybeTrip defaultDate =
     )
 
 
-initAreaForm : Maybe Area -> AreaForm
-initAreaForm maybeArea =
-    Idle
-        { name = Maybe.map .name maybeArea |> Maybe.withDefault ""
-        , country = Maybe.map .country maybeArea |> Maybe.withDefault ""
-        }
-
-
-initSectorForm : Maybe Model -> Maybe Sector -> SectorForm
-initSectorForm maybeModel maybeSector =
-    Idle
-        { name = Maybe.map .name maybeSector |> Maybe.withDefault ""
-        , areaId =
-            ( Maybe.andThen
-                (\model ->
-                    Maybe.andThen (.areaId >> MA.getArea model) maybeSector
-                        |> Maybe.map List.singleton
-                )
-                maybeModel
-                |> Maybe.withDefault []
-            , Select.init "sectorFormAreaId"
-            )
-        }
-
-
 initClimbingRouteForm : Maybe Model -> Maybe ClimbingRoute -> ClimbingRouteForm
 initClimbingRouteForm maybeModel climbingRoute =
     Idle

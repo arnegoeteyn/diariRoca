@@ -56,6 +56,11 @@ deleteArea i m =
             { sectorsModel | areas = Dict.remove i m.areas }
 
 
+addArea : Area -> Data -> Data
+addArea area data =
+    { data | areas = Dict.insert area.id area data.areas }
+
+
 
 --| Sector
 
@@ -112,6 +117,11 @@ deleteSector i m =
                         m.climbingRoutes
             in
             { climbingRoutesModel | sectors = Dict.remove i m.sectors }
+
+
+addSector : Sector -> Data -> Data
+addSector sector data =
+    { data | sectors = Dict.insert sector.id sector data.sectors }
 
 
 

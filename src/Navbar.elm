@@ -29,9 +29,8 @@ view model =
             H.div [ A.css [ Tw.flex, Tw.items_center, Tw.w_auto ] ]
                 [ navLink ClimbingRoutesRoute { url = "/", caption = "Routes" }
                 , navLink AscentsRoute { url = "/ascents", caption = "Ascents" }
-
-                -- , navLink SectorsRoute { url = "/sectors", caption = "Sectors" }
-                -- , navLink StatsRoute { url = "/stats", caption = "Stats" }
+                , navLink SectorsRoute { url = "/sectors", caption = "Sectors" }
+                , navLink StatsRoute { url = "/stats", caption = "Stats" }
                 ]
 
         navAttributes =

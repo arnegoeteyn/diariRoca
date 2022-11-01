@@ -161,8 +161,8 @@ update msg model =
                 task =
                     Nav.load "/"
             in
-            Session.deleteClimbingRoute climbingRoute model
-                |> Session.assignCommand task
+            Session.deleteClimbingRoute climbingRoute model.session
+                |> Session.assignWithCommand model task
 
         OpenClimbingRouteForm maybeClimbingRoute ->
             ( { model
@@ -235,8 +235,8 @@ update msg model =
             in
             case maybeClimbingRoute of
                 Just climbingRoute ->
-                    { updatedModel | modal = Empty }
-                        |> Session.addClimbingRoute climbingRoute
+                    Session.addClimbingRoute climbingRoute model.session
+                        |> Session.assign { updatedModel | modal = Empty }
 
                 Nothing ->
                     ( updatedModel, Cmd.none )
@@ -547,5 +547,3 @@ ascentFromForm form =
 
         Idle _ ->
             ( form, Nothing )
-
-

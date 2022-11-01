@@ -10,9 +10,10 @@ import Dict
 import Html.Styled as H
 import Json.Decode exposing (decodeString)
 import Navbar
-import Page.ClimbingRoute as ClimbingRoute
 import Page.AscentsPage as Ascents
+import Page.ClimbingRoute as ClimbingRoute
 import Page.ClimbingRoutes as ClimbingRoutes
+import Page.Sectors as Sectors
 import Session
 import Skeleton
 import Time
@@ -59,6 +60,7 @@ type Page
     | ClimbingRoutePage ClimbingRoute.Model
     | ClimbingRoutesPage ClimbingRoutes.Model
     | AscentsPage Ascents.Model
+    | SectorsPage Sectors.Model
 
 
 type AppState
@@ -94,6 +96,9 @@ view model =
 
         AscentsPage ascentsModel ->
             Skeleton.view AscentsMsg NavbarMsg (Ascents.view ascentsModel)
+
+        SectorsPage sectorsModel ->
+            Skeleton.view SectorsMsg NavbarMsg (Sectors.view sectorsModel)
 
 
 
@@ -137,6 +142,7 @@ type Msg
     | ClimbingRouteMsg ClimbingRoute.Msg
     | ClimbingRoutesMsg ClimbingRoutes.Msg
     | AscentsMsg Ascents.Msg
+    | SectorsMsg Sectors.Msg
     | NavbarMsg Navbar.Msg
 
 
@@ -199,6 +205,14 @@ update message model =
                 _ ->
                     ( model, Cmd.none )
 
+        SectorsMsg msg ->
+            case model.route of
+                SectorsPage sectorsModel ->
+                    stepSectors model (Sectors.update msg sectorsModel)
+
+                _ ->
+                    ( model, Cmd.none )
+
         NavbarMsg msg ->
             ( model, Cmd.none )
 
@@ -246,10 +260,19 @@ stepClimbingRoutes model ( climbingRoutes, cmds ) =
     )
 
 
-stepAscents : Model -> (Ascents.Model, Cmd Ascents.Msg) -> (Model, Cmd Msg)
-stepAscents model (ascentsModel, cmds) = 
-    ({model | route = AscentsPage ascentsModel}
-    , Cmd.map AscentsMsg cmds)
+stepAscents : Model -> ( Ascents.Model, Cmd Ascents.Msg ) -> ( Model, Cmd Msg )
+stepAscents model ( ascentsModel, cmds ) =
+    ( { model | route = AscentsPage ascentsModel }
+    , Cmd.map AscentsMsg cmds
+    )
+
+
+stepSectors : Model -> ( Sectors.Model, Cmd Sectors.Msg ) -> ( Model, Cmd Msg )
+stepSectors model ( sectorsModel, cmds ) =
+    ( { model | route = SectorsPage sectorsModel }
+    , Cmd.map SectorsMsg cmds
+    )
+
 
 
 -- ROUTER
@@ -268,6 +291,9 @@ exit model =
             m.session
 
         AscentsPage m ->
+            m.session
+
+        SectorsPage m ->
             m.session
 
 
@@ -289,7 +315,12 @@ stepUrl url model =
                             (ClimbingRoute.init { session | route = Session.ClimbingRouteRoute } climbingRouteId)
                     )
                 , route (s "ascents")
-                    (stepAscents model (Ascents.init {session | route = Session.AscentsRoute}))
+                    (stepAscents model (Ascents.init { session | route = Session.AscentsRoute }))
+                , route (s "sectors")
+                    (stepSectors model (Sectors.init { session | route = Session.SectorsRoute }))
+
+                -- , route (s "stats")
+                --     (stepAscents model (Ascents.init { session | route = Session.AscentsRoute }))
                 ]
     in
     case Parser.parse parser url of
