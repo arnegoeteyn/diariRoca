@@ -19,8 +19,8 @@ type Msg
     = NoOp
 
 
-view : Session.Model -> Html Msg
-view model =
+view : Route -> Session.Model -> Html Msg
+view sessionRoute model =
     let
         logo =
             H.div [ A.css [ Tw.flex, Tw.items_center, Tw.flex_shrink_0, Tw.text_white, Tw.mr_6 ] ] [ H.text "Diari roca" ]
@@ -45,12 +45,12 @@ view model =
             ]
 
         isActive route =
-            case ( route, model.route ) of
+            case ( route, sessionRoute ) of
                 ( ClimbingRoutesRoute, ClimbingRouteRoute ) ->
                     True
 
                 _ ->
-                    model.route == route
+                    sessionRoute == route
 
         navLink : Route -> { url : String, caption : String } -> Html msg
         navLink route { url, caption } =

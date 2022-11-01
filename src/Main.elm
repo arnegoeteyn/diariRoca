@@ -45,7 +45,7 @@ main =
 type alias Model =
     { key : Nav.Key
     , url : Url.Url
-    , route : Page
+    , page : ( Session.Route, Page )
     , appState : AppState
     , startUpDate : Date
     , version : String
@@ -80,10 +80,15 @@ subscriptions _ =
 
 view : Model -> Browser.Document Msg
 view model =
-    case model.route of
+    let
+        ( sessionRoute, page ) =
+            model.page
+    in
+    case page of
         NotFoundPage _ ->
             Skeleton.view never
                 NavbarMsg
+                NotFoundRoute
                 { title = "Not Found"
                 , warning = Skeleton.NoProblems
                 , kids = [ H.text "not found" ]
@@ -91,19 +96,19 @@ view model =
                 }
 
         ClimbingRoutePage climbingRoute ->
-            Skeleton.view ClimbingRouteMsg NavbarMsg (ClimbingRoute.view climbingRoute)
+            Skeleton.view ClimbingRouteMsg NavbarMsg sessionRoute (ClimbingRoute.view climbingRoute)
 
         ClimbingRoutesPage climbingRoutes ->
-            Skeleton.view ClimbingRoutesMsg NavbarMsg (ClimbingRoutes.view climbingRoutes)
+            Skeleton.view ClimbingRoutesMsg NavbarMsg sessionRoute (ClimbingRoutes.view climbingRoutes)
 
         AscentsPage ascentsModel ->
-            Skeleton.view AscentsMsg NavbarMsg (Ascents.view ascentsModel)
+            Skeleton.view AscentsMsg NavbarMsg sessionRoute (Ascents.view ascentsModel)
 
         SectorsPage sectorsModel ->
-            Skeleton.view SectorsMsg NavbarMsg (Sectors.view sectorsModel)
+            Skeleton.view SectorsMsg NavbarMsg sessionRoute (Sectors.view sectorsModel)
 
         StatsPage session ->
-            Skeleton.view SectorsMsg NavbarMsg (Stats.view session)
+            Skeleton.view SectorsMsg NavbarMsg sessionRoute (Stats.view session)
 
 
 
@@ -125,7 +130,7 @@ init ({ storageCache, posixTime, version } as flags) url key =
     stepUrl url
         { key = key
         , url = url
-        , route = NotFoundPage <| Session.init flags Session.NotFoundRoute
+        , page = ( NotFoundRoute, NotFoundPage <| Session.init flags )
         , appState = Ready
         , startUpDate = date
         , version = version
@@ -187,32 +192,32 @@ update message model =
                     ( model, Cmd.none )
 
         ClimbingRouteMsg msg ->
-            case model.route of
-                ClimbingRoutePage climbingRoute ->
+            case model.page of
+                ( _, ClimbingRoutePage climbingRoute ) ->
                     stepClimbingRoute model (ClimbingRoute.update msg climbingRoute)
 
                 _ ->
                     ( model, Cmd.none )
 
         ClimbingRoutesMsg msg ->
-            case model.route of
-                ClimbingRoutesPage climbingRoutes ->
+            case model.page of
+                ( _, ClimbingRoutesPage climbingRoutes ) ->
                     stepClimbingRoutes model (ClimbingRoutes.update msg climbingRoutes)
 
                 _ ->
                     ( model, Cmd.none )
 
         AscentsMsg msg ->
-            case model.route of
-                AscentsPage ascentsModel ->
+            case model.page of
+                ( _, AscentsPage ascentsModel ) ->
                     stepAscents model (Ascents.update msg ascentsModel)
 
                 _ ->
                     ( model, Cmd.none )
 
         SectorsMsg msg ->
-            case model.route of
-                SectorsPage sectorsModel ->
+            case model.page of
+                ( _, SectorsPage sectorsModel ) ->
                     stepSectors model (Sectors.update msg sectorsModel)
 
                 _ ->
@@ -253,28 +258,28 @@ loadContent model content =
 
 stepClimbingRoute : Model -> ( ClimbingRoute.Model, Cmd ClimbingRoute.Msg ) -> ( Model, Cmd Msg )
 stepClimbingRoute model ( climbingRoute, cmds ) =
-    ( { model | route = ClimbingRoutePage climbingRoute }
+    ( { model | page = ( ClimbingRouteRoute, ClimbingRoutePage climbingRoute ) }
     , Cmd.map ClimbingRouteMsg cmds
     )
 
 
 stepClimbingRoutes : Model -> ( ClimbingRoutes.Model, Cmd ClimbingRoutes.Msg ) -> ( Model, Cmd Msg )
 stepClimbingRoutes model ( climbingRoutes, cmds ) =
-    ( { model | route = ClimbingRoutesPage climbingRoutes }
+    ( { model | page = ( ClimbingRoutesRoute, ClimbingRoutesPage climbingRoutes ) }
     , Cmd.map ClimbingRoutesMsg cmds
     )
 
 
 stepAscents : Model -> ( Ascents.Model, Cmd Ascents.Msg ) -> ( Model, Cmd Msg )
 stepAscents model ( ascentsModel, cmds ) =
-    ( { model | route = AscentsPage ascentsModel }
+    ( { model | page = ( AscentsRoute, AscentsPage ascentsModel ) }
     , Cmd.map AscentsMsg cmds
     )
 
 
 stepSectors : Model -> ( Sectors.Model, Cmd Sectors.Msg ) -> ( Model, Cmd Msg )
 stepSectors model ( sectorsModel, cmds ) =
-    ( { model | route = SectorsPage sectorsModel }
+    ( { model | page = ( SectorsRoute, SectorsPage sectorsModel ) }
     , Cmd.map SectorsMsg cmds
     )
 
@@ -285,23 +290,23 @@ stepSectors model ( sectorsModel, cmds ) =
 
 exit : Model -> Session.Model
 exit model =
-    case model.route of
-        NotFoundPage session ->
+    case model.page of
+        ( _, NotFoundPage session ) ->
             session
 
-        ClimbingRoutePage m ->
+        ( _, ClimbingRoutePage m ) ->
             m.session
 
-        ClimbingRoutesPage m ->
+        ( _, ClimbingRoutesPage m ) ->
             m.session
 
-        AscentsPage m ->
+        ( _, AscentsPage m ) ->
             m.session
 
-        SectorsPage m ->
+        ( _, SectorsPage m ) ->
             m.session
 
-        StatsPage session ->
+        ( _, StatsPage session ) ->
             session
 
 
@@ -315,19 +320,19 @@ stepUrl url model =
             oneOf
                 [ route top
                     (stepClimbingRoutes model
-                        (ClimbingRoutes.init { session | route = Session.ClimbingRoutesRoute })
+                        (ClimbingRoutes.init session)
                     )
                 , route (s "routes" </> route_)
                     (\climbingRouteId ->
                         stepClimbingRoute model
-                            (ClimbingRoute.init { session | route = Session.ClimbingRouteRoute } climbingRouteId)
+                            (ClimbingRoute.init session climbingRouteId)
                     )
                 , route (s "ascents")
-                    (stepAscents model (Ascents.init { session | route = Session.AscentsRoute }))
+                    (stepAscents model (Ascents.init session))
                 , route (s "sectors")
-                    (stepSectors model (Sectors.init { session | route = Session.SectorsRoute }))
+                    (stepSectors model (Sectors.init session))
                 , route (s "stats")
-                    ( { model | route = StatsPage { session | route = Session.StatsRoute } }, Cmd.none )
+                    ( { model | page = ( StatsRoute, StatsPage session ) }, Cmd.none )
                 ]
     in
     case Parser.parse parser url of
@@ -335,7 +340,7 @@ stepUrl url model =
             answer
 
         Nothing ->
-            ( { model | route = NotFoundPage session }
+            ( { model | page = ( NotFoundRoute, NotFoundPage session ) }
             , Cmd.none
             )
 
