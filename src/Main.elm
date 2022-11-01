@@ -14,7 +14,8 @@ import Page.AscentsPage as Ascents
 import Page.ClimbingRoute as ClimbingRoute
 import Page.ClimbingRoutes as ClimbingRoutes
 import Page.Sectors as Sectors
-import Session
+import Page.Stats as Stats
+import Session exposing (Route(..))
 import Skeleton
 import Time
 import Url
@@ -61,6 +62,7 @@ type Page
     | ClimbingRoutesPage ClimbingRoutes.Model
     | AscentsPage Ascents.Model
     | SectorsPage Sectors.Model
+    | StatsPage Session.Model
 
 
 type AppState
@@ -99,6 +101,9 @@ view model =
 
         SectorsPage sectorsModel ->
             Skeleton.view SectorsMsg NavbarMsg (Sectors.view sectorsModel)
+
+        StatsPage session ->
+            Skeleton.view SectorsMsg NavbarMsg (Stats.view session)
 
 
 
@@ -296,6 +301,9 @@ exit model =
         SectorsPage m ->
             m.session
 
+        StatsPage session ->
+            session
+
 
 stepUrl : Url.Url -> Model -> ( Model, Cmd Msg )
 stepUrl url model =
@@ -318,9 +326,8 @@ stepUrl url model =
                     (stepAscents model (Ascents.init { session | route = Session.AscentsRoute }))
                 , route (s "sectors")
                     (stepSectors model (Sectors.init { session | route = Session.SectorsRoute }))
-
-                -- , route (s "stats")
-                --     (stepAscents model (Ascents.init { session | route = Session.AscentsRoute }))
+                , route (s "stats")
+                    ( { model | route = StatsPage { session | route = Session.StatsRoute } }, Cmd.none )
                 ]
     in
     case Parser.parse parser url of

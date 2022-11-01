@@ -1,11 +1,10 @@
 module View.PerGradeStat exposing (countPerGrade, viewChart, viewHeader, viewTable)
 
 import Axis
+import Data exposing (ClimbingRouteKind(..), Data)
 import DataAccessors as MA
-import DataParser exposing (ClimbingRouteKind(..))
 import Dict
 import Html.Styled as H
-import Message exposing (Msg)
 import Model exposing (Model)
 import Scale exposing (BandScale, ContinuousScale, bandwidth, defaultBandConfig)
 import Set
@@ -16,7 +15,7 @@ import TypedSvg.Core exposing (Svg, text)
 import TypedSvg.Types exposing (AlignmentBaseline(..), AnchorAlignment(..), Transform(..), px)
 
 
-viewHeader : PerGradeStat -> H.Html Msg
+viewHeader : PerGradeStat -> H.Html msg
 viewHeader ( kind, stats ) =
     let
         count =
@@ -33,7 +32,7 @@ viewHeader ( kind, stats ) =
         ]
 
 
-viewTable : PerGradeStat -> H.Html Msg
+viewTable : PerGradeStat -> H.Html msg
 viewTable ( kind, stats ) =
     H.table
         []
@@ -132,7 +131,7 @@ view ( _, stats ) =
         ]
 
 
-viewChart : PerGradeStat -> H.Html Msg
+viewChart : PerGradeStat -> H.Html msg
 viewChart stats =
     H.fromUnstyled <| view stats
 
@@ -149,18 +148,18 @@ type alias PerGradeStat =
     ( ClimbingRouteKind, GradeCount )
 
 
-countPerGrade : Model -> ClimbingRouteKind -> PerGradeStat
-countPerGrade model kind =
+countPerGrade : Data -> ClimbingRouteKind -> PerGradeStat
+countPerGrade data kind =
     ( kind
     , Dict.toList
         (Dict.foldl (\_ v a -> Set.insert v.routeId a)
             Set.empty
-            model.ascents
+            data.ascents
             |> Set.foldl
                 (\k a ->
                     let
                         route =
-                            MA.getClimbingRoute model k
+                            MA.getClimbingRoute data k
                     in
                     case route of
                         Just r ->
