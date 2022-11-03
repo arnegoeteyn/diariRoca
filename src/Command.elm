@@ -1,13 +1,9 @@
-port module Command exposing (GoogleDriveCommandType(..), googleDriveCommand, googleDriveCommandPort, googleDriveSubscriptionPort, loadCache, storeCache)
+port module Command exposing (GoogleDriveCommandType(..), googleDriveCommand, googleDriveCommandPort, googleDriveSubscriptionPort, storeCache)
 
 import Json.Encode
-import Message exposing (Msg)
 
 
 port storeCache : Json.Encode.Value -> Cmd msg
-
-
-port loadCache : (String -> msg) -> Sub msg
 
 
 type GoogleDriveCommandType

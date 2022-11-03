@@ -1,4 +1,4 @@
-module Forms.Form exposing (Form(..), append, check, extract, mapAndReturn, mapErrors, mapValues, succeed)
+module Form.Form exposing (Form(..), append, check, extract, mapAndReturn, mapErrors, mapValues, succeed)
 
 
 type Form values result
