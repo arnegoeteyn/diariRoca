@@ -3,12 +3,8 @@ module Main exposing (main)
 import Browser
 import Browser.Navigation as Nav
 import Command
-import Data exposing (Data)
-import DataParser exposing (encodedJsonFile, jsonFileDecoder)
 import Date exposing (Date)
-import Dict
 import Html.Styled as H
-import Json.Decode exposing (decodeString)
 import Navbar
 import Page.AscentsPage as Ascents
 import Page.ClimbingRoute as ClimbingRoute
@@ -46,11 +42,10 @@ type alias Model =
     { key : Nav.Key
     , url : Url.Url
     , route : Page
+    , navbarModel : Navbar.Model
     , appState : AppState
     , startUpDate : Date
     , version : String
-
-    -- , modal : ModalContent
     , settingsOpen : Bool
     , googleDriveAuthorized : Bool
     }
@@ -75,15 +70,24 @@ type AppState
 
 subscriptions : Model -> Sub Msg
 subscriptions _ =
-    Sub.batch [ Command.loadCache JsonLoaded, Command.googleDriveSubscriptionPort GoogleDriveResponse ]
+    Sub.batch
+        [ Command.googleDriveSubscriptionPort GoogleDriveResponse
+        ]
 
 
 view : Model -> Browser.Document Msg
 view model =
+    let
+        session =
+            exit model
+
+        navbar =
+            H.map NavbarMsg <| Navbar.view <| (\x -> { x | session = session }) model.navbarModel
+    in
     case model.route of
         NotFoundPage _ ->
             Skeleton.view never
-                NavbarMsg
+                navbar
                 { title = "Not Found"
                 , warning = Skeleton.NoProblems
                 , kids = [ H.text "not found" ]
@@ -91,19 +95,19 @@ view model =
                 }
 
         ClimbingRoutePage climbingRoute ->
-            Skeleton.view ClimbingRouteMsg NavbarMsg (ClimbingRoute.view climbingRoute)
+            Skeleton.view ClimbingRouteMsg navbar (ClimbingRoute.view climbingRoute)
 
         ClimbingRoutesPage climbingRoutes ->
-            Skeleton.view ClimbingRoutesMsg NavbarMsg (ClimbingRoutes.view climbingRoutes)
+            Skeleton.view ClimbingRoutesMsg navbar (ClimbingRoutes.view climbingRoutes)
 
         AscentsPage ascentsModel ->
-            Skeleton.view AscentsMsg NavbarMsg (Ascents.view ascentsModel)
+            Skeleton.view AscentsMsg navbar (Ascents.view ascentsModel)
 
         SectorsPage sectorsModel ->
-            Skeleton.view SectorsMsg NavbarMsg (Sectors.view sectorsModel)
+            Skeleton.view SectorsMsg navbar (Sectors.view sectorsModel)
 
-        StatsPage session ->
-            Skeleton.view SectorsMsg NavbarMsg (Stats.view session)
+        StatsPage statsSesssion ->
+            Skeleton.view SectorsMsg navbar (Stats.view statsSesssion)
 
 
 
@@ -113,19 +117,17 @@ view model =
 init : { storageCache : String, posixTime : Int, version : String } -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
 init ({ storageCache, posixTime, version } as flags) url key =
     let
+        session =
+            Session.init flags Session.NotFoundRoute
+
         date =
             Date.fromPosix Time.utc (Time.millisToPosix posixTime)
-
-        decodedStorage =
-            decodeString jsonFileDecoder storageCache
-
-        jsonFile =
-            Result.withDefault { climbingRoutes = Dict.empty, ascents = Dict.empty, sectors = Dict.empty, areas = Dict.empty, trips = Dict.empty } <| decodedStorage
     in
     stepUrl url
         { key = key
         , url = url
-        , route = NotFoundPage <| Session.init flags Session.NotFoundRoute
+        , route = NotFoundPage session
+        , navbarModel = Navbar.init session
         , appState = Ready
         , startUpDate = date
         , version = version
@@ -142,8 +144,9 @@ type Msg
     = NoOp
     | LinkClicked Browser.UrlRequest
     | UrlChanged Url.Url
-    | JsonLoaded String
+      -- Commands
     | GoogleDriveResponse { type_ : String, argument : Maybe String }
+      -- Pages
     | ClimbingRouteMsg ClimbingRoute.Msg
     | ClimbingRoutesMsg ClimbingRoutes.Msg
     | AscentsMsg Ascents.Msg
@@ -172,16 +175,23 @@ update message model =
         UrlChanged url ->
             stepUrl url model
 
-        JsonLoaded content ->
-            loadContent model content
-
         GoogleDriveResponse response ->
             case String.toLower response.type_ of
                 "authorized" ->
-                    ( { model | googleDriveAuthorized = True }, Cmd.none )
+                    let
+                        newSession oldSession =
+                            { oldSession | googleDriveAuthorized = True }
+                    in
+                    ( swapSession model (newSession (exit model)), Cmd.none )
 
                 "filechosen" ->
-                    Maybe.map (loadContent model) response.argument |> Maybe.withDefault ( model, Cmd.none )
+                    let
+                        newSession =
+                            response.argument
+                                |> Maybe.map (\s -> Session.loadJson s (exit model))
+                                |> Maybe.map (Tuple.mapFirst (swapSession model))
+                    in
+                    Maybe.withDefault ( model, Cmd.none ) newSession
 
                 _ ->
                     ( model, Cmd.none )
@@ -219,36 +229,11 @@ update message model =
                     ( model, Cmd.none )
 
         NavbarMsg msg ->
-            ( model, Cmd.none )
-
-
-loadContent : Model -> String -> ( Model, Cmd msg )
-loadContent model content =
-    let
-        result =
-            decodeString jsonFileDecoder content
-    in
-    case result of
-        Ok file ->
             let
-                data =
-                    { climbingRoutes = file.climbingRoutes
-                    , ascents = file.ascents
-                    , sectors = file.sectors
-                    , areas = file.areas
-                    , trips = file.trips
-                    }
+                ( navbarModel, cmd ) =
+                    Navbar.update msg model.navbarModel
             in
-            ( { model
-                | appState = Ready
-
-                -- , data = data
-              }
-            , Cmd.none
-            )
-
-        Err _ ->
-            ( { model | appState = Ready }, Cmd.none )
+            ( swapSession { model | navbarModel = navbarModel } navbarModel.session, Cmd.map NavbarMsg cmd )
 
 
 stepClimbingRoute : Model -> ( ClimbingRoute.Model, Cmd ClimbingRoute.Msg ) -> ( Model, Cmd Msg )
@@ -303,6 +288,31 @@ exit model =
 
         StatsPage session ->
             session
+
+
+swapSession : Model -> Session.Model -> Model
+swapSession model newSession =
+    { model
+        | route =
+            case model.route of
+                NotFoundPage _ ->
+                    NotFoundPage newSession
+
+                ClimbingRoutePage climbingRoutePage ->
+                    ClimbingRoutePage { climbingRoutePage | session = newSession }
+
+                ClimbingRoutesPage climbingRoutesPage ->
+                    ClimbingRoutesPage { climbingRoutesPage | session = newSession }
+
+                AscentsPage ascentsPage ->
+                    AscentsPage { ascentsPage | session = newSession }
+
+                SectorsPage sectorsPage ->
+                    SectorsPage { sectorsPage | session = newSession }
+
+                StatsPage _ ->
+                    StatsPage newSession
+    }
 
 
 stepUrl : Url.Url -> Model -> ( Model, Cmd Msg )

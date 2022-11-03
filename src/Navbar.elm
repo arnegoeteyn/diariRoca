@@ -1,24 +1,117 @@
-module Navbar exposing (Msg, view)
+module Navbar exposing (Model, Msg, init, update, view)
 
+import Command
 import Css
+import DataParser exposing (encodedJsonFile)
+import File
+import File.Download
+import File.Select
 import Html exposing (Html)
 import Html.Styled as H exposing (Html)
 import Html.Styled.Attributes as A
 import Html.Styled.Events as E
+import Json.Encode exposing (encode)
 import Material.Icons.Round as IconsRound
 import Material.Icons.Types exposing (Coloring(..))
-import Session exposing (Route(..))
+import Session exposing (ModelEncapsulated, Route(..))
 import Tailwind.Breakpoints as B
 import Tailwind.Utilities as Tw
+import Task
 import Utilities
+import View.Button exposing (withMsg)
 import View.Icon exposing (iconButton)
+
+
+
+-- Model
+
+
+type alias ModelContent =
+    { dropdownOpen : Bool
+    }
+
+
+type alias Model =
+    ModelEncapsulated ModelContent
+
+
+
+-- Init
+
+
+init : Session.Model -> Model
+init session =
+    { dropdownOpen = False
+    , session = session
+    }
+
+
+
+-- Update
 
 
 type Msg
     = NoOp
+    | ToggleDropdown
+    | CloseDropdown
+    | JsonRequested
+    | JsonSelected File.File
+    | JsonLoaded String
+    | ExportRequested
+    | GoogleDriveJsonRequested
+    | GoogleDriveExportRequested
+    | AuthorizeGoogleDrive
 
 
-view : Session.Model -> Html Msg
+update : Msg -> Model -> ( Model, Cmd Msg )
+update msg model =
+    case msg of
+        NoOp ->
+            ( model, Cmd.none )
+
+        ToggleDropdown ->
+            ( { model | dropdownOpen = not model.dropdownOpen }, Cmd.none )
+
+        CloseDropdown ->
+            ( { model | dropdownOpen = True }, Cmd.none )
+
+        JsonRequested ->
+            ( model, File.Select.file [ "application/json" ] JsonSelected )
+
+        JsonSelected file ->
+            ( model, Task.perform JsonLoaded (File.toString file) )
+
+        JsonLoaded content ->
+            Session.loadJson content model.session
+                |> Session.assign model
+
+        ExportRequested ->
+            let
+                result =
+                    encode 5 <|
+                        encodedJsonFile model.session.data
+            in
+            ( model, File.Download.string "result.json" "application/json" result )
+
+        AuthorizeGoogleDrive ->
+            ( model, Command.googleDriveCommand Command.Authorize )
+
+        GoogleDriveJsonRequested ->
+            ( model, Command.googleDriveCommand Command.ShowPicker )
+
+        GoogleDriveExportRequested ->
+            let
+                result =
+                    encode 5 <| encodedJsonFile model.session.data
+            in
+            ( model, Command.googleDriveCommand (Command.Save result) )
+
+
+
+-- View
+
+
+view : Model -> Html Msg
 view model =
     let
         logo =
@@ -44,12 +137,12 @@ view model =
             ]
 
         isActive route =
-            case ( route, model.route ) of
+            case ( route, model.session.route ) of
                 ( ClimbingRoutesRoute, ClimbingRouteRoute ) ->
                     True
 
                 _ ->
-                    model.route == route
+                    model.session.route == route
 
         navLink : Route -> { url : String, caption : String } -> Html msg
         navLink route { url, caption } =
@@ -68,7 +161,7 @@ view model =
         ]
 
 
-dropDown : Session.Model -> Html Msg
+dropDown : Model -> Html Msg
 dropDown model =
     let
         versionLink =
@@ -83,14 +176,14 @@ dropDown model =
                     , Css.hover
                         [ Tw.bg_gray_600, Tw.text_white ]
                     ]
-                , A.href ("https://github.com/arnegoeteyn/diariRoca/releases/tag/v" ++ model.version)
+                , A.href ("https://github.com/arnegoeteyn/diariRoca/releases/tag/v" ++ model.session.version)
                 , A.target "_blank"
                 ]
-                [ H.text ("v" ++ model.version) ]
+                [ H.text ("v" ++ model.session.version) ]
     in
     H.li [ A.css [ Tw.block ] ]
-        -- [ iconButton IconsRound.settings Message.ToggleSettings
-        [ H.div [ A.css [ Tw.bg_white, Tw.absolute ], A.css <| Utilities.filterList [ ( Tw.hidden, not model.settingsOpen ) ] ]
+        [ iconButton IconsRound.settings ToggleDropdown
+        , H.div [ A.css [ Tw.bg_white, Tw.absolute ], A.css <| Utilities.filterList [ ( Tw.hidden, not model.dropdownOpen ) ] ]
             (List.map
                 (\( action, text ) ->
                     H.div
@@ -107,17 +200,18 @@ dropDown model =
                         ]
                         [ H.text text ]
                 )
-                []
-             --     [ ( Message.JsonRequested, "Load JSON" )
-             --  , ( Message.ExportRequested, "Save JSON" )
-             --  ]
-             -- ++ (if model.googleDriveAuthorized then
-             --         [ ( Message.GoogleDriveJsonRequested, "Load JSON from Google Drive" )
-             --         , ( Message.GoogleDriveExportRequested, "Save JSON to Google Drive" )
-             --         ]
-             --     else
-             --         [ ( Message.AuthorizeGoogleDrive, "Authorize Google Drive" ) ]
-             --    )
-             -- ++ [ versionLink ]
+                ([ ( JsonRequested, "Load JSON" )
+                 , ( ExportRequested, "Save JSON" )
+                 ]
+                    ++ (if model.session.googleDriveAuthorized then
+                            [ ( GoogleDriveJsonRequested, "Load JSON from Google Drive" )
+                            , ( GoogleDriveExportRequested, "Save JSON to Google Drive" )
+                            ]
+
+                        else
+                            [ ( AuthorizeGoogleDrive, "Authorize Google Drive" ) ]
+                       )
+                )
+                ++ [ versionLink ]
             )
         ]

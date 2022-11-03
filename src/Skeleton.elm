@@ -29,15 +29,15 @@ type Warning
 -- VIEW
 
 
-view : (a -> msg) -> (Navbar.Msg -> msg) -> Details a -> Browser.Document msg
-view toMsg toNavbarMsg details =
+view : (a -> msg) -> H.Html msg -> Details a -> Browser.Document msg
+view toMsg navbar details =
     { title =
         details.title
     , body =
         [ Icon.css
         , H.toUnstyled <|
             H.div []
-                [ H.map toNavbarMsg (Navbar.view details.session)
+                [ navbar
                 , Html.Styled.Lazy.lazy viewWarning details.warning
                 , H.map toMsg <|
                     H.div (A.class "center" :: A.style "flex" "1" :: []) details.kids

@@ -21,7 +21,7 @@ type alias Model =
     , startUpDate : Date
     , version : String
     , route : Route
-    , settingsOpen : Bool
+    , googleDriveAuthorized : Bool
     }
 
 
@@ -34,8 +34,11 @@ type Route
     | StatsRoute
 
 
+type alias ModelEncapsulated a =
+    { a | session : Model }
 
--- | DeleteAscentRequestModal Ascent
+
+
 -- Init
 
 
@@ -60,8 +63,12 @@ init { storageCache, posixTime, version } route =
     , startUpDate = Date.fromPosix Time.utc (Time.millisToPosix posixTime)
     , route = route
     , version = version
-    , settingsOpen = False
+    , googleDriveAuthorized = False
     }
+
+
+
+-- Methods
 
 
 assign : { a | session : Model } -> ( Model, Cmd msg ) -> ( { a | session : Model }, Cmd msg )
@@ -83,8 +90,35 @@ updateSessionStorage model =
     )
 
 
-type alias ModelEncapsulated a =
-    { a | session : Model }
+
+-- General
+
+
+loadJson : String -> Model -> ( Model, Cmd msg )
+loadJson json model =
+    let
+        result =
+            decodeString jsonFileDecoder json
+    in
+    case result of
+        Ok file ->
+            let
+                data =
+                    { climbingRoutes = file.climbingRoutes
+                    , ascents = file.ascents
+                    , sectors = file.sectors
+                    , areas = file.areas
+                    , trips = file.trips
+                    }
+            in
+            ( { model
+                | data = data
+              }
+            , Command.storeCache (DataParser.encodedJsonFile data)
+            )
+
+        Err _ ->
+            ( model, Cmd.none )
 
 
 
