@@ -230,8 +230,12 @@ update message model =
 
         NavbarMsg msg ->
             let
+                updatedNavbarModel m =
+                    { m | session = exit model }
+
                 ( navbarModel, cmd ) =
-                    Navbar.update msg model.navbarModel
+                    -- TODO this feels very hacky
+                    Navbar.update msg (updatedNavbarModel model.navbarModel)
             in
             ( swapSession { model | navbarModel = navbarModel } navbarModel.session, Cmd.map NavbarMsg cmd )
 
