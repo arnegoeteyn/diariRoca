@@ -299,7 +299,7 @@ view model =
         [ case maybeRoute of
             Just route ->
                 H.div []
-                    [ H.h1 [] [ H.text <| route.name ++ " ~ " ++ route.grade ]
+                    [ viewRouteHeader model route
                     , viewRouteDetail model route
                     , case model.modal of
                         Empty ->
@@ -322,6 +322,18 @@ view model =
                 H.text "route not found"
         ]
     }
+
+
+viewRouteHeader : Model -> ClimbingRoute -> Html Msg
+viewRouteHeader model route =
+    let
+        sectorName =
+            DA.getSectorNameSafe model.session.data route.sectorId
+    in
+    H.div []
+        [ H.h1 [] [ H.text <| route.name ++ " ~ " ++ route.grade ]
+        , H.h2 [] [ H.text sectorName ]
+        ]
 
 
 viewRouteDetail : Model -> ClimbingRoute -> Html Msg
