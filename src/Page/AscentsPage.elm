@@ -103,7 +103,6 @@ tripFormDatePickerSettings =
 
 
 -- Update
--- View
 
 
 type Msg
@@ -186,6 +185,10 @@ update msg model =
                     ( updatedModel, Cmd.none )
 
 
+
+-- View
+
+
 view : Model -> Skeleton.Details Msg
 view model =
     { title = "Ascents"
@@ -230,16 +233,20 @@ viewAscentRow model ascent =
         maybeRoute =
             MA.getClimbingRoute model.session.data ascent.routeId
 
-        ( routeName, routeGrade ) =
-            Maybe.map (\route -> ( route.name, route.grade )) maybeRoute
-                |> Maybe.withDefault ( "N/A", "N/A" )
+        ( routeName, routeGrade, maybeRouteSectorId ) =
+            Maybe.map (\route -> ( route.name, route.grade, Just route.sectorId )) maybeRoute
+                |> Maybe.withDefault ( "N/A", "N/A", Nothing )
+
+        sectorName =
+            Maybe.andThen (MA.getSectorName model.session.data) maybeRouteSectorId
+                |> Maybe.withDefault "N/A"
     in
     H.div [ A.css [ Tw.flex ] ]
         [ H.div [ A.css [ Tw.w_2over6 ] ] [ H.text <| Date.toIsoString ascent.date ]
         , H.div [ A.css [ Tw.w_2over6 ] ]
             [ H.text <| Utilities.stringFromList [ routeName, " ", "(", routeGrade, ")" ]
             ]
-        , H.div [ A.css [ Tw.w_2over6 ] ] [ H.text (Data.ascentKindToString ascent.kind) ]
+        , H.div [ A.css [ Tw.w_2over6 ] ] [ H.text sectorName ]
         , H.div [ A.css [ Tw.w_2over6 ] ] [ H.text (Data.ascentKindToString ascent.kind) ]
         , case maybeRoute of
             Just route ->
