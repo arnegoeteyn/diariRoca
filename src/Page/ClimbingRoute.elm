@@ -385,7 +385,7 @@ viewRouteMedia model route =
         addMediaInput =
             H.div []
                 [ textCriterium "Link" .mediaLink identity SetMediaLink model
-                , textCriterium "Link" .mediaLabel identity SetMediaLabel model
+                , textCriterium "Label" .mediaLabel identity SetMediaLabel model
                 , Button.addButton (Button.defaultOptions |> Button.withMsg (AddMediaToRoute route))
                 ]
     in
