@@ -18,6 +18,16 @@ catMaybeSet =
     Set.toList >> catMaybe >> Set.fromList
 
 
+orElse : Maybe a -> Maybe a -> Maybe a
+orElse a b =
+    case a of
+        Just _ ->
+            a
+
+        Nothing ->
+            b
+
+
 
 --| String
 
