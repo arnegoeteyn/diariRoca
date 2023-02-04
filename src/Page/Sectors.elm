@@ -15,7 +15,7 @@ import Select
 import Session
 import Skeleton
 import Tailwind.Utilities as TW
-import Utilities
+import Utilities exposing (orElse)
 import View.Button as Button
 
 
@@ -103,16 +103,18 @@ initAreaForm maybeArea =
 
 initSectorForm : Data -> Maybe Area -> Maybe Sector -> SectorForm
 initSectorForm data maybeArea maybeSector =
+    let
+        areaId =
+            Maybe.map .areaId maybeSector
+                |> orElse (Maybe.map .id maybeArea)
+                |> Maybe.andThen (DA.getArea data)
+                |> Maybe.map List.singleton
+                |> Maybe.withDefault []
+    in
     Form.Idle
         { name = Maybe.map .name maybeSector |> Maybe.withDefault ""
         , areaId =
-            ( Maybe.andThen
-                (\area ->
-                    Maybe.andThen (.areaId >> DA.getArea data) maybeSector
-                        |> Maybe.map List.singleton
-                )
-                maybeArea
-                |> Maybe.withDefault []
+            ( areaId
             , Select.init "sectorFormAreaId"
             )
         }
