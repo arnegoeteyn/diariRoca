@@ -154,7 +154,7 @@ removeFirst f l =
 mostOccuring : List comparable -> Maybe comparable
 mostOccuring =
     List.Extra.frequencies
-        >> List.sort
+        >> (List.sortBy Tuple.second)
         >> List.reverse
         >> List.head
         >> Maybe.map Tuple.first
