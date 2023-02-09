@@ -1,6 +1,8 @@
 module Utilities exposing (..)
 
 import Dict
+import Html.Styled as H
+import List.Extra
 import Set exposing (Set)
 
 
@@ -149,6 +151,15 @@ removeFirst f l =
         |> Tuple.first
 
 
+mostOccuring : List comparable -> Maybe comparable
+mostOccuring =
+    List.Extra.frequencies
+        >> List.sort
+        >> List.reverse
+        >> List.head
+        >> Maybe.map Tuple.first
+
+
 
 --| Tuple
 
@@ -160,6 +171,16 @@ replaceFirst c ( a, b ) =
 
 
 --| Misc
+
+
+notFound : (a -> List (H.Html msg)) -> Maybe a -> List (H.Html msg)
+notFound f maybeItem =
+    case maybeItem of
+        Just item ->
+            f item
+
+        Nothing ->
+            [ H.text "not found" ]
 
 
 flip : (a -> b -> c) -> b -> a -> c
