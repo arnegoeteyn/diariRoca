@@ -107,7 +107,7 @@ encodeClimbingRoute route =
         , ( "comment", encodeNullable Json.Encode.string route.comment )
         , ( "beta", encodeNullable Json.Encode.string route.beta )
         , ( "kind", encodeClimbingRouteKind route.kind )
-        , ( "media", Debug.log "test" <| Json.Encode.list mediaEncoder route.media )
+        , ( "media", Json.Encode.list mediaEncoder route.media )
         ]
 
 
