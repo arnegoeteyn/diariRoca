@@ -12,12 +12,14 @@ import Html.Styled as H exposing (Html)
 import Html.Styled.Attributes as A
 import Html.Styled.Events as E
 import Modal
+import Page.ClimbingRoute exposing (Msg(..))
 import Select
 import Session
 import Skeleton
 import Tailwind.Utilities as TW
 import Utilities exposing (notFound, orElse)
 import View.Button as Button
+import View.Modal.DeleteClimbingRoute as DeleteClimbingRouteModal
 
 
 
@@ -26,11 +28,17 @@ import View.Button as Button
 
 type alias ModelContent =
     { sectorId : Int
+    , modal : ModalContent
     }
 
 
 type alias Model =
     Session.ModelEncapsulated ModelContent
+
+
+type ModalContent
+    = Empty
+    | DeleteClimbingRouteRequestModal Data.ClimbingRoute
 
 
 
@@ -41,6 +49,7 @@ init : Session.Model -> Int -> ( Model, Cmd Msg )
 init session sectorId =
     ( { session = session
       , sectorId = sectorId
+      , modal = Empty
       }
     , Cmd.none
     )
@@ -52,6 +61,9 @@ init session sectorId =
 
 type Msg
     = NoOp
+    | CloseModal
+    | DeleteClimbingRouteRequested Data.ClimbingRoute
+    | DeleteClimbingRouteConfirmation Data.ClimbingRoute
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -60,6 +72,18 @@ update msg model =
         NoOp ->
             ( model, Cmd.none )
 
+        CloseModal ->
+            ( { model | modal = Empty }, Cmd.none )
+
+        DeleteClimbingRouteRequested climbingRoute ->
+            ( { model | modal = DeleteClimbingRouteRequestModal climbingRoute }
+            , Cmd.none
+            )
+
+        DeleteClimbingRouteConfirmation climbingRoute ->
+            Session.deleteClimbingRoute climbingRoute model.session
+                |> Session.assign { model | modal = Empty }
+
 
 
 --View
@@ -67,6 +91,10 @@ update msg model =
 
 view : Model -> Skeleton.Details Msg
 view model =
+    let
+        modal =
+            Modal.view CloseModal NoOp
+    in
     { title = "Sector"
     , warning = Skeleton.NoProblems
     , session = model.session
@@ -81,6 +109,12 @@ view model =
                         ]
                     ]
                 , ClimbingRouteList.viewRoutes (routeItems model sector)
+                , case model.modal of
+                    Empty ->
+                        H.text ""
+
+                    DeleteClimbingRouteRequestModal climbingRoute ->
+                        modal (DeleteClimbingRouteModal.view climbingRoute DeleteClimbingRouteConfirmation)
                 ]
             )
             (DA.getSector model.session.data model.sectorId)
@@ -101,7 +135,7 @@ mostOccuringKindText m =
 -- Utilities
 
 
-routeItems : Model -> Sector -> ClimbingRouteList.Model
+routeItems : Model -> Sector -> ClimbingRouteList.Props Msg
 routeItems model sector =
     let
         climbingRoutes =
@@ -112,6 +146,7 @@ routeItems model sector =
             { route = route
             , sector = sector
             , ascents = DA.getAscents model.session.data route
+            , deleteClimbingRouteMsg = DeleteClimbingRouteRequested
             }
         )
         climbingRoutes
