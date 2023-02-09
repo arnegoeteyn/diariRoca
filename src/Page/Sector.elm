@@ -99,10 +99,26 @@ update msg model =
                 |> Session.assign { model | modal = Empty }
 
         OpenClimbingRouteForm maybeClimbingRoute ->
+            let
+                s =
+                    -- todo shouldnt be her
+                    ( DA.getSector model.session.data model.sectorId
+                        |> Maybe.map List.singleton
+                        |> Maybe.withDefault []
+                    , Select.init "climbingRouteFormSectorId"
+                    )
+                kind = 
+                    Maybe.withDefault "sport" (mostOccuringKind model) 
+
+                values =
+                    ClimbingRouteForm.valuesFromMaybeRoute model.session maybeClimbingRoute
+            in
             ( { model
                 | modal = ClimbingRouteFormModal
                 , climbingRouteForm =
-                    ( ClimbingRouteForm.initClimbingRouteForm (ClimbingRouteForm.valuesFromMaybeRoute model.session maybeClimbingRoute)
+                    ( ClimbingRouteForm.initClimbingRouteForm { values 
+                        | sectorId = s
+                        , kind = kind}
                     , maybeClimbingRoute
                     )
               }
