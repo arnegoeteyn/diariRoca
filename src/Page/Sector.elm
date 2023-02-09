@@ -1,5 +1,6 @@
 module Page.Sector exposing (..)
 
+import Component.ClimbingRouteList as ClimbingRouteList
 import Data exposing (Area, ClimbingRouteKind, Data, Sector)
 import DataAccessors as DA exposing (getRoutesFromSector)
 import DataUtilities as DU
@@ -75,10 +76,11 @@ view model =
                 [ H.div []
                     [ H.p []
                         [ H.text sector.name
-                        , H.text " " 
+                        , H.text " "
                         , mostOccuringKindText model
                         ]
                     ]
+                , ClimbingRouteList.viewRoutes (routeItems model sector)
                 ]
             )
             (DA.getSector model.session.data model.sectorId)
@@ -89,7 +91,7 @@ mostOccuringKindText : Model -> H.Html Msg
 mostOccuringKindText m =
     case mostOccuringKind m of
         Just x ->
-            H.span [A.css [TW.text_gray_500]] [H.text <| "(Mostly " ++ x ++ ")"]
+            H.span [ A.css [ TW.text_gray_500 ] ] [ H.text <| "(Mostly " ++ x ++ ")" ]
 
         Nothing ->
             H.text ""
@@ -97,6 +99,22 @@ mostOccuringKindText m =
 
 
 -- Utilities
+
+
+routeItems : Model -> Sector -> ClimbingRouteList.Model
+routeItems model sector =
+    let
+        climbingRoutes =
+            DA.getRoutesFromSector model.sectorId model.session.data
+    in
+    List.map
+        (\route ->
+            { route = route
+            , sector = sector
+            , ascents = DA.getAscents model.session.data route
+            }
+        )
+        climbingRoutes
 
 
 mostOccuringKind : Model -> Maybe String
