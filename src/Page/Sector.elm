@@ -1,5 +1,6 @@
 module Page.Sector exposing (..)
 
+import Form.Criterium as Criterium exposing (formSelectionCriterium, formSelectionWithSearchCriterium, formTextAreaCriterium, formTextCriterium, textCriterium)
 import Component.ClimbingRouteList as ClimbingRouteList
 import Data exposing (Area, ClimbingRouteKind, Data, Sector)
 import DataAccessors as DA exposing (getRoutesFromSector)
@@ -61,12 +62,11 @@ init session sectorId =
 
 climbingRouteFormSettings : ClimbingRouteForm.ClimbingRouteFormSettings Msg
 climbingRouteFormSettings =
-    { onSave = NoOp
-    , onUpdate = \_ -> NoOp
-    , onSelect = \_ -> NoOp
-    , selectToMsg = \_ -> NoOp
+    { onSave = SaveClimbingRouteForm
+    , onUpdate = UpdateClimbingRouteForm
+    , onSelect = ClimbingRouteFormSelectSector
+    , selectToMsg = ClimbingRouteFormSelectSectorMsg
     }
-
 
 
 -- Update
@@ -78,6 +78,11 @@ type Msg
     | DeleteClimbingRouteRequested Data.ClimbingRoute
     | DeleteClimbingRouteConfirmation Data.ClimbingRoute
     | OpenClimbingRouteForm (Maybe Data.ClimbingRoute)
+    -- form
+    | SaveClimbingRouteForm
+    | UpdateClimbingRouteForm ClimbingRouteForm.ClimbingRouteForm
+    | ClimbingRouteFormSelectSector (Maybe Sector)
+    | ClimbingRouteFormSelectSectorMsg (Select.Msg Sector)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -125,6 +130,55 @@ update msg model =
             , Cmd.none
             )
 
+        -- Climbing route form
+        UpdateClimbingRouteForm values ->
+            ( { model | climbingRouteForm = Utilities.replaceFirst values model.climbingRouteForm }, Cmd.none )
+
+        ClimbingRouteFormSelectSector maybeSector ->
+            let
+                newForm f =
+                    { f
+                        | sectorId =
+                            Tuple.mapFirst
+                                (\_ -> Maybe.withDefault [] <| Maybe.map List.singleton maybeSector)
+                                f.sectorId
+                    }
+            in
+            ( { model | climbingRouteForm = Tuple.mapFirst (Form.mapValues newForm) model.climbingRouteForm }, Cmd.none )
+
+        ClimbingRouteFormSelectSectorMsg subMsg ->
+            let
+                ( updatedForm, cmd ) =
+                    Criterium.updateSelectCriteriumMsg .sectorId
+                        (\selected values -> { values | sectorId = selected })
+                        (ClimbingRouteForm.climbingRouteFormSectorSelectConfig climbingRouteFormSettings model.session)
+                        subMsg
+                        (Tuple.first model.climbingRouteForm)
+            in
+            ( { model
+                | climbingRouteForm =
+                    Utilities.replaceFirst updatedForm model.climbingRouteForm
+              }
+            , cmd
+            )
+
+        SaveClimbingRouteForm ->
+            let
+                ( newForm, maybeClimbingRoute ) =
+                    ClimbingRouteForm.validateClimbingRouteForm model
+
+                updatedModel =
+                    { model
+                        | climbingRouteForm = Utilities.replaceFirst newForm model.climbingRouteForm
+                    }
+            in
+            case maybeClimbingRoute of
+                Just climbingRoute ->
+                    Session.addClimbingRoute climbingRoute model.session
+                        |> Session.assign { updatedModel | modal = Empty }
+
+                Nothing ->
+                    ( updatedModel, Cmd.none )
 
 
 --View
