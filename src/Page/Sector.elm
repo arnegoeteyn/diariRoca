@@ -8,6 +8,7 @@ import Dict
 import Form.Criterium exposing (formSelectionWithSearchCriterium, formTextCriterium, updateSelectCriteriumMsg)
 import Form.Form as Form
 import Form.Forms exposing (SelectionCriterium, idForForm, updateName, validateNonEmpty, viewErrors)
+import Form.Forms.ClimbingRouteForm as ClimbingRouteForm
 import Html.Styled as H exposing (Html)
 import Html.Styled.Attributes as A
 import Html.Styled.Events as E
@@ -29,6 +30,7 @@ import View.Modal.DeleteClimbingRoute as DeleteClimbingRouteModal
 type alias ModelContent =
     { sectorId : Int
     , modal : ModalContent
+    , climbingRouteForm : ( ClimbingRouteForm.ClimbingRouteForm, Maybe Data.ClimbingRoute )
     }
 
 
@@ -39,6 +41,7 @@ type alias Model =
 type ModalContent
     = Empty
     | DeleteClimbingRouteRequestModal Data.ClimbingRoute
+    | ClimbingRouteFormModal
 
 
 
@@ -50,9 +53,19 @@ init session sectorId =
     ( { session = session
       , sectorId = sectorId
       , modal = Empty
+      , climbingRouteForm = ( ClimbingRouteForm.initClimbingRouteForm ClimbingRouteForm.emptyValues, Nothing )
       }
     , Cmd.none
     )
+
+
+climbingRouteFormSettings : ClimbingRouteForm.ClimbingRouteFormSettings Msg
+climbingRouteFormSettings =
+    { onSave = NoOp
+    , onUpdate = \_ -> NoOp
+    , onSelect = \_ -> NoOp
+    , selectToMsg = \_ -> NoOp
+    }
 
 
 
@@ -64,6 +77,7 @@ type Msg
     | CloseModal
     | DeleteClimbingRouteRequested Data.ClimbingRoute
     | DeleteClimbingRouteConfirmation Data.ClimbingRoute
+    | OpenClimbingRouteForm (Maybe Data.ClimbingRoute)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -83,6 +97,17 @@ update msg model =
         DeleteClimbingRouteConfirmation climbingRoute ->
             Session.deleteClimbingRoute climbingRoute model.session
                 |> Session.assign { model | modal = Empty }
+
+        OpenClimbingRouteForm maybeClimbingRoute ->
+            ( { model
+                | modal = ClimbingRouteFormModal
+                , climbingRouteForm =
+                    ( ClimbingRouteForm.initClimbingRouteForm (ClimbingRouteForm.valuesFromMaybeRoute model.session maybeClimbingRoute)
+                    , maybeClimbingRoute
+                    )
+              }
+            , Cmd.none
+            )
 
 
 
@@ -106,6 +131,7 @@ view model =
                         [ H.text sector.name
                         , H.text " "
                         , mostOccuringKindText model
+                        , Button.addButton (Button.defaultOptions |> Button.withMsg (OpenClimbingRouteForm Nothing))
                         ]
                     ]
                 , ClimbingRouteList.viewRoutes (routeItems model sector)
@@ -115,6 +141,12 @@ view model =
 
                     DeleteClimbingRouteRequestModal climbingRoute ->
                         modal (DeleteClimbingRouteModal.view climbingRoute DeleteClimbingRouteConfirmation)
+
+                    ClimbingRouteFormModal ->
+                        modal
+                            (H.div []
+                                [ H.h2 [] [ H.text "New climbingroute" ], ClimbingRouteForm.viewClimbingRouteForm climbingRouteFormSettings model ]
+                            )
                 ]
             )
             (DA.getSector model.session.data model.sectorId)
