@@ -9,6 +9,7 @@ import Navbar
 import Page.AscentsPage as Ascents
 import Page.ClimbingRoute as ClimbingRoute
 import Page.ClimbingRoutes as ClimbingRoutes
+import Page.Sector as Sector
 import Page.Sectors as Sectors
 import Page.Stats as Stats
 import Session exposing (Route(..))
@@ -57,6 +58,7 @@ type Page
     | ClimbingRoutesPage ClimbingRoutes.Model
     | AscentsPage Ascents.Model
     | SectorsPage Sectors.Model
+    | SectorPage Sector.Model
     | StatsPage Session.Model
 
 
@@ -106,6 +108,9 @@ view model =
         SectorsPage sectorsModel ->
             Skeleton.view SectorsMsg navbar (Sectors.view sectorsModel)
 
+        SectorPage sectorModel ->
+            Skeleton.view SectorMsg navbar (Sector.view sectorModel)
+
         StatsPage statsSesssion ->
             Skeleton.view SectorsMsg navbar (Stats.view statsSesssion)
 
@@ -151,6 +156,7 @@ type Msg
     | ClimbingRoutesMsg ClimbingRoutes.Msg
     | AscentsMsg Ascents.Msg
     | SectorsMsg Sectors.Msg
+    | SectorMsg Sector.Msg
     | NavbarMsg Navbar.Msg
 
 
@@ -228,6 +234,14 @@ update message model =
                 _ ->
                     ( model, Cmd.none )
 
+        SectorMsg msg ->
+            case model.route of
+                SectorPage sectorModel ->
+                    stepSector model (Sector.update msg sectorModel)
+
+                _ ->
+                    ( model, Cmd.none )
+
         NavbarMsg msg ->
             let
                 updatedNavbarModel m =
@@ -268,6 +282,13 @@ stepSectors model ( sectorsModel, cmds ) =
     )
 
 
+stepSector : Model -> ( Sector.Model, Cmd Sector.Msg ) -> ( Model, Cmd Msg )
+stepSector model ( sectorsModel, cmds ) =
+    ( { model | route = SectorPage sectorsModel }
+    , Cmd.map SectorMsg cmds
+    )
+
+
 
 -- ROUTER
 
@@ -288,6 +309,9 @@ exit model =
             m.session
 
         SectorsPage m ->
+            m.session
+
+        SectorPage m ->
             m.session
 
         StatsPage session ->
@@ -313,6 +337,9 @@ swapSession model newSession =
 
                 SectorsPage sectorsPage ->
                     SectorsPage { sectorsPage | session = newSession }
+
+                SectorPage sectorPage ->
+                    SectorPage { sectorPage | session = newSession }
 
                 StatsPage _ ->
                     StatsPage newSession
@@ -340,6 +367,8 @@ stepUrl url model =
                     (stepAscents model (Ascents.init { session | route = Session.AscentsRoute }))
                 , route (s "sectors")
                     (stepSectors model (Sectors.init { session | route = Session.SectorsRoute }))
+                , route (s "sectors" </> sector_)
+                    (\sectorId -> stepSector model (Sector.init { session | route = Session.SectorRoute } sectorId))
                 , route (s "stats")
                     ( { model | route = StatsPage { session | route = Session.StatsRoute } }, Cmd.none )
                 ]
@@ -362,3 +391,8 @@ route parser handler =
 route_ : Parser (Int -> a) a
 route_ =
     custom "route" String.toInt
+
+
+sector_ : Parser (Int -> a) a
+sector_ =
+    custom "sector" String.toInt

@@ -359,6 +359,11 @@ viewSectorRow { sector, selected } =
         , H.div []
             [ Button.editButton (Button.defaultOptions |> Button.withMsg (OpenSectorForm (Just sector)) |> Button.withKind Button.Icon)
             , Button.deleteButton (Button.defaultOptions |> Button.withMsg (DeleteSectorRequested sector) |> Button.withKind Button.Icon)
+            , Button.gotoButton
+                (Button.defaultOptions
+                    |> Button.withHref ("sectors/" ++ String.fromInt sector.id)
+                    |> Button.withKind Button.Icon
+                )
             ]
         ]
 

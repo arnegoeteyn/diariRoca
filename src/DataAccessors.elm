@@ -123,6 +123,22 @@ addSector sector data =
     { data | sectors = Dict.insert sector.id sector data.sectors }
 
 
+getRoutesFromSector : Int -> Data -> List ClimbingRoute
+getRoutesFromSector sectorId data =
+    let
+        maybeSector =
+            getSector data sectorId
+    in
+    Maybe.map
+        (\sector ->
+            Utilities.dictToList data.climbingRoutes
+                |> List.filter (isClimbingRouteOf sector)
+                |> Utilities.sortByDescending .grade
+        )
+        maybeSector
+        |> Maybe.withDefault []
+
+
 
 --| ClimbingRoute
 
