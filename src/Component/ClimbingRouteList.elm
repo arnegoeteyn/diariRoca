@@ -1,4 +1,4 @@
-module Component.ClimbingRouteList exposing (ClimbingRoutesFilter, Props, initClimbingRoutesFilter, viewClimbingRoutesFilter, viewRoutes)
+module Component.ClimbingRouteList exposing (ClimbingRoutesFilter, Props, filterClimbingRoutes, initClimbingRoutesFilter, viewClimbingRoutesFilter, viewRoutes)
 
 import Data exposing (Ascent, ClimbingRoute, Sector)
 import Form.Criterium as Criterium
@@ -188,3 +188,26 @@ viewClimbingRoutesFilter settings filter =
         settings.onUpdate
         ""
         filter
+
+
+
+--| Filters
+
+
+filterClimbingRoutes : ClimbingRoutesFilter -> Props msg -> Props msg
+filterClimbingRoutes filter routes =
+    routes
+        |> List.filter (filterProjects filter.projectFilter)
+
+
+filterProjects : ProjectFilter -> Item msg -> Bool
+filterProjects projectFilter route =
+    case projectFilter of
+        AllRoutes ->
+            True
+
+        OnlyProjects ->
+             List.isEmpty route.ascents
+
+        OnlyNonProjects ->
+             not <| List.isEmpty route.ascents
