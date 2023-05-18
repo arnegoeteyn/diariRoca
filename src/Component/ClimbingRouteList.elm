@@ -1,4 +1,4 @@
-module Component.ClimbingRouteList exposing (viewRoutes, Props)
+module Component.ClimbingRouteList exposing (Props, viewRoutes)
 
 import Browser.Dom
 import Data exposing (Ascent, ClimbingRoute, Sector)
@@ -21,19 +21,19 @@ import Utilities
 import View.Button as Button
 
 
-type alias Props msg
-    = List (Item msg)
+type alias Props msg =
+    List (Item msg)
 
 
 type alias Item msg =
     { route : ClimbingRoute
     , sector : Sector
     , ascents : List Ascent
-    , deleteClimbingRouteMsg: ClimbingRoute -> msg 
+    , deleteClimbingRouteMsg : ClimbingRoute -> msg
     }
 
 
-viewRoutes : (Props msg) -> Html msg
+viewRoutes : Props msg -> Html msg
 viewRoutes routes =
     H.div
         [ A.css
@@ -103,6 +103,9 @@ viewRouteRow routeItem deleteMsg =
 
         route =
             routeItem.route
+
+        sector =
+            routeItem.sector
     in
     H.tr
         [ A.css [ Tw.bg_white, Tw.border_b ]
@@ -111,9 +114,11 @@ viewRouteRow routeItem deleteMsg =
         ]
         [ H.td [ cellCss ] [ H.text route.grade ]
         , H.td [ cellCss, A.css [ Tw.text_left ] ]
-            [ H.div [ A.css [ Tw.font_bold ] ] [ H.text route.name ]
-
-            -- , sectorLink
+            [ H.div [ A.css [ Tw.font_bold ] ]
+                [ H.text route.name
+                , H.text " ~ "
+                , H.a [ A.href ("/sectors/" ++ String.fromInt sector.id) ] [ H.text sector.name ]
+                ]
             ]
         , H.td [ cellCss ] [ H.text (Data.climbingRouteKindToString route.kind) ]
         , H.td [ cellCss ] [ (H.text << String.fromInt << List.length) routeItem.ascents ]
