@@ -53,22 +53,52 @@ type alias ValidatedClimbingRouteFormValues =
     }
 
 
-initClimbingRouteForm : Maybe Session.Model -> Maybe ClimbingRoute -> ClimbingRouteForm
-initClimbingRouteForm maybeModel climbingRoute =
+initClimbingRouteForm : ClimbingRouteFormValues -> ClimbingRouteForm
+initClimbingRouteForm =
     Idle
-        { name = Maybe.map .name climbingRoute |> Maybe.withDefault ""
-        , grade = Maybe.map .grade climbingRoute |> Maybe.withDefault ""
-        , comment = Maybe.andThen .comment climbingRoute |> Maybe.withDefault ""
-        , beta = Maybe.andThen .beta climbingRoute |> Maybe.withDefault ""
-        , kind = Data.climbingRouteKindToString <| (Maybe.withDefault Data.Sport <| Maybe.map .kind climbingRoute)
-        , sectorId =
-            ( Maybe.andThen
-                (\model -> Maybe.andThen (.sectorId >> DA.getSector model.data) climbingRoute |> Maybe.map List.singleton)
-                maybeModel
-                |> Maybe.withDefault []
-            , Select.init "climbingRouteFormSectorId"
-            )
-        }
+
+
+
+-- Idle
+
+
+emptyValues : ClimbingRouteFormValues
+emptyValues =
+    { name = ""
+    , grade = ""
+    , comment = ""
+    , beta = ""
+    , kind = Data.climbingRouteKindToString <| Data.Sport
+    , sectorId =
+        ( []
+        , Select.init "climbingRouteFormSectorId"
+        )
+    }
+
+
+valuesFromMaybeRoute : Session.Model -> Maybe ClimbingRoute -> ClimbingRouteFormValues
+valuesFromMaybeRoute model maybeRoute =
+    let
+        default =
+            Maybe.withDefault emptyValues
+    in
+    Maybe.map (valuesFromRoute model) maybeRoute |> default
+
+
+valuesFromRoute : Session.Model -> ClimbingRoute -> ClimbingRouteFormValues
+valuesFromRoute model climbingRoute =
+    { name = climbingRoute.name
+    , grade = climbingRoute.grade
+    , comment = climbingRoute.comment |> Maybe.withDefault ""
+    , beta = climbingRoute.beta |> Maybe.withDefault ""
+    , kind = Data.climbingRouteKindToString climbingRoute.kind
+    , sectorId =
+        ( DA.getSector model.data climbingRoute.sectorId
+            |> Maybe.map List.singleton
+            |> Maybe.withDefault []
+        , Select.init "climbingRouteFormSectorId"
+        )
+    }
 
 
 climbingRouteFormSectorSelectConfig : ClimbingRouteFormSettings msg -> Session.Model -> Select.Config msg Sector

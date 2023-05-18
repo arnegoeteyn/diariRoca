@@ -31,6 +31,7 @@ type Route
     | ClimbingRoutesRoute
     | AscentsRoute
     | SectorsRoute
+    | SectorRoute
     | StatsRoute
 
 

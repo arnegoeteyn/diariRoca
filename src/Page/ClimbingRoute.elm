@@ -61,7 +61,7 @@ init session id =
       , mediaLink = ""
       , mediaLabel = ""
       , routeId = id
-      , climbingRouteForm = ( ClimbingRouteForm.initClimbingRouteForm Nothing Nothing, Nothing )
+      , climbingRouteForm = ( ClimbingRouteForm.initClimbingRouteForm ClimbingRouteForm.emptyValues, Nothing )
       , modal = Empty
       , ascentForm = ( ascentForm, Nothing )
       }
@@ -167,7 +167,7 @@ update msg model =
         OpenClimbingRouteForm maybeClimbingRoute ->
             ( { model
                 | modal = ClimbingRouteFormModal
-                , climbingRouteForm = ( ClimbingRouteForm.initClimbingRouteForm (Just model.session) maybeClimbingRoute, maybeClimbingRoute )
+                , climbingRouteForm = ( ClimbingRouteForm.initClimbingRouteForm (ClimbingRouteForm.valuesFromMaybeRoute model.session maybeClimbingRoute), maybeClimbingRoute )
               }
             , Cmd.none
             )
