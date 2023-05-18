@@ -204,7 +204,7 @@ view model =
                         -- , Button.addButton (Button.defaultOptions |> Button.withMsg (OpenClimbingRouteForm Nothing))
                         ]
                     ]
-                -- , ClimbingRouteList.viewRoutes (routeItems model sector)
+                , ClimbingRouteList.viewRoutes (routeItems model area)
                 , case model.modal of
                     Empty ->
                         H.text ""
@@ -237,21 +237,22 @@ view model =
 -- Utilities
 
 
--- routeItems : Model -> Sector -> ClimbingRouteList.Props Msg
--- routeItems model sector =
---     let
---         climbingRoutes =
---             DA.getRoutesFromSector model.sectorId model.session.data
---     in
---     List.map
---         (\route ->
---             { route = route
---             , sector = sector
---             , ascents = DA.getAscents model.session.data route
---             , deleteClimbingRouteMsg = DeleteClimbingRouteRequested
---             }
---         )
---         climbingRoutes
+routeItems : Model -> Area -> ClimbingRouteList.Props Msg
+routeItems model area =
+    let
+        climbingRoutes =
+            DA.getRoutesFromArea area.id model.session.data
+    in
+    List.map
+        (\(route, sector) ->
+            { route = route
+            , sector = sector
+            , ascents = DA.getAscents model.session.data route
+            , deleteClimbingRouteMsg = \_ -> NoOp
+            -- , deleteClimbingRouteMsg = DeleteClimbingRouteRequested
+            }
+        )
+        climbingRoutes
 --
 --
 -- mostOccuringKind : Model -> Maybe String

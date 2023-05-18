@@ -60,6 +60,39 @@ addArea area data =
     { data | areas = Dict.insert area.id area data.areas }
 
 
+getSectorsFromArea : Int -> Data -> List Sector
+getSectorsFromArea areaId data =
+    let
+        maybeArea =
+            getArea data areaId
+    in
+    Maybe.map
+        (\area ->
+            Utilities.dictToList data.sectors
+                |> List.filter (isSectorOf area)
+                |> Utilities.sortByDescending .name
+        )
+        maybeArea
+        |> Maybe.withDefault []
+
+
+getRoutesFromArea : Int -> Data -> List ( ClimbingRoute, Sector )
+getRoutesFromArea areaId data =
+    let
+        maybeArea =
+            getArea data areaId
+    in
+    Maybe.map
+        (\area ->
+            Utilities.flatMap
+                (\sector -> List.map (\r -> ( r, sector )) (getRoutesFromSector sector.id data))
+                (getSectorsFromArea area.id data)
+                |> Utilities.sortByDescending (\( r, _ ) -> r.grade)
+        )
+        maybeArea
+        |> Maybe.withDefault []
+
+
 
 --| Sector
 
