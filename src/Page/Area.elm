@@ -30,7 +30,7 @@ import View.Modal.DeleteClimbingRoute as DeleteClimbingRouteModal
 type alias ModelContent =
     { areaId : Int
     , modal : ModalContent
-    , climbingRouteFilter : ClimbingRouteList.ClimbingRoutesFilter
+    , climbingRoutesFilter : ClimbingRouteList.ClimbingRoutesFilter
 
     -- , climbingRouteForm : ( ClimbingRouteForm.ClimbingRouteForm, Maybe Data.ClimbingRoute )
     }
@@ -55,7 +55,7 @@ init session areaId =
     ( { session = session
       , areaId = areaId
       , modal = Empty
-      , climbingRouteFilter = ClimbingRouteList.initClimbingRoutesFilter
+      , climbingRoutesFilter = ClimbingRouteList.initClimbingRoutesFilter
 
       -- , climbingRouteForm = ( ClimbingRouteForm.initClimbingRouteForm ClimbingRouteForm.emptyValues, Nothing )
       }
@@ -77,6 +77,7 @@ init session areaId =
 type Msg
     = NoOp
     | CloseModal
+    | ClimbingRoutesFilterUpdated ClimbingRouteList.ClimbingRoutesFilter
 
 
 
@@ -98,6 +99,9 @@ update msg model =
 
         CloseModal ->
             ( { model | modal = Empty }, Cmd.none )
+
+        ClimbingRoutesFilterUpdated filter ->
+            ( { model | climbingRoutesFilter = filter }, Cmd.none )
 
 
 
@@ -210,7 +214,7 @@ view model =
                         -- , Button.addButton (Button.defaultOptions |> Button.withMsg (OpenClimbingRouteForm Nothing))
                         ]
                     ]
-                , ClimbingRouteList.viewClimbingRoutesFilter { onUpdate = \_ -> NoOp } model.climbingRouteFilter
+                , ClimbingRouteList.viewClimbingRoutesFilter { onUpdate = ClimbingRoutesFilterUpdated } model.climbingRoutesFilter
                 , ClimbingRouteList.viewRoutes (routeItems model area)
                 , case model.modal of
                     Empty ->
@@ -259,6 +263,7 @@ routeItems model area =
             }
         )
         climbingRoutes
+        |> ClimbingRouteList.filterClimbingRoutes model.climbingRoutesFilter
 
 
 
