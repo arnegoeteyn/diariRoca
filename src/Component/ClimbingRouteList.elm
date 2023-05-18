@@ -1,23 +1,10 @@
-module Component.ClimbingRouteList exposing (Props, viewRoutes)
+module Component.ClimbingRouteList exposing (ClimbingRoutesFilter, Props, initClimbingRoutesFilter, viewClimbingRoutesFilter, viewRoutes)
 
-import Browser.Dom
 import Data exposing (Ascent, ClimbingRoute, Sector)
-import DataAccessors as MA
-import DataUtilities
-import Dict
-import Form.Criterium as Criterium exposing (selectionCriterium, selectionWithSearchCriterium, textCriterium)
-import Form.Form as Form
-import Form.Forms.ClimbingRouteForm as ClimbingRouteForm
+import Form.Criterium as Criterium
 import Html.Styled as H exposing (Html)
 import Html.Styled.Attributes as A
-import Html.Styled.Events as E
-import Modal
-import Select
-import Session
-import Skeleton
 import Tailwind.Utilities as Tw
-import Task
-import Utilities
 import View.Button as Button
 
 
@@ -31,6 +18,53 @@ type alias Item msg =
     , ascents : List Ascent
     , deleteClimbingRouteMsg : ClimbingRoute -> msg
     }
+
+
+type alias ClimbingRoutesFilter =
+    { projectFilter : ProjectFilter
+    }
+
+
+type alias ClimbingRoutesFilterFormSettings msg =
+    { onUpdate : ClimbingRoutesFilter -> msg
+    }
+
+
+type ProjectFilter
+    = AllRoutes
+    | OnlyProjects
+    | OnlyNonProjects
+
+
+projectFilterToString : ProjectFilter -> String
+projectFilterToString p =
+    case p of
+        AllRoutes ->
+            "All"
+
+        OnlyProjects ->
+            "Only projects"
+
+        OnlyNonProjects ->
+            "Only non-projects"
+
+
+projectFilterFromString : String -> ProjectFilter
+projectFilterFromString p =
+    case p of
+        "All" ->
+            AllRoutes
+
+        "Only projects" ->
+            OnlyProjects
+
+        _ ->
+            OnlyNonProjects
+
+
+initClimbingRoutesFilter : ClimbingRoutesFilter
+initClimbingRoutesFilter =
+    { projectFilter = AllRoutes }
 
 
 viewRoutes : Props msg -> Html msg
@@ -140,3 +174,17 @@ viewRouteRow routeItem deleteMsg =
                 )
             ]
         ]
+
+
+
+--| Filter
+
+
+viewClimbingRoutesFilter : ClimbingRoutesFilterFormSettings msg -> ClimbingRoutesFilter -> H.Html msg
+viewClimbingRoutesFilter settings filter =
+    Criterium.selectionCriterium "ProjectFilter"
+        (\_ -> List.map projectFilterToString [ AllRoutes, OnlyProjects, OnlyNonProjects ])
+        (\value -> { filter | projectFilter = projectFilterFromString value })
+        settings.onUpdate
+        ""
+        filter
