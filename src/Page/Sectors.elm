@@ -326,14 +326,20 @@ viewArea { area, selected } =
         , H.div []
             [ Button.editButton (Button.defaultOptions |> Button.withMsg (OpenAreaForm (Just area)) |> Button.withKind Button.Icon)
             , Button.deleteButton (Button.defaultOptions |> Button.withMsg (DeleteAreaRequested area) |> Button.withKind Button.Icon)
+            , Button.gotoButton
+                (Button.defaultOptions
+                    |> Button.withHref ("areas/" ++ String.fromInt area.id)
+                    |> Button.withKind Button.Icon
+                )
             ]
         ]
 
 
 viewSectors : { selectedSector : Maybe Sector } -> List Sector -> H.Html Msg
 viewSectors options sectors =
-    let 
-        sortedSectors = sectors
+    let
+        sortedSectors =
+            sectors
     in
     H.div []
         [ H.text "Sectors"
