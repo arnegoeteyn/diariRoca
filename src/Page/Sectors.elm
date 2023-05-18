@@ -332,6 +332,9 @@ viewArea { area, selected } =
 
 viewSectors : { selectedSector : Maybe Sector } -> List Sector -> H.Html Msg
 viewSectors options sectors =
+    let 
+        sortedSectors = sectors
+    in
     H.div []
         [ H.text "Sectors"
         , Button.addButton (Button.defaultOptions |> Button.withMsg (OpenSectorForm Nothing))
@@ -345,7 +348,7 @@ viewSectors options sectors =
                         ]
                         [ viewSectorRow { sector = sector, selected = False } ]
                 )
-                sectors
+                sortedSectors
             )
         ]
 
@@ -380,6 +383,7 @@ filterSectors model =
 
         Just area ->
             DU.filterSectorsByAreaId area.id (Utilities.dictToList model.session.data.sectors)
+                |> DU.sortSectors
 
 
 areaFormModal : Model -> Html Msg
