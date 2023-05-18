@@ -32,6 +32,7 @@ type Route
     | AscentsRoute
     | SectorsRoute
     | SectorRoute
+    | AreaRoute
     | StatsRoute
 
 
