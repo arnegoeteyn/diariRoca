@@ -252,18 +252,20 @@ routeItems model area =
         climbingRoutes =
             DA.getRoutesFromArea area.id model.session.data
     in
-    List.map
-        (\( route, sector ) ->
-            { route = route
-            , sector = sector
-            , ascents = DA.getAscents model.session.data route
-            , deleteClimbingRouteMsg = \_ -> NoOp
+    { routes =
+        List.map
+            (\( route, sector ) ->
+                { route = route
+                , sector = sector
+                , ascents = DA.getAscents model.session.data route
+                , deleteClimbingRouteMsg = \_ -> NoOp
 
-            -- , deleteClimbingRouteMsg = DeleteClimbingRouteRequested
-            }
-        )
-        climbingRoutes
-        |> ClimbingRouteList.filterClimbingRoutes model.climbingRoutesFilter
+                -- , deleteClimbingRouteMsg = DeleteClimbingRouteRequested
+                }
+            )
+            climbingRoutes
+    , filter = model.climbingRoutesFilter
+    }
 
 
 

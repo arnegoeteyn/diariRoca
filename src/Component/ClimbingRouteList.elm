@@ -9,7 +9,7 @@ import View.Button as Button
 
 
 type alias Props msg =
-    List (Item msg)
+    { routes : List (Item msg), filter : ClimbingRoutesFilter }
 
 
 type alias Item msg =
@@ -62,13 +62,21 @@ projectFilterFromString p =
             OnlyNonProjects
 
 
+
+--| Init
+
+
 initClimbingRoutesFilter : ClimbingRoutesFilter
 initClimbingRoutesFilter =
     { projectFilter = AllRoutes }
 
 
+
+--| View
+
+
 viewRoutes : Props msg -> Html msg
-viewRoutes routes =
+viewRoutes props =
     H.div
         [ A.css
             [ Tw.overflow_x_auto
@@ -83,7 +91,7 @@ viewRoutes routes =
         [ H.table
             [ A.css [ Tw.w_full, Tw.text_sm ] ]
             [ viewRoutesTableHeader
-            , viewRoutesTableBody routes
+            , viewRoutesTableBody (filterClimbingRoutes props)
             ]
         ]
 
@@ -116,7 +124,7 @@ viewRoutesTableHeader =
 
 
 viewRoutesTableBody : Props msg -> Html msg
-viewRoutesTableBody routes =
+viewRoutesTableBody { routes } =
     H.tbody []
         (List.map
             (\route ->
@@ -194,10 +202,9 @@ viewClimbingRoutesFilter settings filter =
 --| Filters
 
 
-filterClimbingRoutes : ClimbingRoutesFilter -> Props msg -> Props msg
-filterClimbingRoutes filter routes =
-    routes
-        |> List.filter (filterProjects filter.projectFilter)
+filterClimbingRoutes : Props msg -> Props msg
+filterClimbingRoutes ({ filter, routes } as props) =
+    {props | routes = routes |> List.filter (filterProjects filter.projectFilter)}
 
 
 filterProjects : ProjectFilter -> Item msg -> Bool
@@ -207,7 +214,7 @@ filterProjects projectFilter route =
             True
 
         OnlyProjects ->
-             List.isEmpty route.ascents
+            List.isEmpty route.ascents
 
         OnlyNonProjects ->
-             not <| List.isEmpty route.ascents
+            not <| List.isEmpty route.ascents
