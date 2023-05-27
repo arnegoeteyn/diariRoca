@@ -4,6 +4,7 @@ import Dict
 import Html.Styled as H
 import List.Extra
 import Set exposing (Set)
+import List exposing (foldr)
 
 
 
@@ -159,6 +160,9 @@ mostOccuring =
         >> List.head
         >> Maybe.map Tuple.first
 
+
+flatMap : (a -> List b) -> List a -> List b
+flatMap f = List.foldr ((++) << f) []
 
 
 --| Tuple

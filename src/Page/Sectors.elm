@@ -326,12 +326,21 @@ viewArea { area, selected } =
         , H.div []
             [ Button.editButton (Button.defaultOptions |> Button.withMsg (OpenAreaForm (Just area)) |> Button.withKind Button.Icon)
             , Button.deleteButton (Button.defaultOptions |> Button.withMsg (DeleteAreaRequested area) |> Button.withKind Button.Icon)
+            , Button.gotoButton
+                (Button.defaultOptions
+                    |> Button.withHref ("areas/" ++ String.fromInt area.id)
+                    |> Button.withKind Button.Icon
+                )
             ]
         ]
 
 
 viewSectors : { selectedSector : Maybe Sector } -> List Sector -> H.Html Msg
 viewSectors options sectors =
+    let
+        sortedSectors =
+            sectors
+    in
     H.div []
         [ H.text "Sectors"
         , Button.addButton (Button.defaultOptions |> Button.withMsg (OpenSectorForm Nothing))
@@ -345,7 +354,7 @@ viewSectors options sectors =
                         ]
                         [ viewSectorRow { sector = sector, selected = False } ]
                 )
-                sectors
+                sortedSectors
             )
         ]
 
@@ -380,6 +389,7 @@ filterSectors model =
 
         Just area ->
             DU.filterSectorsByAreaId area.id (Utilities.dictToList model.session.data.sectors)
+                |> DU.sortSectors
 
 
 areaFormModal : Model -> Html Msg

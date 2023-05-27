@@ -1,18 +1,13 @@
 module Page.Sector exposing (..)
 
-import Form.Criterium as Criterium exposing (formSelectionCriterium, formSelectionWithSearchCriterium, formTextAreaCriterium, formTextCriterium, textCriterium)
 import Component.ClimbingRouteList as ClimbingRouteList
-import Data exposing (Area, ClimbingRouteKind, Data, Sector)
+import Data exposing (Sector)
 import DataAccessors as DA exposing (getRoutesFromSector)
-import DataUtilities as DU
-import Dict
-import Form.Criterium exposing (formSelectionWithSearchCriterium, formTextCriterium, updateSelectCriteriumMsg)
+import Form.Criterium as Criterium
 import Form.Form as Form
-import Form.Forms exposing (SelectionCriterium, idForForm, updateName, validateNonEmpty, viewErrors)
 import Form.Forms.ClimbingRouteForm as ClimbingRouteForm
 import Html.Styled as H exposing (Html)
 import Html.Styled.Attributes as A
-import Html.Styled.Events as E
 import Modal
 import Page.ClimbingRoute exposing (Msg(..))
 import Select
@@ -32,6 +27,7 @@ type alias ModelContent =
     { sectorId : Int
     , modal : ModalContent
     , climbingRouteForm : ( ClimbingRouteForm.ClimbingRouteForm, Maybe Data.ClimbingRoute )
+    , climbingRoutesFilter : ClimbingRouteList.ClimbingRoutesFilter
     }
 
 
@@ -55,6 +51,7 @@ init session sectorId =
       , sectorId = sectorId
       , modal = Empty
       , climbingRouteForm = ( ClimbingRouteForm.initClimbingRouteForm ClimbingRouteForm.emptyValues, Nothing )
+      , climbingRoutesFilter = ClimbingRouteList.initClimbingRoutesFilter
       }
     , Cmd.none
     )
@@ -69,6 +66,7 @@ climbingRouteFormSettings =
     }
 
 
+
 -- Update
 
 
@@ -78,11 +76,13 @@ type Msg
     | DeleteClimbingRouteRequested Data.ClimbingRoute
     | DeleteClimbingRouteConfirmation Data.ClimbingRoute
     | OpenClimbingRouteForm (Maybe Data.ClimbingRoute)
-    -- form
+      -- form
     | SaveClimbingRouteForm
     | UpdateClimbingRouteForm ClimbingRouteForm.ClimbingRouteForm
     | ClimbingRouteFormSelectSector (Maybe Sector)
     | ClimbingRouteFormSelectSectorMsg (Select.Msg Sector)
+      -- filter
+    | ClimbingRoutesFilterUpdated ClimbingRouteList.ClimbingRoutesFilter
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -112,8 +112,9 @@ update msg model =
                         |> Maybe.withDefault []
                     , Select.init "climbingRouteFormSectorId"
                     )
-                kind = 
-                    Maybe.withDefault "sport" (mostOccuringKind model) 
+
+                kind =
+                    Maybe.withDefault "sport" (mostOccuringKind model)
 
                 values =
                     ClimbingRouteForm.valuesFromMaybeRoute model.session maybeClimbingRoute
@@ -121,9 +122,11 @@ update msg model =
             ( { model
                 | modal = ClimbingRouteFormModal
                 , climbingRouteForm =
-                    ( ClimbingRouteForm.initClimbingRouteForm { values 
-                        | sectorId = s
-                        , kind = kind}
+                    ( ClimbingRouteForm.initClimbingRouteForm
+                        { values
+                            | sectorId = s
+                            , kind = kind
+                        }
                     , maybeClimbingRoute
                     )
               }
@@ -180,6 +183,10 @@ update msg model =
                 Nothing ->
                     ( updatedModel, Cmd.none )
 
+        ClimbingRoutesFilterUpdated filter ->
+            ( { model | climbingRoutesFilter = filter }, Cmd.none )
+
+
 
 --View
 
@@ -204,6 +211,7 @@ view model =
                         , Button.addButton (Button.defaultOptions |> Button.withMsg (OpenClimbingRouteForm Nothing))
                         ]
                     ]
+                , ClimbingRouteList.viewClimbingRoutesFilter { onUpdate = ClimbingRoutesFilterUpdated } model.climbingRoutesFilter
                 , ClimbingRouteList.viewRoutes (routeItems model sector)
                 , case model.modal of
                     Empty ->
@@ -243,15 +251,18 @@ routeItems model sector =
         climbingRoutes =
             DA.getRoutesFromSector model.sectorId model.session.data
     in
-    List.map
-        (\route ->
-            { route = route
-            , sector = sector
-            , ascents = DA.getAscents model.session.data route
-            , deleteClimbingRouteMsg = DeleteClimbingRouteRequested
-            }
-        )
-        climbingRoutes
+    { routes =
+        List.map
+            (\route ->
+                { route = route
+                , sector = sector
+                , ascents = DA.getAscents model.session.data route
+                , deleteClimbingRouteMsg = DeleteClimbingRouteRequested
+                }
+            )
+            climbingRoutes
+    , filter = model.climbingRoutesFilter
+    }
 
 
 mostOccuringKind : Model -> Maybe String
