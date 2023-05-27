@@ -1,40 +1,82 @@
-module Component.ClimbingRouteList exposing (viewRoutes, Props)
+module Component.ClimbingRouteList exposing (ClimbingRoutesFilter, Props, filterClimbingRoutes, initClimbingRoutesFilter, viewClimbingRoutesFilter, viewRoutes)
 
-import Browser.Dom
 import Data exposing (Ascent, ClimbingRoute, Sector)
-import DataAccessors as MA
-import DataUtilities
-import Dict
-import Form.Criterium as Criterium exposing (selectionCriterium, selectionWithSearchCriterium, textCriterium)
-import Form.Form as Form
-import Form.Forms.ClimbingRouteForm as ClimbingRouteForm
+import Form.Criterium as Criterium
 import Html.Styled as H exposing (Html)
 import Html.Styled.Attributes as A
-import Html.Styled.Events as E
-import Modal
-import Select
-import Session
-import Skeleton
 import Tailwind.Utilities as Tw
-import Task
-import Utilities
 import View.Button as Button
 
 
-type alias Props msg
-    = List (Item msg)
+type alias Props msg =
+    { routes : List (Item msg), filter : ClimbingRoutesFilter }
 
 
 type alias Item msg =
     { route : ClimbingRoute
     , sector : Sector
     , ascents : List Ascent
-    , deleteClimbingRouteMsg: ClimbingRoute -> msg 
+    , deleteClimbingRouteMsg : ClimbingRoute -> msg
     }
 
 
-viewRoutes : (Props msg) -> Html msg
-viewRoutes routes =
+type alias ClimbingRoutesFilter =
+    { projectFilter : ProjectFilter
+    }
+
+
+type alias ClimbingRoutesFilterFormSettings msg =
+    { onUpdate : ClimbingRoutesFilter -> msg
+    }
+
+
+type ProjectFilter
+    = AllRoutes
+    | OnlyProjects
+    | OnlyNonProjects
+
+
+projectFilterToString : ProjectFilter -> String
+projectFilterToString p =
+    case p of
+        AllRoutes ->
+            "All"
+
+        OnlyProjects ->
+            "Only projects"
+
+        OnlyNonProjects ->
+            "Only non-projects"
+
+
+projectFilterFromString : String -> ProjectFilter
+projectFilterFromString p =
+    case p of
+        "All" ->
+            AllRoutes
+
+        "Only projects" ->
+            OnlyProjects
+
+        _ ->
+            OnlyNonProjects
+
+
+
+--| Init
+
+
+initClimbingRoutesFilter : ClimbingRoutesFilter
+initClimbingRoutesFilter =
+    { projectFilter = AllRoutes }
+
+
+
+--| View
+
+
+viewRoutes : Props msg -> Html msg
+viewRoutes props =
     H.div
         [ A.css
             [ Tw.overflow_x_auto
@@ -49,7 +91,7 @@ viewRoutes routes =
         [ H.table
             [ A.css [ Tw.w_full, Tw.text_sm ] ]
             [ viewRoutesTableHeader
-            , viewRoutesTableBody routes
+            , viewRoutesTableBody (filterClimbingRoutes props)
             ]
         ]
 
@@ -82,7 +124,7 @@ viewRoutesTableHeader =
 
 
 viewRoutesTableBody : Props msg -> Html msg
-viewRoutesTableBody routes =
+viewRoutesTableBody { routes } =
     H.tbody []
         (List.map
             (\route ->
@@ -103,6 +145,9 @@ viewRouteRow routeItem deleteMsg =
 
         route =
             routeItem.route
+
+        sector =
+            routeItem.sector
     in
     H.tr
         [ A.css [ Tw.bg_white, Tw.border_b ]
@@ -111,9 +156,11 @@ viewRouteRow routeItem deleteMsg =
         ]
         [ H.td [ cellCss ] [ H.text route.grade ]
         , H.td [ cellCss, A.css [ Tw.text_left ] ]
-            [ H.div [ A.css [ Tw.font_bold ] ] [ H.text route.name ]
-
-            -- , sectorLink
+            [ H.div [ A.css [ Tw.font_bold ] ]
+                [ H.text route.name
+                , H.text " ~ "
+                , H.a [ A.href ("/sectors/" ++ String.fromInt sector.id) ] [ H.text sector.name ]
+                ]
             ]
         , H.td [ cellCss ] [ H.text (Data.climbingRouteKindToString route.kind) ]
         , H.td [ cellCss ] [ (H.text << String.fromInt << List.length) routeItem.ascents ]
@@ -135,3 +182,39 @@ viewRouteRow routeItem deleteMsg =
                 )
             ]
         ]
+
+
+
+--| Filter
+
+
+viewClimbingRoutesFilter : ClimbingRoutesFilterFormSettings msg -> ClimbingRoutesFilter -> H.Html msg
+viewClimbingRoutesFilter settings filter =
+    Criterium.selectionCriterium "ProjectFilter"
+        (\_ -> List.map projectFilterToString [ AllRoutes, OnlyProjects, OnlyNonProjects ])
+        (\value -> { filter | projectFilter = projectFilterFromString value })
+        settings.onUpdate
+        ""
+        filter
+
+
+
+--| Filters
+
+
+filterClimbingRoutes : Props msg -> Props msg
+filterClimbingRoutes ({ filter, routes } as props) =
+    {props | routes = routes |> List.filter (filterProjects filter.projectFilter)}
+
+
+filterProjects : ProjectFilter -> Item msg -> Bool
+filterProjects projectFilter route =
+    case projectFilter of
+        AllRoutes ->
+            True
+
+        OnlyProjects ->
+            List.isEmpty route.ascents
+
+        OnlyNonProjects ->
+            not <| List.isEmpty route.ascents

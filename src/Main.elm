@@ -6,6 +6,7 @@ import Command
 import Date exposing (Date)
 import Html.Styled as H
 import Navbar
+import Page.Area as Area
 import Page.AscentsPage as Ascents
 import Page.ClimbingRoute as ClimbingRoute
 import Page.ClimbingRoutes as ClimbingRoutes
@@ -59,6 +60,7 @@ type Page
     | AscentsPage Ascents.Model
     | SectorsPage Sectors.Model
     | SectorPage Sector.Model
+    | AreaPage Area.Model
     | StatsPage Session.Model
 
 
@@ -111,6 +113,9 @@ view model =
         SectorPage sectorModel ->
             Skeleton.view SectorMsg navbar (Sector.view sectorModel)
 
+        AreaPage areaModel ->
+            Skeleton.view AreaMsg navbar (Area.view areaModel)
+
         StatsPage statsSesssion ->
             Skeleton.view SectorsMsg navbar (Stats.view statsSesssion)
 
@@ -157,6 +162,7 @@ type Msg
     | AscentsMsg Ascents.Msg
     | SectorsMsg Sectors.Msg
     | SectorMsg Sector.Msg
+    | AreaMsg Area.Msg
     | NavbarMsg Navbar.Msg
 
 
@@ -242,6 +248,14 @@ update message model =
                 _ ->
                     ( model, Cmd.none )
 
+        AreaMsg msg ->
+            case model.route of
+                AreaPage areaModel ->
+                    stepArea model (Area.update msg areaModel)
+
+                _ ->
+                    ( model, Cmd.none )
+
         NavbarMsg msg ->
             let
                 updatedNavbarModel m =
@@ -289,6 +303,13 @@ stepSector model ( sectorsModel, cmds ) =
     )
 
 
+stepArea : Model -> ( Area.Model, Cmd Area.Msg ) -> ( Model, Cmd Msg )
+stepArea model ( areaModel, cmds ) =
+    ( { model | route = AreaPage areaModel }
+    , Cmd.map AreaMsg cmds
+    )
+
+
 
 -- ROUTER
 
@@ -312,6 +333,9 @@ exit model =
             m.session
 
         SectorPage m ->
+            m.session
+
+        AreaPage m ->
             m.session
 
         StatsPage session ->
@@ -341,6 +365,9 @@ swapSession model newSession =
                 SectorPage sectorPage ->
                     SectorPage { sectorPage | session = newSession }
 
+                AreaPage areaPage ->
+                    AreaPage { areaPage | session = newSession }
+
                 StatsPage _ ->
                     StatsPage newSession
     }
@@ -369,6 +396,8 @@ stepUrl url model =
                     (stepSectors model (Sectors.init { session | route = Session.SectorsRoute }))
                 , route (s "sectors" </> sector_)
                     (\sectorId -> stepSector model (Sector.init { session | route = Session.SectorRoute } sectorId))
+                , route (s "areas" </> area_)
+                    (\areaId -> stepArea model (Area.init { session | route = Session.AreaRoute } areaId))
                 , route (s "stats")
                     ( { model | route = StatsPage { session | route = Session.StatsRoute } }, Cmd.none )
                 ]
@@ -396,3 +425,7 @@ route_ =
 sector_ : Parser (Int -> a) a
 sector_ =
     custom "sector" String.toInt
+
+area_ : Parser (Int -> a) a
+area_ =
+    custom "area" String.toInt

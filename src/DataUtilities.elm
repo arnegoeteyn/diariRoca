@@ -64,6 +64,9 @@ filterSectorsByAreaId filter sectors =
     List.filter (matchSectorByAreaId filter) sectors
 
 
+sortSectors : List Sector -> List Sector
+sortSectors =
+    List.sortBy .name
 
 --| ClimbingRoute
 
