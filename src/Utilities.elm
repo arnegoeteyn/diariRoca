@@ -164,6 +164,9 @@ mostOccuring =
 flatMap : (a -> List b) -> List a -> List b
 flatMap f = List.foldr ((++) << f) []
 
+first : (a -> Bool) -> List a -> Maybe a
+first f = List.filter f >> List.head
+
 
 --| Tuple
 

@@ -352,7 +352,7 @@ viewRouteDetail model route =
                     H.text ""
             , viewAscentsList model route
             ]
-        , H.div [ A.css [] ]
+        , H.div [ A.css [ Tw.px_4 ] ]
             [ viewRouteImage route
             , viewRouteMedia model route
             ]
@@ -371,9 +371,24 @@ viewRouteInfo _ climbingRoute =
 
 
 viewRouteImage : ClimbingRoute -> Html Msg
-viewRouteImage _ =
-    H.img [ A.src "https://www.barcelona-tourist-guide.com/images/ext/attractions/montserrat/L550/montserrat-barcelona-29.jpg", A.css [ Tw.col_auto, Tw.mx_auto ] ]
-        []
+viewRouteImage route =
+    let
+        hasImageExtension image =
+            List.member (String.toLower image) [ "jpg", "png", "jpeg"]
+
+        isImage s =
+            String.split "." s |> List.reverse >> List.head |> Maybe.map hasImageExtension |> Maybe.withDefault False
+
+        firstImage =
+            Utilities.first (.link >> isImage) route.media
+    in
+    case firstImage of
+        Just image ->
+            H.img [ A.src image.link, A.css [ Tw.max_w_full ] ]
+                []
+
+        Nothing ->
+            H.text "No image found"
 
 
 viewRouteMedia : Model -> ClimbingRoute -> Html Msg
